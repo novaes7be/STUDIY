@@ -1,0 +1,34 @@
+/* Tela de assinatura do Pro. Cores: somente tokens (css/tokens.css). */
+.pay { max-width: 980px; margin: 0 auto; padding: 32px 20px 64px; }
+.pay .logo { color: var(--link); display: inline-block; margin-bottom: 18px; }
+.pay h1 { font-size: clamp(30px, 4vw, 44px); font-weight: 800; letter-spacing: -.03em; margin-bottom: 8px; }
+.pay .sub { color: var(--text-muted); font-size: 18px; max-width: 640px; }
+.pay-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 28px; }
+.pay-summary { background: var(--hero-grad); color: var(--on-brand); border-radius: 28px; padding: 32px; }
+.pay-summary h2 { font-size: 20px; margin-bottom: 6px; }
+.pay-summary .amount { font-size: 52px; font-weight: 800; letter-spacing: -.03em; margin-bottom: 18px; }
+.pay-summary .amount small { font-size: 16px; font-weight: 500; color: var(--on-brand-muted); }
+.pay-summary ul { margin: 0 0 18px; padding-left: 20px; display: grid; gap: 8px; }
+.pay-summary .hint-text { color: var(--on-brand-muted); margin: 0; }
+.pay-form { background: var(--surface); border: 2px solid var(--surface-border); border-radius: 28px; padding: 28px; }
+.pay-form fieldset { border: 0; padding: 0; margin: 0 0 18px; display: grid; gap: 12px; }
+.pay-form legend { font-weight: 800; font-size: 18px; margin-bottom: 12px; padding: 0; }
+.pay-opt { display: block; cursor: pointer; }
+.pay-opt input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.pay-opt-body { position: relative; display: grid; gap: 2px; padding: 16px 52px 16px 18px; border: 2px solid var(--card-edge); border-radius: 18px; background: var(--card-bg); transition: border-color .2s, background .2s, transform .2s; }
+.pay-opt-body strong { font-size: 17px; }
+.pay-opt-body small { color: var(--text-muted); font-size: 14px; }
+.pay-opt-body::after { content: ""; position: absolute; right: 18px; top: 50%; width: 20px; height: 20px; margin-top: -10px; border-radius: 50%; border: 2px solid var(--card-edge); transition: background .2s, border-color .2s, box-shadow .2s; }
+.pay-opt:hover .pay-opt-body { border-color: var(--card-edge-hover); transform: translateY(-2px); }
+.pay-opt input:checked + .pay-opt-body { border-color: var(--card-edge-hover); background: var(--icon-chip-bg); }
+.pay-opt input:checked + .pay-opt-body::after { border-color: var(--card-edge-hover); background: var(--card-edge-hover); box-shadow: inset 0 0 0 4px var(--icon-chip-bg); }
+.pay-opt input:focus-visible + .pay-opt-body { outline: 3px solid var(--focus); outline-offset: 2px; }
+.pay-form .hint-text { margin: 14px 0 0; }
+.status-card { max-width: 560px; margin: 28px auto 0; background: var(--surface); border: 2px solid var(--surface-border); border-radius: 28px; padding: 36px; text-align: center; }
+.status-card h2 { font-size: 26px; letter-spacing: -.02em; margin-bottom: 10px; }
+.status-card p { color: var(--text-muted); }
+.status-card .btn { margin-top: 12px; }
+.status-ok { border-color: var(--card-edge-hover); }
+.sim-box { margin-top: 18px; padding: 16px; border-radius: 18px; background: var(--msg-info-bg); color: var(--msg-info-fg); }
+.sim-box p { color: inherit; margin-bottom: 8px; }
+@media (max-width: 800px) { .pay-grid { grid-template-columns: 1fr; } }
