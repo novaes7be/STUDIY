@@ -319,3 +319,14 @@ dialog.wide { width: min(640px, 94vw); max-height: 90vh; overflow-y: auto; }
 .acc-section h3 { font-size: 16px; margin-bottom: 10px; }
 details.acc-section summary { cursor: pointer; font-weight: 700; margin-bottom: 4px; }
 details.acc-section form { margin-top: 14px; }
+
+/* ---------- Voltar para a home (todas as páginas, sem precisar de login) ---------- */
+:root {
+  --ico-home: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10'/%3E%3C/svg%3E");
+  --ico-arrow-left: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19 12H5M11 6l-6 6 6 6'/%3E%3C/svg%3E");
+}
+.back-home { --ico: var(--ico-home); display: flex; width: fit-content; margin-bottom: 18px; }
+.back-home::after { -webkit-mask-image: var(--ico-arrow-left); mask-image: var(--ico-arrow-left); }
+.legal .back-home, .pay .back-home { margin-bottom: 22px; }
+.home-link { display: block; padding: 4px 12px; color: var(--c-blue-200); font-weight: 700; font-size: 14px; text-decoration: none; transition: color .2s, transform .2s; }
+.home-link:hover { color: var(--c-white); transform: translateX(-3px); }
