@@ -3,19 +3,18 @@
 Plataforma de estudos: organize matérias, envie PDFs e receba resumo + flashcards com revisão espaçada (SM-2). Plano grátis (20 gerações/mês) e Pro (300/mês, R$ 20 por 30 dias, cartão ou Pix via Mercado Pago).
 
 ```
-src/                 front estático (index, login, cadastro, dashboard, pagamento, termos, privacidade, recuperar-senha)
+frontend/            front estático (index, login, cadastro, dashboard, pagamento, termos, privacidade, recuperar-senha)
 ├── css/tokens.css   TODAS as cores (constantes). Edite aqui para mudar o visual.
-├── css/             style.css, pagamento.css
-├── js/              config, api, auth, dashboard, pagamento, theme, ui
-└── main/ , test/    API Spring Boot 3 (Java) + PostgreSQL + Flyway
-Dockerfile · docker-compose.yml · .github/workflows/ci.yml
+└── js/              config, api, auth, dashboard, pagamento, theme, ui
+backend/             API Spring Boot 3 (Java) + PostgreSQL + Flyway, Dockerfile
+docker-compose.yml · .github/workflows/ci.yml · .env.example
 ```
 
 ## Rodar em desenvolvimento
 
 1. PostgreSQL com o banco `studiy` (o Flyway aplica V1→V5 sozinho). Se vier de versões antigas, recrie o banco.
-2. Backend (dev funciona sem configurar nada): `mvn spring-boot:run` ou botão Run do IntelliJ → http://localhost:8080
-3. Front: Live Server na pasta `src` (porta 5500). A API é definida em `src/js/config.js`.
+2. Backend (dev funciona sem configurar nada): `cd backend && mvn spring-boot:run` ou botão Run do IntelliJ (abra a pasta `backend`) → http://localhost:8080
+3. Front: Live Server na pasta `frontend` (porta 5500). A API é definida em `frontend/js/config.js`.
 4. Em dev, "Esqueci a senha" mostra o token na tela. Sem `ANTHROPIC_API_KEY`, a IA devolve respostas de teste.
 5. Swagger (só dev): http://localhost:8080/swagger-ui.html (botão Authorize → cole o JWT do login).
 
@@ -43,7 +42,7 @@ O perfil padrão no compose é `prod` (exige todas as variáveis). Para testar l
 ## Produção (mínimo)
 
 - `SPRING_PROFILES_ACTIVE=prod` e variáveis de `.env.example` (sem elas a app não sobe, de propósito).
-- HTTPS no front e na API; `CORS_ORIGINS` só com o domínio do front; ajuste `API_BASE` (`js/config.js`) e o `connect-src` da CSP (meta tag nos HTML).
+- HTTPS no front e na API; `CORS_ORIGINS` só com o domínio do front; ajuste `API_BASE` (`frontend/js/config.js`) e o `connect-src` da CSP (meta tag nos HTML).
 - Envie headers de segurança também no servidor do front (CSP, `frame-ancestors 'none'`, HSTS).
 - Atrás de proxy: `server.forward-headers-strategy` para o rate limit ver o IP real. Mais de uma instância: rate limit em Redis.
 - Backup do banco e guarde a `STUDIY_ENCRYPTION_KEY` separada (sem ela os textos cifrados são irrecuperáveis).

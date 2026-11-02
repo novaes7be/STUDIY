@@ -14,7 +14,7 @@ services:
       retries: 10
 
   api:
-    build: .
+    build: ./backend
     env_file: .env
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
