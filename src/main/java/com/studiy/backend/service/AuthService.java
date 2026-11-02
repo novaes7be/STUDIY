@@ -37,6 +37,7 @@ public class AuthService {
     private final boolean exporTokenResetDev;
     private final String versaoTermos;
     private final GamificacaoService gamificacaoService;
+    private final EmailService emailService;
     private final SecureRandom random = new SecureRandom();
 
     public AuthService(
@@ -46,7 +47,8 @@ public class AuthService {
             JwtUtil jwtUtil,
             @Value("${studiy.auth.expor-token-reset-dev}") boolean exporTokenResetDev,
             @Value("${studiy.termos.versao}") String versaoTermos,
-            GamificacaoService gamificacaoService
+            GamificacaoService gamificacaoService,
+            EmailService emailService
     ) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
@@ -55,6 +57,7 @@ public class AuthService {
         this.exporTokenResetDev = exporTokenResetDev;
         this.versaoTermos = versaoTermos;
         this.gamificacaoService = gamificacaoService;
+        this.emailService = emailService;
     }
 
     private static String normalizar(String email) {
@@ -101,8 +104,7 @@ public class AuthService {
     /**
      * Token aleatório de 256 bits, uso único, validade de 30 minutos.
      * Só o hash SHA-256 fica no banco e o token NUNCA é escrito nos logs.
-     * TODO produção: enviar por e-mail um link como
-     * https://seusite/recuperar-senha.html#token=... (JavaMailSender).
+     * Envia por e-mail o link {front}/recuperar-senha.html#token=... (EmailService; só se o SMTP estiver configurado).
      */
     public String esqueciSenha(ForgotPasswordRequest request) {
         Usuario usuario = usuarioRepository.findByEmail(normalizar(request.email())).orElse(null);
@@ -117,6 +119,7 @@ public class AuthService {
         usuario.setResetTokenHash(sha256(token));
         usuario.setResetTokenExpira(LocalDateTime.now().plusMinutes(30));
         usuarioRepository.save(usuario);
+        emailService.enviarResetSenha(usuario.getEmail(), token);
 
         if (exporTokenResetDev) {
             return "Modo desenvolvimento — seu token: " + token;
