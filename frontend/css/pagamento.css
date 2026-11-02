@@ -4,12 +4,12 @@
 .pay h1 { font-size: clamp(30px, 4vw, 44px); font-weight: 800; letter-spacing: -.03em; margin-bottom: 8px; }
 .pay .sub { color: var(--text-muted); font-size: 18px; max-width: 640px; }
 .pay-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 28px; }
-.pay-summary { background: var(--hero-grad); color: var(--on-brand); border-radius: 28px; padding: 32px; }
+.pay-summary { background: var(--hero-grad); color: var(--hero-fg); border-radius: 28px; padding: 32px; }
 .pay-summary h2 { font-size: 20px; margin-bottom: 6px; }
 .pay-summary .amount { font-size: 52px; font-weight: 800; letter-spacing: -.03em; margin-bottom: 18px; }
-.pay-summary .amount small { font-size: 16px; font-weight: 500; color: var(--on-brand-muted); }
+.pay-summary .amount small { font-size: 16px; font-weight: 500; color: var(--hero-fg-muted); }
 .pay-summary ul { margin: 0 0 18px; padding-left: 20px; display: grid; gap: 8px; }
-.pay-summary .hint-text { color: var(--on-brand-muted); margin: 0; }
+.pay-summary .hint-text { color: var(--hero-fg-muted); margin: 0; }
 .pay-form { background: var(--surface); border: 2px solid var(--surface-border); border-radius: 28px; padding: 28px; }
 .pay-form fieldset { border: 0; padding: 0; margin: 0 0 18px; display: grid; gap: 12px; }
 .pay-form legend { font-weight: 800; font-size: 18px; margin-bottom: 12px; padding: 0; }

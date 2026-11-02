@@ -1,36 +1,51 @@
 /* ==========================================================================
    STUDIY — TOKENS DE COR (única fonte de verdade das cores do site)
-   Regra: nenhum outro arquivo CSS/JS usa valor de cor literal; só var(--...).
-   Camadas:  1) primitivas  2) semânticas (claro/escuro)  3) paleta da matéria
+   Regra: nenhum outro arquivo CSS/JS usa cor literal; só var(--...).
+   Paleta: roxo + rosa + azul pastéis.
+
+   PADRONIZAÇÃO (cada cor tem UM papel; nunca todas juntas na mesma seção):
+   - Roxo      = ação principal (botões, links, foco, barras) e as seções de destaque.
+   - Lilás     = fundos suaves (hero, chamada final, cartões secundários).
+   - Rosa      = SÓ detalhes pequenos (selo, destaque pontual) e a cor de matéria "Rosa".
+   - Azul past.= SÓ informação (avisos, dicas) e a cor de matéria "Azul".
+   - Vermelho  = SÓ ações destrutivas e erros.
+   BOTÕES: .btn-grad = primário (roxo) · .btn-ghost = secundário (contorno) ·
+           .btn-light = primário sobre fundo escuro · .btn-dark = menu · .btn-danger = excluir.
    ========================================================================== */
 
 /* 1) PRIMITIVAS ---------------------------------------------------------- */
 :root {
   --c-white: #ffffff;
-  --c-ink-900: #0d0f1a;
-  --c-ink-950: #05060f;
-  --c-night-950: #0a0c18;
-  --c-night-800: #1b2148;
-  --c-night-700: #141937;
-  --c-night-line: #2a3169;
+  --c-ink-900: #2e2159;
+  --c-ink-950: #17102f;
+  --c-night-950: #120d26;
+  --c-night-800: #251c4d;
+  --c-night-700: #1d1640;
+  --c-night-line: #3a2f73;
 
-  --c-blue-600: #1f3fe0;
-  --c-blue-700: #142a9e;
-  --c-blue-300: #8fa2ff;
-  --c-blue-200: #b9c3ff;
-  --c-blue-100: #e9edff;
-  --c-blue-50: #e4e9ff;
-  --c-blue-100b: #cfd3ff;
-  --c-indigo-500: #2b2fd0;
-  --c-indigo-600: #4a2fc4;
-  --c-purple-600: #5b3fd9;
+  --c-primary-700: #5b3fd9;
+  --c-primary-600: #7c5cd6;
+  --c-primary-500: #8f72e6;
+  --c-primary-300: #b9a4fa;
+  --c-primary-200: #d9c9fa;
+  --c-primary-100: #e9dffc;
+  --c-primary-50: #f1eafe;
+  --c-primary-25: #fbf8ff;
+  --c-primary-line: #e2d7f7;
+
+  --c-pink-100: #fad3e4;
+  --c-pink-800: #7a1f4b;
+  --c-pink-600: #c2487f;
+  --c-info-100: #cfe4fa;
+  --c-info-800: #173f6b;
+  --c-info-600: #3a74b8;
+
   --c-red-600: #d62828;
   --c-red-300: #ff9a9a;
+  --c-red-800: #9c1a1a;
 
-  --c-slate-600: #4a4f66;
-  --c-slate-300: #aab2d9;
-  --c-line-light: #d9dcec;
-  --c-text-on-brand-muted: #e6e9ff;
+  --c-slate-600: #6e6392;
+  --c-slate-300: #b6aadb;
 
   --c-err-bg-light: #ffe6e6;
   --c-err-fg-light: #8a1111;
@@ -38,48 +53,54 @@
   --c-err-fg-dark: #ffb3b3;
 
   --c-overlay-white-30: rgba(255, 255, 255, .3);
-  --c-overlay-night-60: rgba(5, 6, 15, .6);
-  --c-shadow: rgba(8, 12, 60, .35);
+  --c-overlay-night-60: rgba(18, 13, 38, .6);
+  --c-shadow: rgba(46, 33, 89, .28);
 }
 
 /* 2) SEMÂNTICAS — TEMA CLARO (padrão) ------------------------------------- */
 :root {
-  --bg-from: var(--c-white);
-  --bg-via: var(--c-blue-50);
-  --bg-to: var(--c-blue-100b);
+  --bg-from: var(--c-primary-25);
+  --bg-via: var(--c-primary-50);
+  --bg-to: var(--c-primary-100);
 
   --text: var(--c-ink-900);
   --text-muted: var(--c-slate-600);
-  --link: var(--c-blue-600);
-  --focus: var(--c-blue-600);
+  --link: var(--c-primary-600);
+  --focus: var(--c-primary-600);
+  --primary-strong: var(--c-primary-700);
 
   --surface: var(--c-white);
-  --surface-border: var(--c-line-light);
+  --surface-border: var(--c-primary-line);
   --input-bg: var(--c-white);
-  --row-line: var(--c-line-light);
+  --row-line: var(--c-primary-line);
 
-  --brand-grad: linear-gradient(135deg, var(--c-blue-600), var(--c-indigo-600));
-  --hero-grad: linear-gradient(135deg, var(--c-blue-600) 0%, var(--c-indigo-500) 55%, var(--c-indigo-600) 100%);
-  --band-grad: linear-gradient(135deg, var(--c-indigo-500), var(--c-indigo-600));
+  --brand-grad: linear-gradient(135deg, var(--c-primary-600), var(--c-primary-700));
+  --hero-grad: linear-gradient(135deg, var(--c-primary-50) 0%, var(--c-primary-100) 55%, var(--c-primary-200) 100%);
+  --band-grad: linear-gradient(135deg, var(--c-primary-700), var(--c-ink-900));
   --btn-grad: var(--brand-grad);
 
   --on-brand: var(--c-white);
-  --on-brand-muted: var(--c-text-on-brand-muted);
+  --on-brand-muted: #efe9ff;
+  --hero-fg: var(--c-ink-900);
+  --hero-fg-muted: #4b3f7a;
 
   --ink-card-bg: var(--c-ink-900);
   --ink-card-edge: transparent;
-  --step-1-bg: var(--c-red-600);
+  --step-1-bg: var(--c-primary-600);
   --step-2-bg: var(--brand-grad);
-  --price-free-bg: var(--c-blue-600);
+  --price-free-bg: var(--c-primary-600);
 
-  --toggle-bg: var(--c-blue-100);
-  --toggle-fg: var(--c-blue-600);
-  --toggle-ring: var(--c-blue-600);
+  --toggle-bg: var(--c-primary-100);
+  --toggle-fg: var(--c-primary-600);
+  --toggle-ring: var(--c-primary-600);
 
   --msg-err-bg: var(--c-err-bg-light);
   --msg-err-fg: var(--c-err-fg-light);
-  --msg-info-bg: var(--c-blue-100);
-  --msg-info-fg: var(--c-blue-700);
+  --msg-info-bg: var(--c-info-100);
+  --msg-info-fg: var(--c-info-800);
+
+  --badge-bg: var(--c-pink-100);
+  --badge-fg: var(--c-pink-800);
 
   --side-bg: var(--c-ink-900);
   --usage-bg: var(--c-white);
@@ -95,54 +116,64 @@
 /* 2b) SEMÂNTICAS — TEMA ESCURO -------------------------------------------- */
 [data-theme="dark"] {
   --bg-from: var(--c-night-950);
-  --bg-via: #0f1330;
-  --bg-to: #171340;
+  --bg-via: #181133;
+  --bg-to: #211848;
 
-  --text: #f2f4ff;
+  --text: #f3efff;
   --text-muted: var(--c-slate-300);
-  --link: var(--c-blue-300);
-  --focus: var(--c-blue-300);
+  --link: var(--c-primary-300);
+  --focus: var(--c-primary-300);
+  --primary-strong: var(--c-primary-300);
 
   --surface: var(--c-night-700);
   --surface-border: var(--c-night-line);
   --input-bg: var(--c-night-800);
   --row-line: var(--c-night-line);
 
+  --hero-grad: linear-gradient(135deg, #2a1f63 0%, #34277a 55%, #3d2e8c 100%);
+  --hero-fg: #f3efff;
+  --hero-fg-muted: var(--c-primary-200);
+
   --ink-card-bg: var(--c-ink-950);
   --ink-card-edge: var(--c-night-line);
 
   --toggle-bg: var(--c-night-800);
-  --toggle-fg: var(--c-blue-300);
-  --toggle-ring: var(--c-blue-300);
+  --toggle-fg: var(--c-primary-300);
+  --toggle-ring: var(--c-primary-300);
 
   --msg-err-bg: var(--c-err-bg-dark);
   --msg-err-fg: var(--c-err-fg-dark);
-  --msg-info-bg: var(--c-night-800);
-  --msg-info-fg: var(--c-blue-200);
+  --msg-info-bg: #14233b;
+  --msg-info-fg: var(--c-info-100);
+
+  --badge-bg: #3a1530;
+  --badge-fg: var(--c-pink-100);
 
   --side-bg: var(--c-ink-950);
   --usage-bg: var(--c-night-800);
-  --usage-fg: #f2f4ff;
+  --usage-fg: #f3efff;
   --danger: var(--c-red-300);
   --swatch-ring: var(--c-night-950);
 }
 
-/* 3) PALETA DA MATÉRIA (o usuário escolhe; o painel inteiro acompanha) ----- */
-[data-subject="azul"] {
-  --s-a: #1f3fe0; --s-b: #4a2fc4; --s-l1: #e4e9ff; --s-l2: #cfd3ff;
-  --s-d1: #0f1330; --s-d2: #171340; --s-lite: #8fa2ff; --s-pd: #141937;
-}
+/* 3) PALETA DA MATÉRIA (o usuário escolhe; o painel inteiro acompanha) -----
+   As chaves (azul, roxo, vermelho, grafite) são gravadas no banco: não renomeie.
+   "vermelho" agora é o ROSA; o nome exibido está em js/config.js. */
 [data-subject="roxo"] {
-  --s-a: #5b3fd9; --s-b: #3b1fa0; --s-l1: #ece6ff; --s-l2: #d8cdff;
-  --s-d1: #140f33; --s-d2: #1d1245; --s-lite: #b9a8ff; --s-pd: #1a1440;
+  --s-a: #7c5cd6; --s-b: #5b3fd9; --s-l1: #f1eafe; --s-l2: #e3d7fb;
+  --s-d1: #181133; --s-d2: #211848; --s-lite: #b9a4fa; --s-pd: #1d1640;
+}
+[data-subject="azul"] {
+  --s-a: #3a74b8; --s-b: #2f5f96; --s-l1: #eaf3fd; --s-l2: #d5e7fa;
+  --s-d1: #0f1a2b; --s-d2: #14233b; --s-lite: #9cc5f0; --s-pd: #13213a;
 }
 [data-subject="vermelho"] {
-  --s-a: #d62828; --s-b: #9c1a1a; --s-l1: #ffe6e6; --s-l2: #ffd0d0;
-  --s-d1: #2a0f12; --s-d2: #3a1015; --s-lite: #ff9a9a; --s-pd: #2a1216;
+  --s-a: #c2487f; --s-b: #9e3566; --s-l1: #fdeef5; --s-l2: #fadcea;
+  --s-d1: #2a1020; --s-d2: #3a1530; --s-lite: #f4a6c8; --s-pd: #2b1424;
 }
 [data-subject="grafite"] {
-  --s-a: #2a2e44; --s-b: #05060f; --s-l1: #eceef5; --s-l2: #d9dce8;
-  --s-d1: #0a0b10; --s-d2: #12141c; --s-lite: #c9ced9; --s-pd: #14161f;
+  --s-a: #3a3355; --s-b: #1e1a33; --s-l1: #f0eef5; --s-l2: #e0dcea;
+  --s-d1: #0e0c18; --s-d2: #151223; --s-lite: #c9c3dc; --s-pd: #17142a;
 }
 
 /* Como a paleta da matéria vira cores do painel */
@@ -173,36 +204,34 @@
 }
 
 /* Amostras de cor do seletor */
-.swatch[data-k="azul"] { background: var(--c-blue-600); }
-.swatch[data-k="roxo"] { background: var(--c-purple-600); }
-.swatch[data-k="vermelho"] { background: var(--c-red-600); }
-.swatch[data-k="grafite"] { background: #2a2e44; }
+.swatch[data-k="roxo"] { background: #7c5cd6; }
+.swatch[data-k="azul"] { background: #3a74b8; }
+.swatch[data-k="vermelho"] { background: #c2487f; }
+.swatch[data-k="grafite"] { background: #3a3355; }
 
 /* 4) NAVBAR, BOTÕES E CARTÕES INTERATIVOS --------------------------------- */
 :root {
   --nav-bg: var(--c-white);
   --nav-fg: var(--c-ink-900);
-  --nav-glow: var(--c-blue-100);
-  --nav-active-fg: var(--c-blue-600);
+  --nav-glow: var(--c-primary-100);
+  --nav-active-fg: var(--c-primary-600);
   --spot: var(--c-overlay-white-30);          /* brilho que segue o mouse nos botões */
   --btn-light-bg: var(--c-white);
-  --btn-light-fg: var(--c-blue-600);
-  --btn-light-hover-bg: var(--c-blue-100);
+  --btn-light-fg: var(--c-primary-600);
+  --btn-light-hover-bg: var(--c-primary-50);
   --card-bg: var(--surface);
   --card-edge: var(--surface-border);
-  --card-edge-hover: var(--c-blue-600);
-  --icon-chip-bg: var(--c-blue-100);
-  --icon-chip-fg: var(--c-blue-600);
+  --card-edge-hover: var(--c-primary-600);
+  --icon-chip-bg: var(--c-primary-100);
+  --icon-chip-fg: var(--c-primary-600);
 }
 [data-theme="dark"] {
   --nav-bg: var(--c-night-800);
-  --nav-fg: #f2f4ff;
+  --nav-fg: #f3efff;
   --nav-glow: var(--c-night-line);
-  --nav-active-fg: var(--c-blue-200);
-  --btn-light-hover-bg: var(--c-blue-100);
-  --card-edge-hover: var(--c-blue-300);
+  --nav-active-fg: var(--c-primary-200);
+  --btn-light-hover-bg: var(--c-primary-100);
+  --card-edge-hover: var(--c-primary-300);
   --icon-chip-bg: var(--c-night-800);
-  --icon-chip-fg: var(--c-blue-300);
+  --icon-chip-fg: var(--c-primary-300);
 }
-
-:root { --c-red-800: #9c1a1a; }
