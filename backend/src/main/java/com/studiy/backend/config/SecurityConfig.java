@@ -1,6 +1,7 @@
 package com.studiy.backend.config;
 
 import com.studiy.backend.security.JwtAuthFilter;
+import com.studiy.backend.security.RateLimitFilter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -39,15 +40,18 @@ public class SecurityConfig {
     private static final String JSON_403 = "{\"erro\":\"Acesso negado\"}";
 
     private final JwtAuthFilter jwtAuthFilter;
+    private final RateLimitFilter rateLimitFilter;
     private final List<String> origensPermitidas;
     private final boolean cookieSecure;
 
     public SecurityConfig(
             JwtAuthFilter jwtAuthFilter,
+            RateLimitFilter rateLimitFilter,
             @Value("${studiy.cors.origins}") String origens,
             @Value("${studiy.auth.cookie-secure:true}") boolean cookieSecure
     ) {
         this.jwtAuthFilter = jwtAuthFilter;
+        this.rateLimitFilter = rateLimitFilter;
         this.origensPermitidas = Arrays.stream(origens.split(",")).map(String::trim).filter(s -> !s.isBlank()).toList();
         this.cookieSecure = cookieSecure;
     }
@@ -95,7 +99,9 @@ public class SecurityConfig {
                 .exceptionHandling(e -> e
                         .authenticationEntryPoint((req, res, ex) -> escrever(res, 401, JSON_401))
                         .accessDeniedHandler((req, res, ex) -> escrever(res, 403, JSON_403)))
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                // depois do JWT: o limite "por usuário" enxerga o usuário autenticado
+                .addFilterAfter(rateLimitFilter, JwtAuthFilter.class);
 
         return http.build();
     }
