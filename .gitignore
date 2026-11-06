@@ -10,3 +10,4 @@ target/
 *.pem
 encriptionKey*
 encryptionKey*
+build/

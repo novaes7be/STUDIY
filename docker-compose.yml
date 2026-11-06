@@ -29,15 +29,18 @@ services:
     restart: unless-stopped
 
   web:
-    image: caddy:2
+    build:
+      context: .
+      dockerfile: deploy/web.Dockerfile
+      args:
+        API_ORIGIN: ${API_ORIGIN:-}
     environment:
       DOMAIN: ${DOMAIN:-localhost}
+      API_ORIGIN: ${API_ORIGIN:-}
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
-      - ./frontend:/srv:ro
       - caddy_data:/data
     depends_on:
       - api
