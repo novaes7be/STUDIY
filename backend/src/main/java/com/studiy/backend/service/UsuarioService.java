@@ -75,7 +75,9 @@ public class UsuarioService {
                 gamificacaoService.status(u),
                 u.getAvatar(),
                 u.isEmailVerificado(),
-                !u.isOnboardingConcluido());
+                !u.isOnboardingConcluido(),
+                u.getPapel() == com.studiy.backend.model.Papel.ADMIN,
+                u.isMfaAtivo());
     }
 
     public PerfilResponse concluirOnboarding(Usuario u) {

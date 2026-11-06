@@ -22,5 +22,7 @@ public record PerfilResponse(
         GamificacaoResponse gamificacao,
         String avatar,
         boolean emailVerificado,
-        boolean onboardingPendente
+        boolean onboardingPendente,
+        boolean admin,
+        boolean mfaAtivo
 ) {}

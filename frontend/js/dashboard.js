@@ -335,6 +335,9 @@
     $('#dlgEmail').textContent = p.email;
     pintarAvatar($('#dlgAvatar'), p);
     $('#avatarDel').hidden = !p.avatar;
+    if (p.admin && !$('#adminLink')) { // o servidor diz quem é admin; o painel em si exige MFA
+      $('#sideName').after(h('a', { id: 'adminLink', class: 'btn btn-ghost btn-sm', href: 'admin.html', text: 'Admin' }));
+    }
   }
   function accMsg(texto, ok) {
     var m = $('#accMsg');

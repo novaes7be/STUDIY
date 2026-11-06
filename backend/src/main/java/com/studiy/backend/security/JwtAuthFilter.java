@@ -1,6 +1,8 @@
 package com.studiy.backend.security;
 
+import com.studiy.backend.model.Papel;
 import com.studiy.backend.model.Usuario;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import com.studiy.backend.repository.UsuarioRepository;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
@@ -14,7 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.List;
 
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
@@ -44,11 +46,23 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 Integer versaoToken = claims.get("tv", Integer.class);
                 // Token só vale se a versão bater (logout/troca de senha invalidam tokens antigos).
                 if (usuario != null && versaoToken != null && versaoToken.equals(usuario.getTokenVersion())) {
-                    var auth = new UsernamePasswordAuthenticationToken(usuario.getEmail(), null, Collections.emptyList());
+                    var auth = new UsernamePasswordAuthenticationToken(usuario.getEmail(), null, papeis(usuario, claims));
                     SecurityContextHolder.getContext().setAuthentication(auth);
                 }
             }
         }
         filterChain.doFilter(request, response);
+    }
+
+    /**
+     * ROLE_ADMIN só existe se as TRÊS coisas forem verdade: papel ADMIN no banco (lido agora, não do token),
+     * MFA ativo na conta e esta sessão ter passado pelo TOTP. Senha sozinha nunca dá acesso de admin.
+     */
+    static List<SimpleGrantedAuthority> papeis(Usuario usuario, Claims claims) {
+        boolean sessaoComMfa = Boolean.TRUE.equals(claims.get("mfa", Boolean.class));
+        if (usuario.getPapel() == Papel.ADMIN && usuario.isMfaAtivo() && sessaoComMfa) {
+            return List.of(new SimpleGrantedAuthority("ROLE_USUARIO"), new SimpleGrantedAuthority("ROLE_ADMIN"));
+        }
+        return List.of(new SimpleGrantedAuthority("ROLE_USUARIO"));
     }
 }

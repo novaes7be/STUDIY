@@ -51,10 +51,16 @@ public class SessaoService {
         this.duracaoRefresh = Duration.ofDays(refreshDias);
     }
 
-    /** Login (ou troca de senha/e-mail): nova família de refresh e novo token de acesso. */
+    /** Login (ou troca de senha/e-mail): nova família de refresh e novo token de acesso, sem MFA. */
     @Transactional
     public void emitir(Usuario usuario, HttpServletResponse res) {
-        emitir(usuario, UUID.randomUUID().toString(), res);
+        emitir(usuario, UUID.randomUUID().toString(), false, res);
+    }
+
+    /** Depois de verificar o TOTP: sessão nova (nova família) marcada com MFA. */
+    @Transactional
+    public void emitirComMfa(Usuario usuario, HttpServletResponse res) {
+        emitir(usuario, UUID.randomUUID().toString(), true, res);
     }
 
     /** Troca o refresh token por um novo (mesma família) e emite novo token de acesso. */
@@ -75,7 +81,7 @@ public class SessaoService {
         }
         atual.setUsadoEm(LocalDateTime.now());
         repo.save(atual);
-        emitir(atual.getUsuario(), atual.getFamilia(), res);
+        emitir(atual.getUsuario(), atual.getFamilia(), atual.isMfa(), res);
         return atual.getUsuario();
     }
 
@@ -98,7 +104,7 @@ public class SessaoService {
         return null;
     }
 
-    private void emitir(Usuario usuario, String familia, HttpServletResponse res) {
+    private void emitir(Usuario usuario, String familia, boolean mfa, HttpServletResponse res) {
         byte[] bytes = new byte[32];
         random.nextBytes(bytes);
         String refresh = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
@@ -107,11 +113,12 @@ public class SessaoService {
                 .usuario(usuario)
                 .tokenHash(sha256(refresh))
                 .familia(familia)
+                .mfa(mfa)
                 .criadoEm(agora)
                 .expiraEm(agora.plus(duracaoRefresh))
                 .build());
 
-        String acesso = jwtUtil.gerarToken(usuario.getEmail(), usuario.getTokenVersion());
+        String acesso = jwtUtil.gerarToken(usuario.getEmail(), usuario.getTokenVersion(), mfa);
         res.addHeader(HttpHeaders.SET_COOKIE,
                 cookie(COOKIE_ACESSO, acesso, "/api", Duration.ofMillis(jwtUtil.getExpirationMs())).toString());
         res.addHeader(HttpHeaders.SET_COOKIE, cookie(COOKIE_REFRESH, refresh, "/api/auth", duracaoRefresh).toString());

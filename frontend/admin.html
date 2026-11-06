@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- CSP gerada por deploy/build-front.sh (connect-src por ambiente) -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self' __API_ORIGIN__; object-src 'none'; base-uri 'none'; form-action 'self'">
+<meta name="referrer" content="no-referrer">
+<title>Admin — Studiy</title>
+<link rel="preload" href="fonts/plus-jakarta-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/admin.css">
+<script src="js/theme.js"></script>
+</head>
+<body data-page="admin">
+<main class="auth admin">
+  <div class="auth-card admin-card">
+    <a class="btn btn-ghost btn-sm back-home" href="dashboard.html">Voltar ao painel</a>
+    <h1>Administração</h1>
+    <div id="msg" class="msg" role="alert" aria-live="assertive" hidden></div>
+
+    <!-- Segundo fator: configurar (primeira vez) ou verificar (a cada sessão) -->
+    <section id="mfa" hidden>
+      <p class="sub" id="mfaTexto"></p>
+      <div id="mfaSetup" hidden>
+        <p class="hint">No app autenticador, adicione uma conta com esta chave (ou use o link otpauth):</p>
+        <p><code id="mfaSegredo" class="admin-code"></code></p>
+        <p><code id="mfaUri" class="admin-code"></code></p>
+      </div>
+      <form id="mfaForm" novalidate>
+        <div class="field"><label for="codigo">Código de 6 dígitos</label><input id="codigo" inputmode="numeric" autocomplete="one-time-code" pattern="\d{6}" maxlength="6" required></div>
+        <button class="btn btn-grad btn-block" type="submit">Confirmar</button>
+      </form>
+    </section>
+
+    <!-- Dados (somente leitura, já formatados pela API) -->
+    <section id="dados" hidden>
+      <nav class="admin-tabs" aria-label="Seções">
+        <button class="btn btn-ghost btn-sm" type="button" data-aba="usuarios" aria-pressed="true">Usuários</button>
+        <button class="btn btn-ghost btn-sm" type="button" data-aba="pedidos" aria-pressed="false">Pedidos</button>
+        <button class="btn btn-ghost btn-sm" type="button" data-aba="uso-ia" aria-pressed="false">Uso de IA</button>
+      </nav>
+      <p class="hint" id="resumo"></p>
+      <div class="admin-table-wrap"><table class="admin-table" id="tabela"></table></div>
+      <div class="admin-pager">
+        <button class="btn btn-ghost btn-sm" type="button" id="anterior">Anterior</button>
+        <span id="paginaInfo"></span>
+        <button class="btn btn-ghost btn-sm" type="button" id="proxima">Próxima</button>
+      </div>
+    </section>
+  </div>
+</main>
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>

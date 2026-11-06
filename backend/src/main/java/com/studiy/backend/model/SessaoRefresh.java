@@ -39,6 +39,10 @@ public class SessaoRefresh {
     @Column(nullable = false)
     private LocalDateTime expiraEm;
 
+    /** A sessão passou pelo segundo fator (TOTP); as renovações herdam. */
+    @Column(nullable = false)
+    private boolean mfa;
+
     /** Preenchido quando o token é trocado por um novo; usar de novo = roubo provável. */
     private LocalDateTime usadoEm;
 }

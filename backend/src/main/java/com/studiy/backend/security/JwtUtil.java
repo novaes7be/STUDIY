@@ -32,12 +32,13 @@ public class JwtUtil {
         return expirationMs;
     }
 
-    /** O claim "tv" (token version) permite revogar todas as sessões de um usuário. */
-    public String gerarToken(String email, int tokenVersion) {
+    /** "tv" (token version) permite revogar todas as sessões; "mfa" diz se o segundo fator foi verificado. */
+    public String gerarToken(String email, int tokenVersion, boolean mfa) {
         Date agora = new Date();
         return Jwts.builder()
                 .subject(email)
                 .claim("tv", tokenVersion)
+                .claim("mfa", mfa)
                 .issuedAt(agora)
                 .expiration(new Date(agora.getTime() + expirationMs))
                 .signWith(secretKey)

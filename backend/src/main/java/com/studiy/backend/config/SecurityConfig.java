@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.lang.NonNull;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -34,6 +35,7 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private static final String JSON_401 = "{\"erro\":\"Não autenticado\"}";
@@ -94,6 +96,8 @@ public class SecurityConfig {
                         // Webhook do Mercado Pago: público, mas o serviço só aceita x-signature válido
                         .requestMatchers(HttpMethod.POST, "/api/pagamentos/webhook").permitAll()
                         .requestMatchers("/error").permitAll()
+                        // Admin: papel ADMIN + sessão verificada por TOTP (veja JwtAuthFilter.papeis)
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         // Tudo o mais exige sessão válida (negado por padrão).
                         .anyRequest().authenticated())
                 .exceptionHandling(e -> e

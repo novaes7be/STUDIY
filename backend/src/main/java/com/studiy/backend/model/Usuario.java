@@ -59,6 +59,20 @@ public class Usuario {
     private LocalDateTime termosAceitosEm;
     private String termosVersao;
 
+    // Papel e segundo fator (TOTP). Promoção a ADMIN só direto no banco; segredo cifrado em repouso.
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    @Column(nullable = false)
+    private Papel papel = Papel.USUARIO;
+    @Convert(converter = com.studiy.backend.config.CriptoConverter.class)
+    @Column(columnDefinition = "TEXT")
+    private String mfaSegredo;
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean mfaAtivo = false;
+    /** Último passo TOTP aceito: o mesmo código não vale duas vezes. */
+    private Long mfaUltimoPasso;
+
     // Bloqueio progressivo após falhas de login
     @Builder.Default
     @Column(nullable = false)
