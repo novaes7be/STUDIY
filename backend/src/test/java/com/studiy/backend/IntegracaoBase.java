@@ -89,7 +89,7 @@ public abstract class IntegracaoBase {
     }
 
     protected JsonNode ler(MvcResult r) throws Exception {
-        return json.readTree(r.getResponse().getContentAsString());
+        return json.readTree(r.getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8));
     }
 
     protected void cadastrar(String email) throws Exception {

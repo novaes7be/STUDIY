@@ -1,8 +1,7 @@
-/* Onboarding do primeiro acesso: 3 passos, aparece uma vez por navegador. */
+/* Onboarding do primeiro acesso: 3 passos. QUEM decide se aparece é o backend (perfil.onboardingPendente);
+   o dashboard chama window.studiyOnboarding(aoConcluir) e, ao fechar, avisa a API. */
 (function () {
   'use strict';
-  var KEY = 'studiy_onboarding_v1';
-  try { if (localStorage.getItem(KEY)) return; } catch (e) { return; }
 
   var passos = [
     ['Crie uma matéria', 'Clique em “Nova matéria” e escolha uma cor para ela.'],
@@ -17,6 +16,7 @@
     return n;
   }
 
+  window.studiyOnboarding = function (aoConcluir) {
   var anterior = document.activeElement;
   var back = el('div', 'onb-back');
   var box = el('div', 'onb');
@@ -48,7 +48,7 @@
   back.appendChild(box);
 
   function fechar() {
-    try { localStorage.setItem(KEY, '1'); } catch (e) { /* sem armazenamento: aparece de novo, sem problema */ }
+    if (aoConcluir) aoConcluir();
     document.removeEventListener('keydown', teclado);
     back.remove();
     if (anterior && anterior.focus) anterior.focus();
@@ -62,4 +62,5 @@
   document.addEventListener('keydown', teclado);
   document.body.appendChild(back);
   ok.focus();
+  };
 })();

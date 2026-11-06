@@ -8,16 +8,13 @@
   var pedidoId = params.get('pedido');
   var simulado = params.get('simulado') === '1';
 
-  function brl(centavos) {
-    return (centavos / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  }
   function msg(texto) { var m = $('#payMsg'); m.textContent = texto; m.hidden = false; }
 
   /* ---------- Escolha do método ---------- */
   async function carregarConfig() {
     try {
       var c = await api.get('/api/pagamentos/config');
-      $('#priceValue').textContent = brl(c.precoCentavos);
+      $('#priceValue').textContent = c.precoFormatado;
       $('#priceDays').textContent = '/ ' + c.dias + ' dias';
       $('#daysText').textContent = c.dias;
     } catch (e) { /* mantém o texto padrão */ }
@@ -31,9 +28,8 @@
     var botao = $('#payForm button[type="submit"]');
     botao.disabled = true;
     try {
-      // pasta atual do site (ex.: http://127.0.0.1:5500/STUDIY/src); o servidor só aceita origens permitidas
-      var retornoUrl = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '');
-      var r = await api.post('/api/pagamentos/checkout', { metodo: metodo, retornoUrl: retornoUrl });
+      // Preço, plano e endereço de volta são decididos pelo servidor; aqui só vai o método.
+      var r = await api.post('/api/pagamentos/checkout', { metodo: metodo });
       var destino = new URL(r.url);
       if (destino.protocol !== 'https:' && destino.protocol !== 'http:') throw new Error('Endereço de pagamento inválido.');
       window.location.assign(destino.href);

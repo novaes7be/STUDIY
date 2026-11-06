@@ -59,7 +59,7 @@ class CadastroIT extends IntegracaoBase {
                         .content(corpo(Map.of("pdfId", 999999, "tipo", "RESUMO"))))
                 .andExpect(status().isForbidden());
         mvc.perform(s.em(post("/api/pagamentos/checkout")).contentType(MediaType.APPLICATION_JSON)
-                        .content(corpo(Map.of("metodo", "PIX", "retornoUrl", "http://localhost:5500"))))
+                        .content(corpo(Map.of("metodo", "PIX"))))
                 .andExpect(status().isForbidden());
 
         // Confirma o e-mail com o token que teria ido por e-mail
@@ -73,7 +73,7 @@ class CadastroIT extends IntegracaoBase {
                         .content(corpo(Map.of("pdfId", 999999, "tipo", "RESUMO"))))
                 .andExpect(status().isNotFound());
         mvc.perform(s.em(post("/api/pagamentos/checkout")).contentType(MediaType.APPLICATION_JSON)
-                        .content(corpo(Map.of("metodo", "PIX", "retornoUrl", "http://localhost:5500"))))
+                        .content(corpo(Map.of("metodo", "PIX"))))
                 .andExpect(status().isOk());
 
         // Token de verificação é de uso único

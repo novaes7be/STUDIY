@@ -92,6 +92,7 @@ public class AuthService {
                 .termosAceitosEm(LocalDateTime.now())
                 .termosVersao(versaoTermos)
                 .emailVerificado(false)
+                .onboardingConcluido(false)
                 .build();
         try {
             usuarioRepository.saveAndFlush(usuario);

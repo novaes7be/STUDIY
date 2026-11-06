@@ -60,7 +60,7 @@ public class FlashcardService {
         materiaService.buscarDoUsuario(usuario, materiaId);
         Flashcard f = buscar(materiaId, flashcardId);
 
-        int qualidade = request.qualidade();
+        int qualidade = request.resposta().qualidade();
 
         if (qualidade < 3) {
             f.setRepeticoes(0);

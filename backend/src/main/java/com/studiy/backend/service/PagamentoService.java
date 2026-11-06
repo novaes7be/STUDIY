@@ -18,7 +18,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
@@ -59,7 +58,7 @@ public class PagamentoService {
     private final boolean simulacao;
     private final String segredoWebhook;
     private final String apiPublica;
-    private final CorsConfiguration origensPermitidas = new CorsConfiguration();
+    private final String frontUrl;
 
     public PagamentoService(
             PedidoRepository pedidoRepository,
@@ -71,7 +70,7 @@ public class PagamentoService {
             @Value("${studiy.pagamento.simulacao:false}") boolean simulacao,
             @Value("${studiy.pagamento.mp.webhook-secret:}") String segredoWebhook,
             @Value("${studiy.pagamento.api-publica:}") String apiPublica,
-            @Value("${studiy.cors.origins}") String origens
+            @Value("${studiy.front.url}") String frontUrl
     ) {
         this.pedidoRepository = pedidoRepository;
         this.usuarioRepository = usuarioRepository;
@@ -82,22 +81,26 @@ public class PagamentoService {
         this.simulacao = simulacao;
         this.segredoWebhook = segredoWebhook == null ? "" : segredoWebhook.trim();
         this.apiPublica = apiPublica == null ? "" : apiPublica.trim();
-        this.origensPermitidas.setAllowedOriginPatterns(
-                Arrays.stream(origens.split(",")).map(String::trim).filter(s -> !s.isBlank()).toList());
+        this.frontUrl = frontUrl.trim().replaceAll("/+$", "");
     }
 
     public ConfigResponse config() {
-        return new ConfigResponse(precoCentavos, dias, simulacao && !mp.configurado());
+        return new ConfigResponse(precoCentavos, formatarBrl(precoCentavos), dias, simulacao && !mp.configurado());
+    }
+
+    static String formatarBrl(int centavos) {
+        return java.text.NumberFormat.getCurrencyInstance(java.util.Locale.forLanguageTag("pt-BR"))
+                .format(BigDecimal.valueOf(centavos, 2)).replace('\u00a0', ' ');
     }
 
     /** Cria o pedido e devolve para onde enviar o usuário (checkout do Mercado Pago ou tela de simulação). */
-    public CheckoutResponse criarCheckout(Usuario usuario, MetodoPagamento metodo, String retornoUrl) {
+    public CheckoutResponse criarCheckout(Usuario usuario, MetodoPagamento metodo) {
         AuthService.exigirEmailVerificado(usuario);
         boolean gateway = mp.configurado();
         if (!gateway && !simulacao) {
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Pagamento indisponível no momento.");
         }
-        String base = validarRetorno(retornoUrl);
+        String base = frontUrl; // nunca vem do cliente: sem redirecionamento aberto
 
         Pedido pedido = pedidoRepository.save(Pedido.builder()
                 .id(UUID.randomUUID().toString())
@@ -254,26 +257,6 @@ public class PagamentoService {
     }
 
     /** O front informa a pasta onde está; só aceitamos origens da lista de CORS (evita redirecionamento para sites de terceiros). */
-    private String validarRetorno(String retorno) {
-        if (retorno == null || retorno.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Endereço de retorno ausente");
-        }
-        try {
-            URI uri = URI.create(retorno.trim());
-            String esquema = uri.getScheme();
-            boolean ok = ("http".equals(esquema) || "https".equals(esquema))
-                    && uri.getRawAuthority() != null && uri.getUserInfo() == null
-                    && uri.getRawQuery() == null && uri.getRawFragment() == null;
-            String origem = ok ? esquema + "://" + uri.getRawAuthority() : null;
-            if (origem == null || origensPermitidas.checkOrigin(origem) == null) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Endereço de retorno não permitido");
-            }
-            String caminho = uri.getRawPath() == null ? "" : uri.getRawPath().replaceAll("/+$", "");
-            return origem + caminho;
-        } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Endereço de retorno inválido");
-        }
-    }
 
     private Map<String, Object> preferencia(Pedido p, Usuario u, String voltar) {
         Map<String, Object> item = new LinkedHashMap<>();

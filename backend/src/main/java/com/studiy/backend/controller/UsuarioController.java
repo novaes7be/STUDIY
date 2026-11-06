@@ -55,6 +55,12 @@ public class UsuarioController {
         return AuthResponse.de(u);
     }
 
+    /** Marca o onboarding do primeiro acesso como visto (o backend decide quando mostrar). */
+    @PostMapping("/onboarding")
+    public PerfilResponse concluirOnboarding(Authentication auth) {
+        return usuarioService.concluirOnboarding(usuarioAtual.resolver(auth));
+    }
+
     @PutMapping("/avatar")
     public PerfilResponse avatar(Authentication auth, @Valid @RequestBody PerfilDtos.AvatarRequest request) {
         return usuarioService.definirAvatar(usuarioAtual.resolver(auth), request.avatar());

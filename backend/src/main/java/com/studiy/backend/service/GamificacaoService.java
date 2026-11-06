@@ -47,6 +47,8 @@ public class GamificacaoService {
     public GamificacaoResponse status(Usuario usuario) {
         int xpNoNivel = usuario.getXp() % XP_POR_NIVEL;
         int faltam = XP_POR_NIVEL - xpNoNivel;
-        return new GamificacaoResponse(usuario.getXp(), usuario.getNivel(), usuario.getStreakAtual(), faltam);
+        int percentual = xpNoNivel * 100 / XP_POR_NIVEL;
+        return new GamificacaoResponse(usuario.getXp(), usuario.getNivel(), usuario.getStreakAtual(),
+                xpNoNivel, faltam, percentual);
     }
 }

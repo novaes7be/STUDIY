@@ -52,11 +52,9 @@
     form.addEventListener('submit', function (ev) {
       ev.preventDefault();
       enviar(async function () {
-        if (!document.getElementById('aceito').checked) {
-          throw new Error('É preciso aceitar os Termos e a Política de Privacidade.');
-        }
+        // O aceite vai como foi marcado; quem recusa o cadastro sem aceite é o servidor.
         var resp = await api.post('/api/auth/registrar', {
-          nome: v('nome'), email: v('email'), senha: v('senha'), aceitoTermos: true
+          nome: v('nome'), email: v('email'), senha: v('senha'), aceitoTermos: document.getElementById('aceito').checked
         }, false);
         // Resposta sempre genérica (o servidor não revela se o e-mail já tem conta): só exibe a mensagem.
         form.reset();

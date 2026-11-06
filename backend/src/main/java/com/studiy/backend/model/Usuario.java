@@ -65,6 +65,11 @@ public class Usuario {
     private int falhasLogin = 0;
     private LocalDateTime bloqueadoAte;
 
+    // Onboarding do primeiro acesso (contas antigas já nascem concluídas; o cadastro grava false)
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean onboardingConcluido = true;
+
     // Verificação de e-mail (contas antigas já nascem verificadas).
     @Builder.Default
     @Column(nullable = false)

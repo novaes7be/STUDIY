@@ -28,7 +28,7 @@ public class PagamentoController {
 
     @PostMapping("/checkout")
     public PagamentoDtos.CheckoutResponse checkout(Authentication auth, @Valid @RequestBody PagamentoDtos.CheckoutRequest request) {
-        return pagamentoService.criarCheckout(usuarioAtual.resolver(auth), request.metodo(), request.retornoUrl());
+        return pagamentoService.criarCheckout(usuarioAtual.resolver(auth), request.metodo());
     }
 
     @GetMapping("/{id}")

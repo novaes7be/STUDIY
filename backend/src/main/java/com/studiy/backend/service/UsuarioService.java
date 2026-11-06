@@ -2,6 +2,7 @@ package com.studiy.backend.service;
 
 import com.studiy.backend.dto.PerfilResponse;
 import com.studiy.backend.model.Materia;
+import com.studiy.backend.model.Plano;
 import com.studiy.backend.model.Usuario;
 import com.studiy.backend.repository.FlashcardRepository;
 import com.studiy.backend.repository.MateriaRepository;
@@ -56,16 +57,31 @@ public class UsuarioService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    private static final String REGRA_USO =
+            "Cada resumo ou conjunto de flashcards conta como 1 geração do mês. Enviar PDFs e revisar cartões é ilimitado.";
+
     public PerfilResponse perfil(Usuario u) {
-        var gam = gamificacaoService.status(u);
+        Plano plano = u.planoEfetivo();
+        boolean pro = plano == Plano.PREMIUM;
+        int usados = usoMensalService.buscarOuCriar(u).getPdfsUsados();
+        int limite = usoMensalService.limiteDoPlano(plano);
+        int percentual = limite <= 0 ? 100 : Math.min(100, Math.round(100f * usados / limite));
         return new PerfilResponse(
-                u.getNome(), u.getEmail(), u.planoEfetivo(),
-                usoMensalService.buscarOuCriar(u).getPdfsUsados(),
-                usoMensalService.limiteDoPlano(u.planoEfetivo()),
-                gam.xp(), gam.nivel(), gam.streakAtual(), gam.xpParaProximoNivel(),
+                u.getNome(), u.getEmail(), plano,
+                pro ? "Plano Pro" : "Plano Grátis",
+                pro ? "Renovar" : "Assinar Pro",
+                pro ? u.getPlanoExpiraEm() : null,
+                usados, limite, percentual, REGRA_USO,
+                gamificacaoService.status(u),
                 u.getAvatar(),
-                u.planoEfetivo() == com.studiy.backend.model.Plano.PREMIUM ? u.getPlanoExpiraEm() : null,
-                u.isEmailVerificado());
+                u.isEmailVerificado(),
+                !u.isOnboardingConcluido());
+    }
+
+    public PerfilResponse concluirOnboarding(Usuario u) {
+        u.setOnboardingConcluido(true);
+        usuarioRepository.save(u);
+        return perfil(u);
     }
 
     /* ---------------- Edição de conta ---------------- */
