@@ -4,3 +4,10 @@ target/
 *.iml
 .env
 .DS_Store
+.env.*
+!.env.example
+*.key
+*.pem
+encriptionKey*
+encryptionKey*
+build/

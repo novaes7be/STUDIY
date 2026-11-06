@@ -3,18 +3,18 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' http://localhost:8080 http://127.0.0.1:8080; base-uri 'none'; form-action 'self'">
+<!-- CSP gerada por deploy/build-front.sh (connect-src por ambiente) -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self' __API_ORIGIN__; object-src 'none'; base-uri 'none'; form-action 'self'">
 <meta name="referrer" content="no-referrer">
 <title>Painel — Studiy</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&amp;display=swap">
+<link rel="preload" href="fonts/plus-jakarta-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/fonts.css">
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/style.css">
 <script src="js/theme.js"></script>
 </head>
 <body>
-<div class="app" id="app" data-subject="azul">
+<div class="app" id="app" data-subject="roxo">
   <aside class="side" aria-label="Menu lateral">
     <a class="logo" href="index.html">Studiy</a>
     <a class="home-link" href="index.html">← Voltar para a home</a>
@@ -120,5 +120,6 @@
 <script src="js/api.js"></script>
 <script src="js/dashboard.js"></script>
 <script src="js/ui.js"></script>
+<script src="js/onboarding.js"></script>
 </body>
 </html>

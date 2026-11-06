@@ -1,5 +1,6 @@
 package com.studiy.backend.security;
 
+import com.studiy.backend.security.ratelimit.LimitadorLocal;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -8,11 +9,11 @@ class RateLimitFilterTest {
 
     @Test
     void bloqueiaDepoisDoLimiteEIsolaChaves() {
-        RateLimitFilter filtro = new RateLimitFilter(3, 3, 3);
-        assertTrue(filtro.permitir("auth:1.1.1.1", 3));
-        assertTrue(filtro.permitir("auth:1.1.1.1", 3));
-        assertTrue(filtro.permitir("auth:1.1.1.1", 3));
-        assertFalse(filtro.permitir("auth:1.1.1.1", 3));
-        assertTrue(filtro.permitir("auth:2.2.2.2", 3));
+        LimitadorLocal l = new LimitadorLocal();
+        assertTrue(l.consumir("auth:1.1.1.1", 3));
+        assertTrue(l.consumir("auth:1.1.1.1", 3));
+        assertTrue(l.consumir("auth:1.1.1.1", 3));
+        assertFalse(l.consumir("auth:1.1.1.1", 3));
+        assertTrue(l.consumir("auth:2.2.2.2", 3));
     }
 }

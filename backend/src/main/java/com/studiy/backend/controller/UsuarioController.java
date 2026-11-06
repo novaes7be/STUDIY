@@ -4,7 +4,10 @@ import com.studiy.backend.dto.AuthResponse;
 import com.studiy.backend.dto.ExcluirContaRequest;
 import com.studiy.backend.dto.PerfilDtos;
 import com.studiy.backend.dto.PerfilResponse;
+import com.studiy.backend.model.Usuario;
+import com.studiy.backend.security.SessaoService;
 import com.studiy.backend.security.UsuarioAtual;
+import jakarta.servlet.http.HttpServletResponse;
 import com.studiy.backend.service.UsuarioService;
 import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
@@ -18,10 +21,12 @@ public class UsuarioController {
 
     private final UsuarioService usuarioService;
     private final UsuarioAtual usuarioAtual;
+    private final SessaoService sessaoService;
 
-    public UsuarioController(UsuarioService usuarioService, UsuarioAtual usuarioAtual) {
+    public UsuarioController(UsuarioService usuarioService, UsuarioAtual usuarioAtual, SessaoService sessaoService) {
         this.usuarioService = usuarioService;
         this.usuarioAtual = usuarioAtual;
+        this.sessaoService = sessaoService;
     }
 
     @GetMapping
@@ -35,13 +40,25 @@ public class UsuarioController {
     }
 
     @PutMapping("/email")
-    public AuthResponse alterarEmail(Authentication auth, @Valid @RequestBody PerfilDtos.EmailRequest request) {
-        return usuarioService.alterarEmail(usuarioAtual.resolver(auth), request.novoEmail(), request.senha());
+    public AuthResponse alterarEmail(Authentication auth, @Valid @RequestBody PerfilDtos.EmailRequest request,
+                                     HttpServletResponse res) {
+        Usuario u = usuarioService.alterarEmail(usuarioAtual.resolver(auth), request.novoEmail(), request.senha());
+        sessaoService.emitir(u, res); // as outras sessões caíram; esta continua com cookies novos
+        return AuthResponse.de(u);
     }
 
     @PutMapping("/senha")
-    public AuthResponse alterarSenha(Authentication auth, @Valid @RequestBody PerfilDtos.SenhaRequest request) {
-        return usuarioService.alterarSenha(usuarioAtual.resolver(auth), request.senhaAtual(), request.novaSenha());
+    public AuthResponse alterarSenha(Authentication auth, @Valid @RequestBody PerfilDtos.SenhaRequest request,
+                                     HttpServletResponse res) {
+        Usuario u = usuarioService.alterarSenha(usuarioAtual.resolver(auth), request.senhaAtual(), request.novaSenha());
+        sessaoService.emitir(u, res);
+        return AuthResponse.de(u);
+    }
+
+    /** Marca o onboarding do primeiro acesso como visto (o backend decide quando mostrar). */
+    @PostMapping("/onboarding")
+    public PerfilResponse concluirOnboarding(Authentication auth) {
+        return usuarioService.concluirOnboarding(usuarioAtual.resolver(auth));
     }
 
     @PutMapping("/avatar")
@@ -55,7 +72,8 @@ public class UsuarioController {
     }
 
     @DeleteMapping
-    public void excluir(Authentication auth, @Valid @RequestBody ExcluirContaRequest request) {
+    public void excluir(Authentication auth, @Valid @RequestBody ExcluirContaRequest request, HttpServletResponse res) {
         usuarioService.excluirConta(usuarioAtual.resolver(auth), request.senha());
+        sessaoService.limparCookies(res);
     }
 }

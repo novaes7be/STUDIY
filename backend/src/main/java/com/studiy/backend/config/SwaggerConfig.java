@@ -1,10 +1,7 @@
 package com.studiy.backend.config;
 
-import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
-import io.swagger.v3.oas.models.security.SecurityRequirement;
-import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -13,18 +10,17 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
-/** Documentação da API (Swagger UI em /swagger-ui.html). Só existe fora do perfil prod. */
+/** Documentação da API (Swagger UI em /swagger-ui.html). Só existe no perfil dev. */
 @Configuration
-@Profile("!prod")
+@Profile("dev")
 public class SwaggerConfig {
 
     @Bean
     public OpenAPI studiyOpenApi() {
         return new OpenAPI()
-                .info(new Info().title("Studiy API").version("0.1.0"))
-                .components(new Components().addSecuritySchemes("bearer",
-                        new SecurityScheme().type(SecurityScheme.Type.HTTP).scheme("bearer").bearerFormat("JWT")))
-                .addSecurityItem(new SecurityRequirement().addList("bearer"));
+                .info(new Info().title("Studiy API").version("0.1.0")
+                        .description("Sessão em cookies HttpOnly (studiy_at/studiy_rt). Faça login pelo front em "
+                                + "localhost e as chamadas daqui usam os mesmos cookies; escritas exigem X-XSRF-TOKEN."));
     }
 
     /** Cadeia própria (CSP mais branda) só para a documentação; o restante da API segue a cadeia principal. */

@@ -1,0 +1,2 @@
+# Falso positivo: linha "anthropic.api.model=claude-..." (nome do modelo, não é chave) num commit antigo.
+98bd35d4a2a59a125b97220aa97559e9eb782060:studiy-backend/src/main/resources/application.properties:generic-api-key:42

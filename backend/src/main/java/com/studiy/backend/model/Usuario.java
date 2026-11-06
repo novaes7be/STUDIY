@@ -59,6 +59,38 @@ public class Usuario {
     private LocalDateTime termosAceitosEm;
     private String termosVersao;
 
+    // Papel e segundo fator (TOTP). Promoção a ADMIN só direto no banco; segredo cifrado em repouso.
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    @Column(nullable = false)
+    private Papel papel = Papel.USUARIO;
+    @Convert(converter = com.studiy.backend.config.CriptoConverter.class)
+    @Column(columnDefinition = "TEXT")
+    private String mfaSegredo;
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean mfaAtivo = false;
+    /** Último passo TOTP aceito: o mesmo código não vale duas vezes. */
+    private Long mfaUltimoPasso;
+
+    // Bloqueio progressivo após falhas de login
+    @Builder.Default
+    @Column(nullable = false)
+    private int falhasLogin = 0;
+    private LocalDateTime bloqueadoAte;
+
+    // Onboarding do primeiro acesso (contas antigas já nascem concluídas; o cadastro grava false)
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean onboardingConcluido = true;
+
+    // Verificação de e-mail (contas antigas já nascem verificadas).
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean emailVerificado = true;
+    private String verifTokenHash;
+    private LocalDateTime verifTokenExpira;
+
     // Foto de perfil (data URL já validada e redimensionada), cifrada em repouso
     @jakarta.persistence.Convert(converter = com.studiy.backend.config.CriptoConverter.class)
     @jakarta.persistence.Column(columnDefinition = "TEXT")

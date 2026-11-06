@@ -28,18 +28,12 @@ public class PagamentoController {
 
     @PostMapping("/checkout")
     public PagamentoDtos.CheckoutResponse checkout(Authentication auth, @Valid @RequestBody PagamentoDtos.CheckoutRequest request) {
-        return pagamentoService.criarCheckout(usuarioAtual.resolver(auth), request.metodo(), request.retornoUrl());
+        return pagamentoService.criarCheckout(usuarioAtual.resolver(auth), request.metodo());
     }
 
     @GetMapping("/{id}")
     public PagamentoDtos.PedidoResponse consultar(Authentication auth, @PathVariable String id) {
         return pagamentoService.consultar(usuarioAtual.resolver(auth), id);
-    }
-
-    /** Apenas desenvolvimento: aprova o pedido sem cobrança (desligado quando há credenciais do Mercado Pago). */
-    @PostMapping("/{id}/simular")
-    public PagamentoDtos.PedidoResponse simular(Authentication auth, @PathVariable String id) {
-        return pagamentoService.simular(usuarioAtual.resolver(auth), id);
     }
 
     /** Público, mas só aceita chamadas com x-signature válido do Mercado Pago. */

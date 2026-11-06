@@ -1,6 +1,5 @@
 package com.studiy.backend.service;
 
-import com.studiy.backend.dto.AuthResponse;
 import com.studiy.backend.dto.ForgotPasswordRequest;
 import com.studiy.backend.dto.LoginRequest;
 import com.studiy.backend.dto.RegisterRequest;
@@ -8,11 +7,10 @@ import com.studiy.backend.dto.ResetPasswordRequest;
 import com.studiy.backend.model.Plano;
 import com.studiy.backend.model.Usuario;
 import com.studiy.backend.repository.UsuarioRepository;
-import com.studiy.backend.security.JwtUtil;
+import com.studiy.backend.security.SessaoService;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -29,11 +27,16 @@ import java.util.Locale;
 public class AuthService {
 
     private static final String MSG_GENERICA_RESET = "Se o e-mail existir, as instruções de recuperação foram enviadas.";
+    static final String MSG_GENERICA_CADASTRO =
+            "Pronto! Se o e-mail puder ser usado, enviamos um link para confirmar. Depois é só entrar.";
+    private static final String MSG_GENERICA_VERIF = "Se o e-mail existir e ainda não estiver confirmado, enviamos um novo link.";
 
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
-    private final AuthenticationManager authenticationManager;
-    private final JwtUtil jwtUtil;
+    private final BloqueioLoginService bloqueio;
+    private final String hashFicticio;
+    private final long tempoMinimoLoginMs;
+    private final SessaoService sessaoService;
     private final boolean exporTokenResetDev;
     private final String versaoTermos;
     private final GamificacaoService gamificacaoService;
@@ -43,8 +46,9 @@ public class AuthService {
     public AuthService(
             UsuarioRepository usuarioRepository,
             PasswordEncoder passwordEncoder,
-            AuthenticationManager authenticationManager,
-            JwtUtil jwtUtil,
+            BloqueioLoginService bloqueio,
+            @Value("${studiy.auth.login-tempo-minimo-ms:400}") long tempoMinimoLoginMs,
+            SessaoService sessaoService,
             @Value("${studiy.auth.expor-token-reset-dev}") boolean exporTokenResetDev,
             @Value("${studiy.termos.versao}") String versaoTermos,
             GamificacaoService gamificacaoService,
@@ -52,8 +56,11 @@ public class AuthService {
     ) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
-        this.authenticationManager = authenticationManager;
-        this.jwtUtil = jwtUtil;
+        this.bloqueio = bloqueio;
+        this.tempoMinimoLoginMs = tempoMinimoLoginMs;
+        // Hash bcrypt de uma senha aleatória: comparado quando o e-mail não existe, para o custo ser o mesmo.
+        this.hashFicticio = passwordEncoder.encode(java.util.UUID.randomUUID().toString());
+        this.sessaoService = sessaoService;
         this.exporTokenResetDev = exporTokenResetDev;
         this.versaoTermos = versaoTermos;
         this.gamificacaoService = gamificacaoService;
@@ -64,36 +71,84 @@ public class AuthService {
         return email.trim().toLowerCase(Locale.ROOT);
     }
 
-    public AuthResponse registrar(RegisterRequest request) {
+    /**
+     * Cadastro sem enumeração: a resposta (e o trabalho feito, incluindo o bcrypt) é a mesma para e-mail
+     * novo ou já cadastrado. Quem já tem conta recebe um e-mail avisando; conta nova recebe o link de verificação.
+     * Nenhuma sessão é criada aqui: o usuário entra pelo login.
+     */
+    public String registrar(RegisterRequest request) {
         String email = normalizar(request.email());
-        if (usuarioRepository.existsByEmail(email)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "Não foi possível criar a conta. Se você já tem cadastro, entre ou recupere a senha.");
-        }
+        String senhaHash = passwordEncoder.encode(request.senha()); // sempre, para o tempo não denunciar o caminho
 
+        if (usuarioRepository.existsByEmail(email)) {
+            emailService.enviarAvisoContaExistente(email);
+            return MSG_GENERICA_CADASTRO;
+        }
         Usuario usuario = Usuario.builder()
                 .nome(request.nome().trim())
                 .email(email)
-                .senha(passwordEncoder.encode(request.senha()))
+                .senha(senhaHash)
                 .plano(Plano.FREE) // o plano NUNCA vem do cliente
                 .termosAceitosEm(LocalDateTime.now())
                 .termosVersao(versaoTermos)
+                .emailVerificado(false)
+                .onboardingConcluido(false)
                 .build();
-        usuarioRepository.save(usuario);
-
-        return resposta(usuario);
+        try {
+            usuarioRepository.saveAndFlush(usuario);
+        } catch (DataIntegrityViolationException corrida) { // dois cadastros simultâneos do mesmo e-mail
+            emailService.enviarAvisoContaExistente(email);
+            return MSG_GENERICA_CADASTRO;
+        }
+        enviarVerificacao(usuario);
+        return MSG_GENERICA_CADASTRO;
     }
 
-    public AuthResponse login(LoginRequest request) {
-        String email = normalizar(request.email());
-        // Lança BadCredentialsException (tratada como 401 genérico) se e-mail/senha não baterem.
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, request.senha()));
+    /**
+     * Login com tempo de resposta constante e sem enumeração:
+     *  - sempre exatamente UMA verificação bcrypt (contra um hash fictício se o e-mail não existir);
+     *  - conta bloqueada, e-mail inexistente e senha errada dão a MESMA resposta 401;
+     *  - a resposta nunca sai antes de um tempo mínimo (absorve a diferença das escritas no banco).
+     */
+    public Usuario login(LoginRequest request) {
+        long inicio = System.nanoTime();
+        try {
+            String email = normalizar(request.email());
+            Usuario usuario = usuarioRepository.findByEmail(email).orElse(null);
+            boolean senhaOk = passwordEncoder.matches(request.senha(), usuario != null ? usuario.getSenha() : hashFicticio);
 
-        Usuario usuario = usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciais inválidas"));
+            if (usuario == null) {
+                throw credenciaisInvalidas();
+            }
+            if (bloqueio.bloqueado(usuario)) {
+                throw credenciaisInvalidas(); // nem a senha certa entra durante o bloqueio
+            }
+            if (!senhaOk) {
+                bloqueio.registrarFalha(usuario.getId());
+                throw credenciaisInvalidas();
+            }
+            bloqueio.limpar(usuario);
+            gamificacaoService.registrarAtividade(usuario); // salva a entidade (inclui o contador zerado)
+            return usuario;
+        } finally {
+            aguardarTempoMinimo(inicio);
+        }
+    }
 
-        gamificacaoService.registrarAtividade(usuario);
-        return resposta(usuario);
+    private static ResponseStatusException credenciaisInvalidas() {
+        return new ResponseStatusException(HttpStatus.UNAUTHORIZED,
+                "E-mail ou senha inválidos. Depois de várias tentativas, o acesso fica bloqueado por alguns minutos.");
+    }
+
+    private void aguardarTempoMinimo(long inicioNanos) {
+        long restante = tempoMinimoLoginMs - (System.nanoTime() - inicioNanos) / 1_000_000;
+        if (restante > 0) {
+            try {
+                Thread.sleep(restante);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 
     /** Encerra todas as sessões do usuário (invalida tokens já emitidos). */
@@ -138,17 +193,53 @@ public class AuthService {
         usuario.setSenha(passwordEncoder.encode(request.novaSenha()));
         usuario.setResetTokenHash(null);       // uso único
         usuario.setResetTokenExpira(null);
+        bloqueio.limpar(usuario);              // provou ser o dono do e-mail: sai do bloqueio
         revogarSessoes(usuario);               // troca de senha derruba as sessões abertas
     }
 
-    private void revogarSessoes(Usuario usuario) {
-        usuario.setTokenVersion(usuario.getTokenVersion() + 1);
+    /** Token de 256 bits, uso único, 24 h; só o hash fica no banco e o token nunca vai para os logs. */
+    void enviarVerificacao(Usuario usuario) {
+        byte[] bytes = new byte[32];
+        random.nextBytes(bytes);
+        String token = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+        usuario.setVerifTokenHash(sha256(token));
+        usuario.setVerifTokenExpira(LocalDateTime.now().plusHours(24));
+        usuarioRepository.save(usuario);
+        emailService.enviarVerificacao(usuario.getEmail(), token);
+    }
+
+    public void verificarEmail(String token) {
+        Usuario usuario = usuarioRepository.findByVerifTokenHash(sha256(token))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Link inválido ou expirado"));
+        if (usuario.getVerifTokenExpira() == null || usuario.getVerifTokenExpira().isBefore(LocalDateTime.now())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Link inválido ou expirado");
+        }
+        usuario.setEmailVerificado(true);
+        usuario.setVerifTokenHash(null);   // uso único
+        usuario.setVerifTokenExpira(null);
         usuarioRepository.save(usuario);
     }
 
-    private AuthResponse resposta(Usuario usuario) {
-        String token = jwtUtil.gerarToken(usuario.getEmail(), usuario.getTokenVersion());
-        return new AuthResponse(token, usuario.getNome(), usuario.getEmail(), usuario.planoEfetivo());
+    public String reenviarVerificacao(ForgotPasswordRequest request) {
+        usuarioRepository.findByEmail(normalizar(request.email()))
+                .filter(u -> !u.isEmailVerificado())
+                .ifPresent(this::enviarVerificacao);
+        return MSG_GENERICA_VERIF; // não revela se o e-mail existe
+    }
+
+    /** Recursos que custam dinheiro (IA, pagamento) só para quem confirmou o e-mail. */
+    public static void exigirEmailVerificado(Usuario usuario) {
+        if (!usuario.isEmailVerificado()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Confirme seu e-mail para usar este recurso. Não recebeu o link? Peça outro no seu perfil.");
+        }
+    }
+
+    /** Invalida tokens de acesso já emitidos (versão) e todos os refresh tokens. */
+    public void revogarSessoes(Usuario usuario) {
+        usuario.setTokenVersion(usuario.getTokenVersion() + 1);
+        usuarioRepository.save(usuario);
+        sessaoService.revogarTodas(usuario);
     }
 
     static String sha256(String valor) {

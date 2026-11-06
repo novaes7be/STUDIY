@@ -30,8 +30,8 @@ public class FlashcardController {
 
     /** Fila de revisão do dia (repetição espaçada - SM-2). */
     @GetMapping("/revisao")
-    public List<FlashcardResponse> listarParaRevisar(Authentication auth, @PathVariable Long materiaId) {
-        return flashcardService.listarParaRevisar(usuarioAtual.resolver(auth), materiaId);
+    public com.studiy.backend.dto.RevisaoResponse listarParaRevisar(Authentication auth, @PathVariable Long materiaId) {
+        return com.studiy.backend.dto.RevisaoResponse.de(flashcardService.listarParaRevisar(usuarioAtual.resolver(auth), materiaId));
     }
 
     @PutMapping("/{flashcardId}")

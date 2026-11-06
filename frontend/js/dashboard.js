@@ -43,14 +43,19 @@
 
   /* ---------- Carregamento ---------- */
   async function init() {
-    if (!api.hasToken()) { window.location.replace('login.html'); return; }
     try {
       var r = await Promise.all([api.get('/api/usuarios/me'), api.get('/api/materias')]);
       state.perfil = r[0]; state.materias = r[1];
+      api.marcarLogado();
     } catch (e) { falha(e); return; }
     renderUso();
     renderLateral();
     await selecionar(state.materias.length ? state.materias[0].id : null);
+    if (state.perfil.onboardingPendente && window.studiyOnboarding) {
+      window.studiyOnboarding(function () {
+        api.post('/api/usuarios/me/onboarding').then(function (p) { state.perfil = p; }, function () { /* tenta de novo no próximo acesso */ });
+      });
+    }
   }
 
   async function recarregarPerfil() {
@@ -93,13 +98,12 @@
   }
 
   function renderUso() {
-    var p = state.perfil;
-    var pro = p.plano === 'PREMIUM';
-    $('#planName').textContent = pro ? 'Plano Pro' : 'Plano Grátis';
-    $('#upgradeLink').textContent = pro ? 'Renovar' : 'Assinar Pro';
+    var p = state.perfil; // tudo já vem calculado pelo servidor
+    $('#planName').textContent = p.planoRotulo;
+    $('#upgradeLink').textContent = p.acaoPlano;
     $('#usageText').textContent = p.pdfsUsados + ' de ' + p.pdfsLimite + ' gerações com IA neste mês'
-      + (pro && p.planoExpiraEm ? ' · Pro até ' + fmtData(p.planoExpiraEm) : '');
-    $('#usageBar').style.width = Math.min(100, Math.round(100 * p.pdfsUsados / Math.max(1, p.pdfsLimite))) + '%';
+      + (p.planoExpiraEm ? ' · Pro até ' + fmtData(p.planoExpiraEm) : '');
+    $('#usageBar').style.width = p.usoPercentual + '%';
     renderPerfil();
   }
 
@@ -111,6 +115,17 @@
     $('#subjectTitle').textContent = m ? m.nome : 'Bem-vindo ao Studiy';
     app.dataset.subject = m ? chaveCor(m.cor) : CFG.DEFAULT_SUBJECT;
     document.title = (m ? m.nome + ' — ' : '') + 'Studiy';
+
+    if (!state.perfil.emailVerificado) {
+      var reenviar = h('button', { class: 'btn btn-ghost btn-sm', type: 'button', text: 'Reenviar link' });
+      reenviar.addEventListener('click', async function () {
+        reenviar.disabled = true;
+        try { var r = await api.post('/api/auth/reenviar-verificacao', { email: state.perfil.email }, false); toast(r.mensagem); }
+        catch (e) { falha(e); reenviar.disabled = false; }
+      });
+      content.append(h('p', { class: 'msg info', role: 'status' },
+        'Confirme seu e-mail para liberar a geração com IA e o plano Pro. ', reenviar));
+    }
 
     if (!m) {
       content.append(h('section', { class: 'welcome' },
@@ -137,10 +152,9 @@
     content.append(sw);
 
     /* Cartões de status */
-    var g = state.perfil;
-    var pct = Math.min(100, Math.round(100 * (g.xp % 100) / 100));
-    var barra = h('div', { class: 'bar' }, h('span'));
-    barra.firstChild.style.width = pct + '%';
+    var g = state.perfil.gamificacao;
+    var barra = h('div', { class: 'bar', title: g.xpParaProximoNivel + ' XP para o próximo nível' }, h('span'));
+    barra.firstChild.style.width = g.percentualNivel + '%';
     content.append(h('div', { class: 'stats' },
       h('div', { class: 'stat stat-dark' }, h('div', { class: 'label', text: 'Sequência' }), h('div', { class: 'value', text: g.streakAtual + (g.streakAtual === 1 ? ' dia' : ' dias') })),
       h('div', { class: 'stat stat-grad' }, h('div', { class: 'label', text: 'Nível ' + g.nivel }), h('div', { class: 'value', text: g.xp + ' XP' }), barra),
@@ -148,7 +162,7 @@
 
     /* Materiais */
     var mat = h('section', { class: 'panel' }, h('h2', { text: 'Materiais' }));
-    mat.append(h('p', { class: 'hint-text', text: 'Cada resumo ou conjunto de flashcards conta como 1 geração do mês. Enviar PDFs e revisar cartões é ilimitado.' }));
+    mat.append(h('p', { class: 'hint-text', text: state.perfil.regraUso }));
     if (!state.pdfs.length) mat.append(h('p', { class: 'empty', text: 'Nenhum PDF ainda. Use "Enviar PDF" para começar.' }));
     state.pdfs.forEach(function (p) {
       var bResumo = h('button', { class: 'btn btn-grad btn-sm i-sparkle', type: 'button', text: 'Resumo' });
@@ -221,7 +235,6 @@
     var arquivo = ev.target.files[0];
     ev.target.value = '';
     if (!arquivo || !state.atual) return;
-    if (arquivo.size > 10 * 1024 * 1024) { toast('PDF muito grande (máximo 10MB).', true); return; }
     var form = new FormData();
     form.append('arquivo', arquivo);
     var btn = $('#uploadBtn');
@@ -267,8 +280,11 @@
   async function abrirRevisao() {
     var dlg = $('#reviewDialog');
     var box = $('#reviewBody');
-    var fila;
-    try { fila = await api.get('/api/materias/' + state.atual.id + '/flashcards/revisao'); } catch (e) { falha(e); return; }
+    var fila, opcoes;
+    try {
+      var rev = await api.get('/api/materias/' + state.atual.id + '/flashcards/revisao');
+      fila = rev.cartoes; opcoes = rev.opcoes; // botões e escala SM-2 decididos pelo servidor
+    } catch (e) { falha(e); return; }
     if (!fila.length) { toast('Nenhum cartão para revisar hoje.'); return; }
     var i = 0;
     function mostrar() {
@@ -282,9 +298,9 @@
       var c = fila[i];
       var resposta = h('div', { class: 'card-a', text: c.resposta, hidden: true });
       var notas = h('div', { class: 'rate', hidden: true });
-      [['Errei', 1], ['Difícil', 3], ['Bom', 4], ['Fácil', 5]].forEach(function (n) {
-        notas.append(h('button', { class: 'btn btn-grad btn-sm', type: 'button', text: n[0], onclick: async function () {
-          try { await api.post('/api/materias/' + state.atual.id + '/flashcards/' + c.id + '/revisar', { qualidade: n[1] }); i++; mostrar(); }
+      opcoes.forEach(function (o) {
+        notas.append(h('button', { class: 'btn btn-grad btn-sm', type: 'button', text: o.rotulo, onclick: async function () {
+          try { await api.post('/api/materias/' + state.atual.id + '/flashcards/' + c.id + '/revisar', { resposta: o.valor }); i++; mostrar(); }
           catch (e) { falha(e); }
         } }));
       });
@@ -319,6 +335,9 @@
     $('#dlgEmail').textContent = p.email;
     pintarAvatar($('#dlgAvatar'), p);
     $('#avatarDel').hidden = !p.avatar;
+    if (p.admin && !$('#adminLink')) { // o servidor diz quem é admin; o painel em si exige MFA
+      $('#sideName').after(h('a', { id: 'adminLink', class: 'btn btn-ghost btn-sm', href: 'admin.html', text: 'Admin' }));
+    }
   }
   function accMsg(texto, ok) {
     var m = $('#accMsg');
@@ -353,8 +372,7 @@
   $('#emailForm').addEventListener('submit', function (ev) {
     ev.preventDefault();
     acao(async function () {
-      var r = await api.put('/api/usuarios/me/email', { novoEmail: $('#accNovoEmail').value, senha: $('#accSenhaEmail').value });
-      api.saveToken(r.token);
+      await api.put('/api/usuarios/me/email', { novoEmail: $('#accNovoEmail').value, senha: $('#accSenhaEmail').value });
       state.perfil = await api.get('/api/usuarios/me');
       $('#accNovoEmail').value = ''; $('#accSenhaEmail').value = '';
       renderPerfil();
@@ -364,8 +382,7 @@
   $('#passForm').addEventListener('submit', function (ev) {
     ev.preventDefault();
     acao(async function () {
-      var r = await api.put('/api/usuarios/me/senha', { senhaAtual: $('#accSenhaAtual').value, novaSenha: $('#accSenhaNova').value });
-      api.saveToken(r.token);
+      await api.put('/api/usuarios/me/senha', { senhaAtual: $('#accSenhaAtual').value, novaSenha: $('#accSenhaNova').value });
       $('#accSenhaAtual').value = ''; $('#accSenhaNova').value = '';
     }, 'Senha alterada. As outras sessões foram encerradas.');
   });
@@ -373,8 +390,7 @@
   /* Foto: recorta em quadrado e reduz para 256x256 no navegador (fica leve) antes de enviar */
   function prepararFoto(arquivo) {
     return new Promise(function (resolve, reject) {
-      if (!/^image\/(png|jpeg|webp)$/.test(arquivo.type)) { reject(new Error('Use uma imagem PNG, JPEG ou WebP.')); return; }
-      if (arquivo.size > 8 * 1024 * 1024) { reject(new Error('Imagem muito grande (máximo 8 MB).')); return; }
+      // Só recorta/reduz para 256x256 antes de enviar; tipo, tamanho e assinatura são validados no servidor.
       var leitor = new FileReader();
       leitor.onerror = function () { reject(new Error('Não foi possível ler a imagem.')); };
       leitor.onload = function () {
@@ -413,7 +429,7 @@
   /* ---------- Sair, exportar e excluir (LGPD) ---------- */
   $('#logoutBtn').addEventListener('click', async function () {
     try { await api.post('/api/auth/logout'); } catch (e) { /* sai mesmo assim */ }
-    api.clearToken();
+    api.esquecerSessao();
     window.location.href = 'login.html';
   });
   $('#exportBtn').addEventListener('click', async function () {
@@ -429,7 +445,7 @@
     ev.preventDefault();
     acao(async function () {
       await api.del('/api/usuarios/me', { senha: $('#delPass').value });
-      api.clearToken();
+      api.esquecerSessao();
       window.location.href = 'index.html';
     });
   });

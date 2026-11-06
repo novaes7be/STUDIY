@@ -330,3 +330,14 @@ details.acc-section form { margin-top: 14px; }
 .legal .back-home, .pay .back-home { margin-bottom: 22px; }
 .home-link { display: block; padding: 4px 12px; color: var(--c-primary-200); font-weight: 700; font-size: 14px; text-decoration: none; transition: color .2s, transform .2s; }
 .home-link:hover { color: var(--c-white); transform: translateX(-3px); }
+/* Onboarding (primeiro acesso) */
+.onb-back { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 16px; background: var(--backdrop); }
+.onb { width: 100%; max-width: 440px; background: var(--surface); color: var(--text); border: 1px solid var(--surface-border); border-radius: 18px; padding: 26px 24px 22px; box-shadow: 0 20px 60px var(--shadow); }
+.onb h2 { margin: 0 0 4px; font-size: 22px; }
+.onb p { margin: 0 0 16px; color: var(--text-muted); }
+.onb ol { list-style: none; counter-reset: passo; margin: 0 0 20px; padding: 0; display: grid; gap: 14px; }
+.onb li { counter-increment: passo; display: grid; grid-template-columns: 32px 1fr; gap: 12px; align-items: start; }
+.onb li::before { content: counter(passo); width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--icon-chip-bg); color: var(--icon-chip-fg); font-weight: 700; }
+.onb li strong { display: block; }
+.onb li span { color: var(--text-muted); font-size: 14px; }
+.onb-actions { display: flex; justify-content: flex-end; }
