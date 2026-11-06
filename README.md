@@ -16,7 +16,25 @@ deploy/              build-front.sh (front por ambiente), Dockerfile do site, Ca
 SECURITY.md · CONTRIBUTING.md · LICENSE · docker-compose.yml · .env.example
 ```
 
-## Rodar em desenvolvimento
+## Ver o projeto rodando (só Docker, sem IDE)
+
+```bash
+docker compose -f docker-compose.dev.yml up --build
+```
+
+- **Site + API:** http://localhost:8090 (mesma origem, igual à produção).
+- **E-mails enviados** (confirmação de cadastro, aviso, redefinição de senha): http://localhost:8025 (Mailpit).
+- Editou algo em `frontend/`? Recarregue a página: o serviço `front` reconstrói sozinho em ~2 s.
+- Mudou o backend? Rode o mesmo comando de novo (o `--build` recompila a API).
+- IA de verdade (opcional): `ANTHROPIC_API_KEY=... docker compose -f docker-compose.dev.yml up --build`;
+  sem a chave, a IA devolve respostas de teste.
+- Parar: `docker compose -f docker-compose.dev.yml down`. Apagar também o banco de dev: acrescente `-v`.
+
+Usa o perfil `dev` (segredos públicos de desenvolvimento, nunca use para produção) e só abre portas
+em `127.0.0.1`. Para admin: promova a conta com o comando da seção Administração, trocando o início por
+`docker compose -f docker-compose.dev.yml exec db psql -U postgres -d studiy -c ...`.
+
+## Rodar em desenvolvimento (com IDE)
 
 O perfil **sem nome não sobe** (fail-closed): em dev use sempre `SPRING_PROFILES_ACTIVE=dev`.
 

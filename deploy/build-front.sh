@@ -12,7 +12,8 @@ set -euo pipefail
 AMBIENTE="${1:-}"
 RAIZ="$(cd "$(dirname "$0")/.." && pwd)"
 ORIGEM="$RAIZ/frontend"
-DESTINO="$RAIZ/build/front-$AMBIENTE"
+# SAIDA (opcional) troca a pasta de saída; o docker-compose.dev.yml usa build/front-docker.
+DESTINO="${SAIDA:-$RAIZ/build/front-$AMBIENTE}"
 
 case "$AMBIENTE" in
   dev)  API="${API_ORIGIN-http://localhost:8080}" ;;
@@ -24,8 +25,9 @@ case "$AMBIENTE" in
   *) echo "Uso: $0 dev|prod" >&2; exit 1 ;;
 esac
 
-rm -rf "$DESTINO"
+# Esvazia sem remover a pasta: ela pode estar montada num container (docker-compose.dev.yml).
 mkdir -p "$DESTINO"
+find "$DESTINO" -mindepth 1 -delete
 cp -R "$ORIGEM"/. "$DESTINO"/
 
 # Valores vão para atributo HTML e string JS: só caracteres de URL simples (validado acima em prod).
@@ -54,4 +56,4 @@ if [[ "$AMBIENTE" == "prod" ]]; then
   fi
 fi
 
-echo "Front ($AMBIENTE) gerado em build/front-$AMBIENTE (API: ${API:-mesma origem})"
+echo "Front ($AMBIENTE) gerado em ${DESTINO#$RAIZ/} (API: ${API:-mesma origem})"
