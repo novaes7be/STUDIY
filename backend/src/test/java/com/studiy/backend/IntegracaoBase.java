@@ -16,6 +16,8 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
+import jakarta.servlet.http.Cookie;
 import org.testcontainers.containers.PostgreSQLContainer;
 
 import java.util.Map;
@@ -56,10 +58,25 @@ public abstract class IntegracaoBase {
 
     protected static final String SENHA = "senha-segura-123";
 
-    /** Sessão autenticada de um usuário de teste; aplica as credenciais em qualquer requisição. */
-    public record Sessao(String email, String token) {
+    /** Valor do double-submit CSRF usado pelos testes: cookie XSRF-TOKEN e header X-XSRF-TOKEN iguais. */
+    protected static final String XSRF = "xsrf-de-teste-0123456789";
+
+    /** Como o front faz: manda o cookie XSRF-TOKEN e repete o valor no header. */
+    public static RequestPostProcessor comCsrf() {
+        return req -> {
+            Cookie[] atuais = req.getCookies() == null ? new Cookie[0] : req.getCookies();
+            Cookie[] novos = java.util.Arrays.copyOf(atuais, atuais.length + 1);
+            novos[atuais.length] = new Cookie("XSRF-TOKEN", XSRF);
+            req.setCookies(novos);
+            req.addHeader("X-XSRF-TOKEN", XSRF);
+            return req;
+        };
+    }
+
+    /** Sessão autenticada de um usuário de teste (cookies HttpOnly devolvidos pelo login). */
+    public record Sessao(String email, Cookie acesso, Cookie refresh) {
         public MockHttpServletRequestBuilder em(MockHttpServletRequestBuilder req) {
-            return req.header("Authorization", "Bearer " + token);
+            return req.cookie(acesso).with(comCsrf());
         }
     }
 
@@ -76,13 +93,13 @@ public abstract class IntegracaoBase {
     }
 
     protected void cadastrar(String email) throws Exception {
-        mvc.perform(post("/api/auth/registrar").contentType(MediaType.APPLICATION_JSON)
+        mvc.perform(post("/api/auth/registrar").with(comCsrf()).contentType(MediaType.APPLICATION_JSON)
                         .content(corpo(Map.of("nome", "Teste", "email", email, "senha", SENHA, "aceitoTermos", true))))
                 .andExpect(status().is2xxSuccessful());
     }
 
     protected MvcResult tentarLogin(String email, String senha) throws Exception {
-        return mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+        return mvc.perform(post("/api/auth/login").with(comCsrf()).contentType(MediaType.APPLICATION_JSON)
                 .content(corpo(Map.of("email", email, "senha", senha)))).andReturn();
     }
 
@@ -93,7 +110,10 @@ public abstract class IntegracaoBase {
         Usuario u = usuarios.findByEmail(email).orElseThrow();
         u.setEmailVerificado(true);
         usuarios.save(u);
-        MvcResult r = tentarLogin(email, SENHA);
-        return new Sessao(email, ler(r).path("token").asText());
+        return sessaoDe(email, tentarLogin(email, SENHA));
+    }
+
+    protected static Sessao sessaoDe(String email, MvcResult login) {
+        return new Sessao(email, login.getResponse().getCookie("studiy_at"), login.getResponse().getCookie("studiy_rt"));
     }
 }

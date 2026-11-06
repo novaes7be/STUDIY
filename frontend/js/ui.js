@@ -30,7 +30,7 @@
 
   /* Já entrou? O botão "Entrar" vira "Meu painel" */
   var logado = false;
-  try { logado = !!sessionStorage.getItem('studiy-token'); } catch (e) { /* ignora */ }
+  try { logado = sessionStorage.getItem('studiy-logado') === '1'; } catch (e) { /* ignora */ }
   var botaoEntrar = nav.querySelector('.nav-end a[href="login.html"]');
   if (logado && botaoEntrar) { botaoEntrar.textContent = 'Meu painel'; botaoEntrar.setAttribute('href', 'dashboard.html'); }
   var links = Array.prototype.slice.call(nav.querySelectorAll('.nav-links a[href^="#"]'));

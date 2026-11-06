@@ -43,10 +43,10 @@
 
   /* ---------- Carregamento ---------- */
   async function init() {
-    if (!api.hasToken()) { window.location.replace('login.html'); return; }
     try {
       var r = await Promise.all([api.get('/api/usuarios/me'), api.get('/api/materias')]);
       state.perfil = r[0]; state.materias = r[1];
+      api.marcarLogado();
     } catch (e) { falha(e); return; }
     renderUso();
     renderLateral();
@@ -353,8 +353,7 @@
   $('#emailForm').addEventListener('submit', function (ev) {
     ev.preventDefault();
     acao(async function () {
-      var r = await api.put('/api/usuarios/me/email', { novoEmail: $('#accNovoEmail').value, senha: $('#accSenhaEmail').value });
-      api.saveToken(r.token);
+      await api.put('/api/usuarios/me/email', { novoEmail: $('#accNovoEmail').value, senha: $('#accSenhaEmail').value });
       state.perfil = await api.get('/api/usuarios/me');
       $('#accNovoEmail').value = ''; $('#accSenhaEmail').value = '';
       renderPerfil();
@@ -364,8 +363,7 @@
   $('#passForm').addEventListener('submit', function (ev) {
     ev.preventDefault();
     acao(async function () {
-      var r = await api.put('/api/usuarios/me/senha', { senhaAtual: $('#accSenhaAtual').value, novaSenha: $('#accSenhaNova').value });
-      api.saveToken(r.token);
+      await api.put('/api/usuarios/me/senha', { senhaAtual: $('#accSenhaAtual').value, novaSenha: $('#accSenhaNova').value });
       $('#accSenhaAtual').value = ''; $('#accSenhaNova').value = '';
     }, 'Senha alterada. As outras sessões foram encerradas.');
   });
@@ -413,7 +411,7 @@
   /* ---------- Sair, exportar e excluir (LGPD) ---------- */
   $('#logoutBtn').addEventListener('click', async function () {
     try { await api.post('/api/auth/logout'); } catch (e) { /* sai mesmo assim */ }
-    api.clearToken();
+    api.esquecerSessao();
     window.location.href = 'login.html';
   });
   $('#exportBtn').addEventListener('click', async function () {
@@ -429,7 +427,7 @@
     ev.preventDefault();
     acao(async function () {
       await api.del('/api/usuarios/me', { senha: $('#delPass').value });
-      api.clearToken();
+      api.esquecerSessao();
       window.location.href = 'index.html';
     });
   });

@@ -13,8 +13,8 @@
   function busy(on) {
     document.querySelectorAll('button[type="submit"]').forEach(function (b) { b.disabled = on; });
   }
-  function entrar(resp) {
-    api.saveToken(resp.token);
+  function entrar() {
+    api.marcarLogado(); // a sessão em si fica nos cookies HttpOnly que o servidor gravou
     window.location.href = 'dashboard.html';
   }
   async function enviar(fn) {
@@ -34,7 +34,7 @@
     }
   });
 
-  if (api.hasToken() && (page === 'login' || page === 'cadastro')) {
+  if (api.pareceLogado() && (page === 'login' || page === 'cadastro')) {
     window.location.replace('dashboard.html');
   }
 
@@ -42,7 +42,8 @@
     form.addEventListener('submit', function (ev) {
       ev.preventDefault();
       enviar(async function () {
-        entrar(await api.post('/api/auth/login', { email: v('email'), senha: v('senha') }, false));
+        await api.post('/api/auth/login', { email: v('email'), senha: v('senha') }, false);
+        entrar();
       });
     });
   }

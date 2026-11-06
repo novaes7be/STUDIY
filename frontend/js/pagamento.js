@@ -2,7 +2,6 @@
    O preço e o plano são decididos pelo servidor; aqui só escolhemos o método. */
 (function () {
   'use strict';
-  if (!api.hasToken()) { window.location.replace('login.html'); return; }
 
   var $ = function (s) { return document.querySelector(s); };
   var params = new URLSearchParams(window.location.search);

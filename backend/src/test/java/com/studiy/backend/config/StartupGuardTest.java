@@ -22,6 +22,7 @@ class StartupGuardTest {
         MockEnvironment e = new MockEnvironment();
         if (jwt != null) e.setProperty("studiy.jwt.secret", jwt);
         if (chave != null) e.setProperty("studiy.crypto.key", chave);
+        e.setProperty("studiy.cors.origins", "https://studiy.app");
         e.setActiveProfiles(perfis);
         return e;
     }
@@ -66,6 +67,14 @@ class StartupGuardTest {
     }
 
     @Test
+    void cookieSemSecureForaDeDevECorsComCuringaSaoBloqueados() {
+        MockEnvironment e = env(JWT_FORTE, CHAVE_FORTE, "prod");
+        e.setProperty("studiy.auth.cookie-secure", "false");
+        e.setProperty("studiy.cors.origins", "https://*.studiy.app");
+        assertThat(StartupGuard.verificar(e)).hasSize(2);
+    }
+
+    @Test
     void devEProdJuntosSaoBloqueados() {
         assertThat(StartupGuard.verificar(env(JWT_FORTE, CHAVE_FORTE, "dev", "prod"))).isNotEmpty();
     }
@@ -78,6 +87,7 @@ class StartupGuardTest {
                 .run("--spring.profiles.active=prod",
                         "--studiy.jwt.secret=" + JWT_FORTE,
                         "--studiy.crypto.key=" + CHAVE_FORTE,
+                        "--studiy.cors.origins=https://studiy.app",
                         "--studiy.pagamento.simulacao=true"))
                 .hasMessageContaining("StartupGuard");
     }

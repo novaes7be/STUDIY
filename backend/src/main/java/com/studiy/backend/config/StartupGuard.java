@@ -17,6 +17,7 @@ import java.util.Set;
  *  - o JWT secret tiver menos de 32 bytes (em qualquer perfil);
  *  - fora do perfil dev: o JWT secret ou a chave de criptografia forem valores públicos conhecidos,
  *    ou a simulação de pagamento / exposição do token de reset estiverem ligadas;
+ *  - cookies sem Secure fora de dev, ou CORS com curinga;
  *  - o perfil dev estiver ativo junto com o prod.
  * Registrada em META-INF/spring.factories.
  */
@@ -66,6 +67,13 @@ public class StartupGuard implements EnvironmentPostProcessor, Ordered {
             if (env.getProperty("studiy.auth.expor-token-reset-dev", Boolean.class, false)) {
                 erros.add("studiy.auth.expor-token-reset-dev=true só é permitido no perfil dev");
             }
+            if (!env.getProperty("studiy.auth.cookie-secure", Boolean.class, true)) {
+                erros.add("studiy.auth.cookie-secure=false só é permitido no perfil dev");
+            }
+        }
+        String origens = valor(env, "studiy.cors.origins", erros);
+        if (origens != null && origens.contains("*")) {
+            erros.add("studiy.cors.origins não aceita curinga (*): liste as origens exatas do front");
         }
         return erros;
     }

@@ -28,6 +28,10 @@ public class JwtUtil {
         this.expirationMs = expirationMs;
     }
 
+    public long getExpirationMs() {
+        return expirationMs;
+    }
+
     /** O claim "tv" (token version) permite revogar todas as sessões de um usuário. */
     public String gerarToken(String email, int tokenVersion) {
         Date agora = new Date();

@@ -1,6 +1,5 @@
 package com.studiy.backend.service;
 
-import com.studiy.backend.dto.AuthResponse;
 import com.studiy.backend.dto.ForgotPasswordRequest;
 import com.studiy.backend.dto.LoginRequest;
 import com.studiy.backend.dto.RegisterRequest;
@@ -8,7 +7,7 @@ import com.studiy.backend.dto.ResetPasswordRequest;
 import com.studiy.backend.model.Plano;
 import com.studiy.backend.model.Usuario;
 import com.studiy.backend.repository.UsuarioRepository;
-import com.studiy.backend.security.JwtUtil;
+import com.studiy.backend.security.SessaoService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -37,7 +36,7 @@ public class AuthService {
     private final BloqueioLoginService bloqueio;
     private final String hashFicticio;
     private final long tempoMinimoLoginMs;
-    private final JwtUtil jwtUtil;
+    private final SessaoService sessaoService;
     private final boolean exporTokenResetDev;
     private final String versaoTermos;
     private final GamificacaoService gamificacaoService;
@@ -49,7 +48,7 @@ public class AuthService {
             PasswordEncoder passwordEncoder,
             BloqueioLoginService bloqueio,
             @Value("${studiy.auth.login-tempo-minimo-ms:400}") long tempoMinimoLoginMs,
-            JwtUtil jwtUtil,
+            SessaoService sessaoService,
             @Value("${studiy.auth.expor-token-reset-dev}") boolean exporTokenResetDev,
             @Value("${studiy.termos.versao}") String versaoTermos,
             GamificacaoService gamificacaoService,
@@ -61,7 +60,7 @@ public class AuthService {
         this.tempoMinimoLoginMs = tempoMinimoLoginMs;
         // Hash bcrypt de uma senha aleatória: comparado quando o e-mail não existe, para o custo ser o mesmo.
         this.hashFicticio = passwordEncoder.encode(java.util.UUID.randomUUID().toString());
-        this.jwtUtil = jwtUtil;
+        this.sessaoService = sessaoService;
         this.exporTokenResetDev = exporTokenResetDev;
         this.versaoTermos = versaoTermos;
         this.gamificacaoService = gamificacaoService;
@@ -110,7 +109,7 @@ public class AuthService {
      *  - conta bloqueada, e-mail inexistente e senha errada dão a MESMA resposta 401;
      *  - a resposta nunca sai antes de um tempo mínimo (absorve a diferença das escritas no banco).
      */
-    public AuthResponse login(LoginRequest request) {
+    public Usuario login(LoginRequest request) {
         long inicio = System.nanoTime();
         try {
             String email = normalizar(request.email());
@@ -129,7 +128,7 @@ public class AuthService {
             }
             bloqueio.limpar(usuario);
             gamificacaoService.registrarAtividade(usuario); // salva a entidade (inclui o contador zerado)
-            return resposta(usuario);
+            return usuario;
         } finally {
             aguardarTempoMinimo(inicio);
         }
@@ -235,14 +234,11 @@ public class AuthService {
         }
     }
 
-    private void revogarSessoes(Usuario usuario) {
+    /** Invalida tokens de acesso já emitidos (versão) e todos os refresh tokens. */
+    public void revogarSessoes(Usuario usuario) {
         usuario.setTokenVersion(usuario.getTokenVersion() + 1);
         usuarioRepository.save(usuario);
-    }
-
-    private AuthResponse resposta(Usuario usuario) {
-        String token = jwtUtil.gerarToken(usuario.getEmail(), usuario.getTokenVersion());
-        return new AuthResponse(token, usuario.getNome(), usuario.getEmail(), usuario.planoEfetivo());
+        sessaoService.revogarTodas(usuario);
     }
 
     static String sha256(String valor) {

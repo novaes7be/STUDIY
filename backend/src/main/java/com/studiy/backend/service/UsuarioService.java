@@ -1,6 +1,5 @@
 package com.studiy.backend.service;
 
-import com.studiy.backend.dto.AuthResponse;
 import com.studiy.backend.dto.PerfilResponse;
 import com.studiy.backend.model.Materia;
 import com.studiy.backend.model.Usuario;
@@ -9,7 +8,6 @@ import com.studiy.backend.repository.MateriaRepository;
 import com.studiy.backend.repository.PdfRepository;
 import com.studiy.backend.repository.ResumoRepository;
 import com.studiy.backend.repository.UsuarioRepository;
-import com.studiy.backend.security.JwtUtil;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -39,14 +37,13 @@ public class UsuarioService {
     private final UsoMensalService usoMensalService;
     private final GamificacaoService gamificacaoService;
     private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil;
     private final AuthService authService;
 
     public UsuarioService(
             UsuarioRepository usuarioRepository, MateriaRepository materiaRepository, PdfRepository pdfRepository,
             ResumoRepository resumoRepository, FlashcardRepository flashcardRepository,
             UsoMensalService usoMensalService, GamificacaoService gamificacaoService,
-            PasswordEncoder passwordEncoder, JwtUtil jwtUtil, AuthService authService
+            PasswordEncoder passwordEncoder, AuthService authService
     ) {
         this.authService = authService;
         this.usuarioRepository = usuarioRepository;
@@ -57,7 +54,6 @@ public class UsuarioService {
         this.usoMensalService = usoMensalService;
         this.gamificacaoService = gamificacaoService;
         this.passwordEncoder = passwordEncoder;
-        this.jwtUtil = jwtUtil;
     }
 
     public PerfilResponse perfil(Usuario u) {
@@ -80,8 +76,8 @@ public class UsuarioService {
         return perfil(u);
     }
 
-    /** Exige a senha atual. Devolve um token novo (o antigo deixa de valer, pois o e-mail é a identidade dele). */
-    public AuthResponse alterarEmail(Usuario u, String novoEmail, String senha) {
+    /** Exige a senha atual. Derruba as sessões (o e-mail é a identidade do token); o controller emite uma nova. */
+    public Usuario alterarEmail(Usuario u, String novoEmail, String senha) {
         exigirSenha(u, senha);
         String email = novoEmail.trim().toLowerCase(Locale.ROOT);
         if (!email.equals(u.getEmail())) {
@@ -90,20 +86,18 @@ public class UsuarioService {
             }
             u.setEmail(email);
             u.setEmailVerificado(false); // o endereço novo também precisa ser confirmado
-            u.setTokenVersion(u.getTokenVersion() + 1);
-            usuarioRepository.save(u);
+            authService.revogarSessoes(u);
             authService.enviarVerificacao(u);
         }
-        return novaSessao(u);
+        return u;
     }
 
-    /** Exige a senha atual, derruba as outras sessões e devolve um token novo para esta. */
-    public AuthResponse alterarSenha(Usuario u, String senhaAtual, String novaSenha) {
+    /** Exige a senha atual e derruba todas as sessões; o controller emite uma nova para esta. */
+    public Usuario alterarSenha(Usuario u, String senhaAtual, String novaSenha) {
         exigirSenha(u, senhaAtual);
         u.setSenha(passwordEncoder.encode(novaSenha));
-        u.setTokenVersion(u.getTokenVersion() + 1);
-        usuarioRepository.save(u);
-        return novaSessao(u);
+        authService.revogarSessoes(u);
+        return u;
     }
 
     /** Foto de perfil: só PNG/JPEG/WebP reais (confere a assinatura do arquivo), até 150 KB. Vazio remove. */
@@ -138,10 +132,6 @@ public class UsuarioService {
         if (!passwordEncoder.matches(senha, u.getSenha())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Senha incorreta");
         }
-    }
-
-    private AuthResponse novaSessao(Usuario u) {
-        return new AuthResponse(jwtUtil.gerarToken(u.getEmail(), u.getTokenVersion()), u.getNome(), u.getEmail(), u.planoEfetivo());
     }
 
     private static boolean assinaturaValida(String tipo, byte[] b) {

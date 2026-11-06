@@ -34,11 +34,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
 
-        String header = request.getHeader("Authorization");
+        // O token de acesso vem SÓ do cookie HttpOnly (o JavaScript do front nunca o vê).
+        String token = SessaoService.lerCookie(request, SessaoService.COOKIE_ACESSO);
 
-        if (header != null && header.startsWith("Bearer ")
-                && SecurityContextHolder.getContext().getAuthentication() == null) {
-            Claims claims = jwtUtil.validar(header.substring(7));
+        if (token != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            Claims claims = jwtUtil.validar(token);
             if (claims != null) {
                 Usuario usuario = usuarioRepository.findByEmail(claims.getSubject()).orElse(null);
                 Integer versaoToken = claims.get("tv", Integer.class);

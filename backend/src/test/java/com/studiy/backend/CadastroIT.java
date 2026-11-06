@@ -18,7 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class CadastroIT extends IntegracaoBase {
 
     private MvcResult registrar(String email) throws Exception {
-        return mvc.perform(post("/api/auth/registrar").contentType(MediaType.APPLICATION_JSON)
+        return mvc.perform(post("/api/auth/registrar").with(comCsrf()).contentType(MediaType.APPLICATION_JSON)
                 .content(corpo(Map.of("nome", "Teste", "email", email, "senha", SENHA, "aceitoTermos", true)))).andReturn();
     }
 
@@ -49,9 +49,8 @@ class CadastroIT extends IntegracaoBase {
     void contaNaoVerificadaEntraMasNaoUsaIaNemPagamento() throws Exception {
         String email = emailNovo();
         registrar(email);
-        String token = ler(tentarLogin(email, SENHA)).path("token").asText();
-        assertThat(token).isNotBlank();
-        Sessao s = new Sessao(email, token);
+        Sessao s = sessaoDe(email, tentarLogin(email, SENHA));
+        assertThat(s.acesso()).isNotNull();
 
         long materia = ler(mvc.perform(s.em(post("/api/materias")).contentType(MediaType.APPLICATION_JSON)
                 .content(corpo(Map.of("nome", "Física", "cor", "azul")))).andReturn()).path("id").asLong();
@@ -66,7 +65,7 @@ class CadastroIT extends IntegracaoBase {
         // Confirma o e-mail com o token que teria ido por e-mail
         ArgumentCaptor<String> tk = ArgumentCaptor.forClass(String.class);
         verify(emailService).enviarVerificacao(eq(email), tk.capture());
-        mvc.perform(post("/api/auth/verificar-email").contentType(MediaType.APPLICATION_JSON)
+        mvc.perform(post("/api/auth/verificar-email").with(comCsrf()).contentType(MediaType.APPLICATION_JSON)
                 .content(corpo(Map.of("token", tk.getValue())))).andExpect(status().isOk());
 
         // Agora passa da verificação (o PDF não existe → 404, não mais 403)
@@ -78,18 +77,18 @@ class CadastroIT extends IntegracaoBase {
                 .andExpect(status().isOk());
 
         // Token de verificação é de uso único
-        mvc.perform(post("/api/auth/verificar-email").contentType(MediaType.APPLICATION_JSON)
+        mvc.perform(post("/api/auth/verificar-email").with(comCsrf()).contentType(MediaType.APPLICATION_JSON)
                 .content(corpo(Map.of("token", tk.getValue())))).andExpect(status().isBadRequest());
     }
 
     @Test
     void reenviarVerificacaoNaoRevelaSeOEmailExiste() throws Exception {
         String inexistente = emailNovo();
-        String r1 = mvc.perform(post("/api/auth/reenviar-verificacao").contentType(MediaType.APPLICATION_JSON)
+        String r1 = mvc.perform(post("/api/auth/reenviar-verificacao").with(comCsrf()).contentType(MediaType.APPLICATION_JSON)
                 .content(corpo(Map.of("email", inexistente)))).andReturn().getResponse().getContentAsString();
         String existente = emailNovo();
         registrar(existente);
-        String r2 = mvc.perform(post("/api/auth/reenviar-verificacao").contentType(MediaType.APPLICATION_JSON)
+        String r2 = mvc.perform(post("/api/auth/reenviar-verificacao").with(comCsrf()).contentType(MediaType.APPLICATION_JSON)
                 .content(corpo(Map.of("email", existente)))).andReturn().getResponse().getContentAsString();
         assertThat(r1).isEqualTo(r2);
         verify(emailService, never()).enviarVerificacao(eq(inexistente), org.mockito.ArgumentMatchers.anyString());
