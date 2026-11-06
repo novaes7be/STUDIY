@@ -1,7 +1,6 @@
 package com.studiy.backend.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.studiy.backend.model.TipoGeracao;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -43,11 +42,15 @@ public class AnthropicService {
         this.restClient = RestClient.builder().baseUrl(apiUrl).requestFactory(fabrica).build();
     }
 
-    public String gerar(TipoGeracao tipo, String textoExtraido) {
+    public String modelo() {
+        return model;
+    }
+
+    public RespostaIa gerar(TipoGeracao tipo, String textoExtraido) {
         if (apiKey == null || apiKey.isBlank()) {
             // Sem chave configurada: devolve uma resposta de teste, sem gastar nada,
             // pra dar pra testar o fluxo inteiro do app antes de pagar pela API.
-            return respostaMock(tipo);
+            return RespostaIa.mock(respostaMock(tipo));
         }
 
         String promptSistema = promptSistemaPara(tipo);
@@ -80,7 +83,7 @@ public class AnthropicService {
             throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Serviço de IA indisponível. Tente novamente em instantes.");
         }
 
-        return extrairTexto(resposta);
+        return interpretar(resposta);
     }
 
     private String promptSistemaPara(TipoGeracao tipo) {
@@ -99,19 +102,41 @@ public class AnthropicService {
         };
     }
 
-    private String extrairTexto(JsonNode resposta) {
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode content = resposta.get("content");
-            StringBuilder sb = new StringBuilder();
-            for (JsonNode bloco : content) {
-                if ("text".equals(bloco.get("type").asText())) {
-                    sb.append(bloco.get("text").asText());
-                }
-            }
-            return sb.toString();
-        } catch (Exception e) {
+    /** Texto + uso de tokens (usage). Recusa do modelo vira erro claro em vez de texto vazio. */
+    private RespostaIa interpretar(JsonNode resposta) {
+        if (resposta == null || !resposta.path("content").isArray()) {
             throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Resposta inesperada da IA");
+        }
+        String motivo = resposta.path("stop_reason").asText("");
+        JsonNode uso = resposta.path("usage");
+        StringBuilder sb = new StringBuilder();
+        for (JsonNode bloco : resposta.path("content")) {
+            if ("text".equals(bloco.path("type").asText())) {
+                sb.append(bloco.path("text").asText());
+            }
+        }
+        RespostaIa r = new RespostaIa(sb.toString(), resposta.path("model").asText(model),
+                uso.path("input_tokens").asInt(0), uso.path("output_tokens").asInt(0),
+                uso.path("cache_creation_input_tokens").asInt(0), uso.path("cache_read_input_tokens").asInt(0),
+                motivo);
+        if ("refusal".equals(motivo) || r.texto().isBlank()) {
+            throw new IaRecusouException(r);
+        }
+        return r;
+    }
+
+    /** O modelo recusou (ou não gerou texto). Carrega o uso para o custo ser registrado mesmo assim. */
+    public static class IaRecusouException extends ResponseStatusException {
+        private final transient RespostaIa resposta;
+
+        IaRecusouException(RespostaIa resposta) {
+            super(HttpStatus.UNPROCESSABLE_ENTITY,
+                    "A IA não conseguiu gerar conteúdo para este material. Tente outro PDF ou outro tipo de geração.");
+            this.resposta = resposta;
+        }
+
+        public RespostaIa resposta() {
+            return resposta;
         }
     }
 }

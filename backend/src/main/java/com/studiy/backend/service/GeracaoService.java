@@ -26,6 +26,7 @@ public class GeracaoService {
     private final SimuladoRepository simuladoRepository;
     private final ResumoRepository resumoRepository;
     private final GamificacaoService gamificacaoService;
+    private final IaCustoService iaCustoService;
 
     private static final Pattern FLASHCARD_PATTERN =
             Pattern.compile("Pergunta:\\s*(.+?)\\s*\\|\\s*Resposta:\\s*(.+)");
@@ -37,8 +38,10 @@ public class GeracaoService {
             FlashcardRepository flashcardRepository,
             SimuladoRepository simuladoRepository,
             ResumoRepository resumoRepository,
-            GamificacaoService gamificacaoService
+            GamificacaoService gamificacaoService,
+            IaCustoService iaCustoService
     ) {
+        this.iaCustoService = iaCustoService;
         this.usoMensalService = usoMensalService;
         this.anthropicService = anthropicService;
         this.pdfService = pdfService;
@@ -54,7 +57,18 @@ public class GeracaoService {
 
         // O PDF precisa pertencer a ESTA matéria (que já foi validada como do usuário): evita acesso cruzado por ID.
         Pdf pdf = pdfService.buscarDaMateria(materia.getId(), request.pdfId());
-        String conteudoGerado = anthropicService.gerar(request.tipo(), pdf.getTextoExtraido());
+        RespostaIa ia;
+        try {
+            ia = anthropicService.gerar(request.tipo(), pdf.getTextoExtraido());
+        } catch (AnthropicService.IaRecusouException e) {
+            iaCustoService.registrar(usuario, request.tipo(), e.resposta()); // tokens foram cobrados
+            throw e;
+        } catch (RuntimeException e) {
+            iaCustoService.registrarFalha(usuario, request.tipo(), anthropicService.modelo(), "erro");
+            throw e;
+        }
+        iaCustoService.registrar(usuario, request.tipo(), ia);
+        String conteudoGerado = ia.texto();
 
         usoMensalService.incrementar(usuario);
 
