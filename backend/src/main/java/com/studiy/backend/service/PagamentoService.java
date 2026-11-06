@@ -92,6 +92,7 @@ public class PagamentoService {
 
     /** Cria o pedido e devolve para onde enviar o usuário (checkout do Mercado Pago ou tela de simulação). */
     public CheckoutResponse criarCheckout(Usuario usuario, MetodoPagamento metodo, String retornoUrl) {
+        AuthService.exigirEmailVerificado(usuario);
         boolean gateway = mp.configurado();
         if (!gateway && !simulacao) {
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Pagamento indisponível no momento.");

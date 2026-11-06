@@ -40,13 +40,15 @@ public class UsuarioService {
     private final GamificacaoService gamificacaoService;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final AuthService authService;
 
     public UsuarioService(
             UsuarioRepository usuarioRepository, MateriaRepository materiaRepository, PdfRepository pdfRepository,
             ResumoRepository resumoRepository, FlashcardRepository flashcardRepository,
             UsoMensalService usoMensalService, GamificacaoService gamificacaoService,
-            PasswordEncoder passwordEncoder, JwtUtil jwtUtil
+            PasswordEncoder passwordEncoder, JwtUtil jwtUtil, AuthService authService
     ) {
+        this.authService = authService;
         this.usuarioRepository = usuarioRepository;
         this.materiaRepository = materiaRepository;
         this.pdfRepository = pdfRepository;
@@ -66,7 +68,8 @@ public class UsuarioService {
                 usoMensalService.limiteDoPlano(u.planoEfetivo()),
                 gam.xp(), gam.nivel(), gam.streakAtual(), gam.xpParaProximoNivel(),
                 u.getAvatar(),
-                u.planoEfetivo() == com.studiy.backend.model.Plano.PREMIUM ? u.getPlanoExpiraEm() : null);
+                u.planoEfetivo() == com.studiy.backend.model.Plano.PREMIUM ? u.getPlanoExpiraEm() : null,
+                u.isEmailVerificado());
     }
 
     /* ---------------- Edição de conta ---------------- */
@@ -86,8 +89,10 @@ public class UsuarioService {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "Não foi possível usar esse e-mail.");
             }
             u.setEmail(email);
+            u.setEmailVerificado(false); // o endereço novo também precisa ser confirmado
             u.setTokenVersion(u.getTokenVersion() + 1);
             usuarioRepository.save(u);
+            authService.enviarVerificacao(u);
         }
         return novaSessao(u);
     }

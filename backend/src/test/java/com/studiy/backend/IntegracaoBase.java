@@ -29,7 +29,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Flyway aplicando as migrations de verdade e MockMvc passando por toda a cadeia do Spring Security.
  * O EmailService é substituído por um mock para os testes lerem os links enviados.
  */
-@SpringBootTest
+@SpringBootTest(properties = {
+        "studiy.ratelimit.auth-por-minuto=100000", "studiy.ratelimit.ia-por-minuto=100000",
+        "studiy.ratelimit.upload-por-minuto=100000"})
 @AutoConfigureMockMvc
 @ActiveProfiles("dev")
 public abstract class IntegracaoBase {

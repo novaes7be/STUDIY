@@ -22,9 +22,11 @@ public class AuthController {
         this.usuarioAtual = usuarioAtual;
     }
 
+    /** Sempre 202 com a mesma mensagem: não revela se o e-mail já tem conta. */
     @PostMapping("/registrar")
-    public AuthResponse registrar(@Valid @RequestBody RegisterRequest request) {
-        return authService.registrar(request);
+    @ResponseStatus(org.springframework.http.HttpStatus.ACCEPTED)
+    public MensagemResponse registrar(@Valid @RequestBody RegisterRequest request) {
+        return new MensagemResponse(authService.registrar(request));
     }
 
     @PostMapping("/login")

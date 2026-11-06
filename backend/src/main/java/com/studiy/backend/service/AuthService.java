@@ -10,6 +10,7 @@ import com.studiy.backend.model.Usuario;
 import com.studiy.backend.repository.UsuarioRepository;
 import com.studiy.backend.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -29,6 +30,8 @@ import java.util.Locale;
 public class AuthService {
 
     private static final String MSG_GENERICA_RESET = "Se o e-mail existir, as instruções de recuperação foram enviadas.";
+    static final String MSG_GENERICA_CADASTRO =
+            "Pronto! Se o e-mail puder ser usado, enviamos um link para confirmar. Depois é só entrar.";
     private static final String MSG_GENERICA_VERIF = "Se o e-mail existir e ainda não estiver confirmado, enviamos um novo link.";
 
     private final UsuarioRepository usuarioRepository;
@@ -39,7 +42,6 @@ public class AuthService {
     private final String versaoTermos;
     private final GamificacaoService gamificacaoService;
     private final EmailService emailService;
-    private final boolean exigirVerificacaoEmail;
     private final SecureRandom random = new SecureRandom();
 
     public AuthService(
@@ -50,8 +52,7 @@ public class AuthService {
             @Value("${studiy.auth.expor-token-reset-dev}") boolean exporTokenResetDev,
             @Value("${studiy.termos.versao}") String versaoTermos,
             GamificacaoService gamificacaoService,
-            EmailService emailService,
-            @Value("${studiy.auth.exigir-verificacao-email:false}") boolean exigirVerificacaoEmail
+            EmailService emailService
     ) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
@@ -61,37 +62,42 @@ public class AuthService {
         this.versaoTermos = versaoTermos;
         this.gamificacaoService = gamificacaoService;
         this.emailService = emailService;
-        this.exigirVerificacaoEmail = exigirVerificacaoEmail;
     }
 
     private static String normalizar(String email) {
         return email.trim().toLowerCase(Locale.ROOT);
     }
 
-    public AuthResponse registrar(RegisterRequest request) {
+    /**
+     * Cadastro sem enumeração: a resposta (e o trabalho feito, incluindo o bcrypt) é a mesma para e-mail
+     * novo ou já cadastrado. Quem já tem conta recebe um e-mail avisando; conta nova recebe o link de verificação.
+     * Nenhuma sessão é criada aqui: o usuário entra pelo login.
+     */
+    public String registrar(RegisterRequest request) {
         String email = normalizar(request.email());
-        if (usuarioRepository.existsByEmail(email)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "Não foi possível criar a conta. Se você já tem cadastro, entre ou recupere a senha.");
-        }
+        String senhaHash = passwordEncoder.encode(request.senha()); // sempre, para o tempo não denunciar o caminho
 
+        if (usuarioRepository.existsByEmail(email)) {
+            emailService.enviarAvisoContaExistente(email);
+            return MSG_GENERICA_CADASTRO;
+        }
         Usuario usuario = Usuario.builder()
                 .nome(request.nome().trim())
                 .email(email)
-                .senha(passwordEncoder.encode(request.senha()))
+                .senha(senhaHash)
                 .plano(Plano.FREE) // o plano NUNCA vem do cliente
                 .termosAceitosEm(LocalDateTime.now())
                 .termosVersao(versaoTermos)
-                .emailVerificado(!exigirVerificacaoEmail)
+                .emailVerificado(false)
                 .build();
-        usuarioRepository.save(usuario);
-
-        if (exigirVerificacaoEmail) {
-            enviarVerificacao(usuario);
-            // sem token: a conta só entra depois de confirmar o e-mail
-            return new AuthResponse(null, usuario.getNome(), usuario.getEmail(), usuario.planoEfetivo());
+        try {
+            usuarioRepository.saveAndFlush(usuario);
+        } catch (DataIntegrityViolationException corrida) { // dois cadastros simultâneos do mesmo e-mail
+            emailService.enviarAvisoContaExistente(email);
+            return MSG_GENERICA_CADASTRO;
         }
-        return resposta(usuario);
+        enviarVerificacao(usuario);
+        return MSG_GENERICA_CADASTRO;
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -101,11 +107,6 @@ public class AuthService {
 
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciais inválidas"));
-
-        if (exigirVerificacaoEmail && !usuario.isEmailVerificado()) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "Confirme seu e-mail para entrar. Não recebeu o link? Peça outro em verificar-email.html.");
-        }
 
         gamificacaoService.registrarAtividade(usuario);
         return resposta(usuario);
@@ -157,7 +158,7 @@ public class AuthService {
     }
 
     /** Token de 256 bits, uso único, 24 h; só o hash fica no banco e o token nunca vai para os logs. */
-    private void enviarVerificacao(Usuario usuario) {
+    void enviarVerificacao(Usuario usuario) {
         byte[] bytes = new byte[32];
         random.nextBytes(bytes);
         String token = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
@@ -184,6 +185,14 @@ public class AuthService {
                 .filter(u -> !u.isEmailVerificado())
                 .ifPresent(this::enviarVerificacao);
         return MSG_GENERICA_VERIF; // não revela se o e-mail existe
+    }
+
+    /** Recursos que custam dinheiro (IA, pagamento) só para quem confirmou o e-mail. */
+    public static void exigirEmailVerificado(Usuario usuario) {
+        if (!usuario.isEmailVerificado()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Confirme seu e-mail para usar este recurso. Não recebeu o link? Peça outro no seu perfil.");
+        }
     }
 
     private void revogarSessoes(Usuario usuario) {

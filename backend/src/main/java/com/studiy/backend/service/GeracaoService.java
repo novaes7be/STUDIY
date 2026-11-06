@@ -49,6 +49,7 @@ public class GeracaoService {
     }
 
     public GerarResponse gerar(Usuario usuario, Materia materia, GerarRequest request) {
+        AuthService.exigirEmailVerificado(usuario);
         usoMensalService.garantirDentroDoLimite(usuario);
 
         // O PDF precisa pertencer a ESTA matéria (que já foi validada como do usuário): evita acesso cruzado por ID.

@@ -13,5 +13,6 @@ public record PerfilResponse(
         Integer streakAtual,
         Integer xpParaProximoNivel,
         String avatar,
-        java.time.LocalDateTime planoExpiraEm
+        java.time.LocalDateTime planoExpiraEm,
+        boolean emailVerificado
 ) {}

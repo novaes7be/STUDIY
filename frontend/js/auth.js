@@ -57,12 +57,9 @@
         var resp = await api.post('/api/auth/registrar', {
           nome: v('nome'), email: v('email'), senha: v('senha'), aceitoTermos: true
         }, false);
-        if (!resp.token) { // servidor exige confirmar o e-mail antes de entrar
-          form.reset();
-          show('Conta criada! Enviamos um link de confirmação para o seu e-mail. Confirme para poder entrar.', 'info');
-          return;
-        }
-        entrar(resp);
+        // Resposta sempre genérica (o servidor não revela se o e-mail já tem conta): só exibe a mensagem.
+        form.reset();
+        show(resp.mensagem, 'info');
       });
     });
   }
