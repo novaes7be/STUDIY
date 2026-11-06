@@ -36,12 +36,6 @@ public class PagamentoController {
         return pagamentoService.consultar(usuarioAtual.resolver(auth), id);
     }
 
-    /** Apenas desenvolvimento: aprova o pedido sem cobrança (desligado quando há credenciais do Mercado Pago). */
-    @PostMapping("/{id}/simular")
-    public PagamentoDtos.PedidoResponse simular(Authentication auth, @PathVariable String id) {
-        return pagamentoService.simular(usuarioAtual.resolver(auth), id);
-    }
-
     /** Público, mas só aceita chamadas com x-signature válido do Mercado Pago. */
     @PostMapping("/webhook")
     public ResponseEntity<Void> webhook(

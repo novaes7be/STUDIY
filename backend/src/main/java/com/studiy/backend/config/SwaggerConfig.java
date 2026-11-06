@@ -13,9 +13,9 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
-/** Documentação da API (Swagger UI em /swagger-ui.html). Só existe fora do perfil prod. */
+/** Documentação da API (Swagger UI em /swagger-ui.html). Só existe no perfil dev. */
 @Configuration
-@Profile("!prod")
+@Profile("dev")
 public class SwaggerConfig {
 
     @Bean
