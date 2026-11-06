@@ -1,0 +1,38 @@
+name: Auditoria de dependências
+on:
+  pull_request:
+    paths: ['backend/pom.xml']
+  schedule:
+    - cron: '41 5 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  owasp:
+    name: OWASP Dependency-Check (falha com CVSS >= 7)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+      - name: Cache da base NVD
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository/org/owasp/dependency-check-data
+          key: nvd-${{ github.run_id }}
+          restore-keys: nvd-
+      # NVD_API_KEY (opcional, secret do repositório) deixa o download da base muito mais rápido.
+      - run: mvn -B -Paudit verify -DskipTests
+        working-directory: backend
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dependency-check
+          path: backend/target/dependency-check-report.html
