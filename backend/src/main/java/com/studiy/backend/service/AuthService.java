@@ -12,8 +12,6 @@ import com.studiy.backend.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -36,7 +34,9 @@ public class AuthService {
 
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
-    private final AuthenticationManager authenticationManager;
+    private final BloqueioLoginService bloqueio;
+    private final String hashFicticio;
+    private final long tempoMinimoLoginMs;
     private final JwtUtil jwtUtil;
     private final boolean exporTokenResetDev;
     private final String versaoTermos;
@@ -47,7 +47,8 @@ public class AuthService {
     public AuthService(
             UsuarioRepository usuarioRepository,
             PasswordEncoder passwordEncoder,
-            AuthenticationManager authenticationManager,
+            BloqueioLoginService bloqueio,
+            @Value("${studiy.auth.login-tempo-minimo-ms:400}") long tempoMinimoLoginMs,
             JwtUtil jwtUtil,
             @Value("${studiy.auth.expor-token-reset-dev}") boolean exporTokenResetDev,
             @Value("${studiy.termos.versao}") String versaoTermos,
@@ -56,7 +57,10 @@ public class AuthService {
     ) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
-        this.authenticationManager = authenticationManager;
+        this.bloqueio = bloqueio;
+        this.tempoMinimoLoginMs = tempoMinimoLoginMs;
+        // Hash bcrypt de uma senha aleatória: comparado quando o e-mail não existe, para o custo ser o mesmo.
+        this.hashFicticio = passwordEncoder.encode(java.util.UUID.randomUUID().toString());
         this.jwtUtil = jwtUtil;
         this.exporTokenResetDev = exporTokenResetDev;
         this.versaoTermos = versaoTermos;
@@ -100,16 +104,51 @@ public class AuthService {
         return MSG_GENERICA_CADASTRO;
     }
 
+    /**
+     * Login com tempo de resposta constante e sem enumeração:
+     *  - sempre exatamente UMA verificação bcrypt (contra um hash fictício se o e-mail não existir);
+     *  - conta bloqueada, e-mail inexistente e senha errada dão a MESMA resposta 401;
+     *  - a resposta nunca sai antes de um tempo mínimo (absorve a diferença das escritas no banco).
+     */
     public AuthResponse login(LoginRequest request) {
-        String email = normalizar(request.email());
-        // Lança BadCredentialsException (tratada como 401 genérico) se e-mail/senha não baterem.
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, request.senha()));
+        long inicio = System.nanoTime();
+        try {
+            String email = normalizar(request.email());
+            Usuario usuario = usuarioRepository.findByEmail(email).orElse(null);
+            boolean senhaOk = passwordEncoder.matches(request.senha(), usuario != null ? usuario.getSenha() : hashFicticio);
 
-        Usuario usuario = usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciais inválidas"));
+            if (usuario == null) {
+                throw credenciaisInvalidas();
+            }
+            if (bloqueio.bloqueado(usuario)) {
+                throw credenciaisInvalidas(); // nem a senha certa entra durante o bloqueio
+            }
+            if (!senhaOk) {
+                bloqueio.registrarFalha(usuario.getId());
+                throw credenciaisInvalidas();
+            }
+            bloqueio.limpar(usuario);
+            gamificacaoService.registrarAtividade(usuario); // salva a entidade (inclui o contador zerado)
+            return resposta(usuario);
+        } finally {
+            aguardarTempoMinimo(inicio);
+        }
+    }
 
-        gamificacaoService.registrarAtividade(usuario);
-        return resposta(usuario);
+    private static ResponseStatusException credenciaisInvalidas() {
+        return new ResponseStatusException(HttpStatus.UNAUTHORIZED,
+                "E-mail ou senha inválidos. Depois de várias tentativas, o acesso fica bloqueado por alguns minutos.");
+    }
+
+    private void aguardarTempoMinimo(long inicioNanos) {
+        long restante = tempoMinimoLoginMs - (System.nanoTime() - inicioNanos) / 1_000_000;
+        if (restante > 0) {
+            try {
+                Thread.sleep(restante);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 
     /** Encerra todas as sessões do usuário (invalida tokens já emitidos). */
@@ -154,6 +193,7 @@ public class AuthService {
         usuario.setSenha(passwordEncoder.encode(request.novaSenha()));
         usuario.setResetTokenHash(null);       // uso único
         usuario.setResetTokenExpira(null);
+        bloqueio.limpar(usuario);              // provou ser o dono do e-mail: sai do bloqueio
         revogarSessoes(usuario);               // troca de senha derruba as sessões abertas
     }
 

@@ -59,6 +59,12 @@ public class Usuario {
     private LocalDateTime termosAceitosEm;
     private String termosVersao;
 
+    // Bloqueio progressivo após falhas de login
+    @Builder.Default
+    @Column(nullable = false)
+    private int falhasLogin = 0;
+    private LocalDateTime bloqueadoAte;
+
     // Verificação de e-mail (contas antigas já nascem verificadas).
     @Builder.Default
     @Column(nullable = false)
