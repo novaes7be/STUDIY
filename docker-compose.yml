@@ -1,4 +1,5 @@
-# Sobe Postgres + API. Copie .env.example para .env e preencha antes (docker compose up --build).
+# Sobe Postgres + API + site com HTTPS (Caddy). Copie .env.example para .env e preencha antes.
+#   docker compose up -d --build
 services:
   db:
     image: postgres:16
@@ -12,6 +13,7 @@ services:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d studiy"]
       interval: 5s
       retries: 10
+    restart: unless-stopped
 
   api:
     build: ./backend
@@ -22,8 +24,25 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    expose:
+      - "8080"      # só o Caddy acessa; não fica aberta para a internet
+    restart: unless-stopped
+
+  web:
+    image: caddy:2
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
     ports:
-      - "8080:8080"
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./frontend:/srv:ro
+      - caddy_data:/data
+    depends_on:
+      - api
+    restart: unless-stopped
 
 volumes:
   pgdata:
+  caddy_data:

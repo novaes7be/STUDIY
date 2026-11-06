@@ -5,6 +5,7 @@ import com.studiy.backend.dto.ForgotPasswordRequest;
 import com.studiy.backend.dto.LoginRequest;
 import com.studiy.backend.dto.RegisterRequest;
 import com.studiy.backend.dto.ResetPasswordRequest;
+import com.studiy.backend.dto.VerificarEmailRequest;
 import com.studiy.backend.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
@@ -39,6 +40,16 @@ public class AuthController {
     @PostMapping("/redefinir-senha")
     public void redefinirSenha(@Valid @RequestBody ResetPasswordRequest request) {
         authService.redefinirSenha(request);
+    }
+
+    @PostMapping("/verificar-email")
+    public void verificarEmail(@Valid @RequestBody VerificarEmailRequest request) {
+        authService.verificarEmail(request.token());
+    }
+
+    @PostMapping("/reenviar-verificacao")
+    public MensagemResponse reenviarVerificacao(@Valid @RequestBody ForgotPasswordRequest request) {
+        return new MensagemResponse(authService.reenviarVerificacao(request));
     }
 
     @PostMapping("/logout")

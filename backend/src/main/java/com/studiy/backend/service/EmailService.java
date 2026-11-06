@@ -32,6 +32,33 @@ public class EmailService {
         this.frontUrl = frontUrl;
     }
 
+    public void enviarVerificacao(String para, String token) {
+        enviar(para, "Studiy: confirme seu e-mail",
+                "Bem-vindo ao Studiy! Confirme seu e-mail para ativar a conta:\n\n"
+                        + frontUrl.replaceAll("/+$", "") + "/verificar-email.html#token=" + token
+                        + "\n\nO link vale por 24 horas. Se não foi você, ignore esta mensagem.");
+    }
+
+    private void enviar(String para, String assunto, String texto) {
+        JavaMailSender sender = mailSender.getIfAvailable();
+        if (sender == null || remetente.isBlank()) {
+            log.warn("E-mail não configurado (SPRING_MAIL_HOST/MAIL_FROM): mensagem não enviada.");
+            return;
+        }
+        SimpleMailMessage msg = new SimpleMailMessage();
+        msg.setFrom(remetente);
+        msg.setTo(para);
+        msg.setSubject(assunto);
+        msg.setText(texto);
+        CompletableFuture.runAsync(() -> {
+            try {
+                sender.send(msg);
+            } catch (Exception e) {
+                log.error("Falha ao enviar e-mail ({}).", e.getClass().getSimpleName());
+            }
+        });
+    }
+
     public void enviarResetSenha(String para, String token) {
         JavaMailSender sender = mailSender.getIfAvailable();
         if (sender == null || remetente.isBlank()) {

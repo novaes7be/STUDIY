@@ -5,7 +5,7 @@
 (function () {
   var host = window.location.hostname;
   var local = host === '' || host === 'localhost' || host === '127.0.0.1';
-  var API_PRODUCAO = 'https://api.seudominio.com.br';
+  var API_PRODUCAO = ''; // produção: mesma origem (o Caddy encaminha /api para a API); sem CORS e sem mexer na CSP
 
   window.STUDIY = {
     API_BASE: local ? 'http://' + (host || 'localhost') + ':8080' : API_PRODUCAO,
@@ -13,9 +13,9 @@
     SUBJECTS: [
       { key: 'azul', label: 'Azul' },
       { key: 'roxo', label: 'Roxo' },
-      { key: 'vermelho', label: 'Vermelho' },
-      { key: 'grafite', label: 'Preto' }
+      { key: 'vermelho', label: 'Rosa' },
+      { key: 'grafite', label: 'Grafite' }
     ],
-    DEFAULT_SUBJECT: 'azul'
+    DEFAULT_SUBJECT: 'roxo'
   };
 })();

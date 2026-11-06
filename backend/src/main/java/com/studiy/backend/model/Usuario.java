@@ -59,6 +59,13 @@ public class Usuario {
     private LocalDateTime termosAceitosEm;
     private String termosVersao;
 
+    // Verificação de e-mail (contas antigas já nascem verificadas).
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean emailVerificado = true;
+    private String verifTokenHash;
+    private LocalDateTime verifTokenExpira;
+
     // Foto de perfil (data URL já validada e redimensionada), cifrada em repouso
     @jakarta.persistence.Convert(converter = com.studiy.backend.config.CriptoConverter.class)
     @jakarta.persistence.Column(columnDefinition = "TEXT")

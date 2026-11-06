@@ -54,9 +54,15 @@
         if (!document.getElementById('aceito').checked) {
           throw new Error('É preciso aceitar os Termos e a Política de Privacidade.');
         }
-        entrar(await api.post('/api/auth/registrar', {
+        var resp = await api.post('/api/auth/registrar', {
           nome: v('nome'), email: v('email'), senha: v('senha'), aceitoTermos: true
-        }, false));
+        }, false);
+        if (!resp.token) { // servidor exige confirmar o e-mail antes de entrar
+          form.reset();
+          show('Conta criada! Enviamos um link de confirmação para o seu e-mail. Confirme para poder entrar.', 'info');
+          return;
+        }
+        entrar(resp);
       });
     });
   }
@@ -82,6 +88,31 @@
         history.replaceState(null, '', 'recuperar-senha.html');
         show('Senha alterada. Redirecionando para o login...', 'info');
         setTimeout(function () { window.location.href = 'login.html'; }, 1500);
+      });
+    });
+  }
+
+  if (page === 'verificar') {
+    // O token vem no fragmento (#token=...), que o navegador não envia ao servidor nem a terceiros.
+    var tk = new URLSearchParams(window.location.hash.slice(1)).get('token');
+    var formReenvio = document.getElementById('etapaEmail');
+    if (tk) {
+      formReenvio.hidden = true;
+      show('Confirmando seu e-mail…', 'info');
+      api.post('/api/auth/verificar-email', { token: tk }, false).then(function () {
+        history.replaceState(null, '', 'verificar-email.html');
+        show('E-mail confirmado! Redirecionando para o login…', 'info');
+        setTimeout(function () { window.location.href = 'login.html'; }, 1500);
+      }).catch(function (e) {
+        formReenvio.hidden = false;
+        show((e.message || 'Link inválido ou expirado.') + ' Peça um novo link abaixo.');
+      });
+    }
+    formReenvio.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      enviar(async function () {
+        var r = await api.post('/api/auth/reenviar-verificacao', { email: v('email') }, false);
+        show(r.mensagem, 'info');
       });
     });
   }

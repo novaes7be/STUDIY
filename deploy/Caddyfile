@@ -1,0 +1,19 @@
+# HTTPS automático (Let's Encrypt) para o domínio em DOMAIN. Front e API na mesma origem.
+{$DOMAIN:localhost} {
+	encode gzip
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy strict-origin-when-cross-origin
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		-Server
+	}
+	handle /api/* {
+		reverse_proxy api:8080
+	}
+	handle {
+		root * /srv
+		file_server
+	}
+}

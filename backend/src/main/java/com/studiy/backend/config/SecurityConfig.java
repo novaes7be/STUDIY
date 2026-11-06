@@ -80,7 +80,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.POST,
                                 "/api/auth/registrar", "/api/auth/login",
-                                "/api/auth/esqueci-senha", "/api/auth/redefinir-senha").permitAll()
+                                "/api/auth/esqueci-senha", "/api/auth/redefinir-senha",
+                                "/api/auth/verificar-email", "/api/auth/reenviar-verificacao").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/saude").permitAll()
                         // Webhook do Mercado Pago: público, mas o serviço só aceita x-signature válido
                         .requestMatchers(HttpMethod.POST, "/api/pagamentos/webhook").permitAll()

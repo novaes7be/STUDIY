@@ -29,6 +29,7 @@ import java.util.Locale;
 public class AuthService {
 
     private static final String MSG_GENERICA_RESET = "Se o e-mail existir, as instruções de recuperação foram enviadas.";
+    private static final String MSG_GENERICA_VERIF = "Se o e-mail existir e ainda não estiver confirmado, enviamos um novo link.";
 
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
@@ -38,6 +39,7 @@ public class AuthService {
     private final String versaoTermos;
     private final GamificacaoService gamificacaoService;
     private final EmailService emailService;
+    private final boolean exigirVerificacaoEmail;
     private final SecureRandom random = new SecureRandom();
 
     public AuthService(
@@ -48,7 +50,8 @@ public class AuthService {
             @Value("${studiy.auth.expor-token-reset-dev}") boolean exporTokenResetDev,
             @Value("${studiy.termos.versao}") String versaoTermos,
             GamificacaoService gamificacaoService,
-            EmailService emailService
+            EmailService emailService,
+            @Value("${studiy.auth.exigir-verificacao-email:false}") boolean exigirVerificacaoEmail
     ) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
@@ -58,6 +61,7 @@ public class AuthService {
         this.versaoTermos = versaoTermos;
         this.gamificacaoService = gamificacaoService;
         this.emailService = emailService;
+        this.exigirVerificacaoEmail = exigirVerificacaoEmail;
     }
 
     private static String normalizar(String email) {
@@ -78,9 +82,15 @@ public class AuthService {
                 .plano(Plano.FREE) // o plano NUNCA vem do cliente
                 .termosAceitosEm(LocalDateTime.now())
                 .termosVersao(versaoTermos)
+                .emailVerificado(!exigirVerificacaoEmail)
                 .build();
         usuarioRepository.save(usuario);
 
+        if (exigirVerificacaoEmail) {
+            enviarVerificacao(usuario);
+            // sem token: a conta só entra depois de confirmar o e-mail
+            return new AuthResponse(null, usuario.getNome(), usuario.getEmail(), usuario.planoEfetivo());
+        }
         return resposta(usuario);
     }
 
@@ -91,6 +101,11 @@ public class AuthService {
 
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciais inválidas"));
+
+        if (exigirVerificacaoEmail && !usuario.isEmailVerificado()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Confirme seu e-mail para entrar. Não recebeu o link? Peça outro em verificar-email.html.");
+        }
 
         gamificacaoService.registrarAtividade(usuario);
         return resposta(usuario);
@@ -139,6 +154,36 @@ public class AuthService {
         usuario.setResetTokenHash(null);       // uso único
         usuario.setResetTokenExpira(null);
         revogarSessoes(usuario);               // troca de senha derruba as sessões abertas
+    }
+
+    /** Token de 256 bits, uso único, 24 h; só o hash fica no banco e o token nunca vai para os logs. */
+    private void enviarVerificacao(Usuario usuario) {
+        byte[] bytes = new byte[32];
+        random.nextBytes(bytes);
+        String token = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+        usuario.setVerifTokenHash(sha256(token));
+        usuario.setVerifTokenExpira(LocalDateTime.now().plusHours(24));
+        usuarioRepository.save(usuario);
+        emailService.enviarVerificacao(usuario.getEmail(), token);
+    }
+
+    public void verificarEmail(String token) {
+        Usuario usuario = usuarioRepository.findByVerifTokenHash(sha256(token))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Link inválido ou expirado"));
+        if (usuario.getVerifTokenExpira() == null || usuario.getVerifTokenExpira().isBefore(LocalDateTime.now())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Link inválido ou expirado");
+        }
+        usuario.setEmailVerificado(true);
+        usuario.setVerifTokenHash(null);   // uso único
+        usuario.setVerifTokenExpira(null);
+        usuarioRepository.save(usuario);
+    }
+
+    public String reenviarVerificacao(ForgotPasswordRequest request) {
+        usuarioRepository.findByEmail(normalizar(request.email()))
+                .filter(u -> !u.isEmailVerificado())
+                .ifPresent(this::enviarVerificacao);
+        return MSG_GENERICA_VERIF; // não revela se o e-mail existe
     }
 
     private void revogarSessoes(Usuario usuario) {
