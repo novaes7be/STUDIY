@@ -15,10 +15,11 @@ html.motion [data-reveal].is-in { opacity: 1; transform: none; }
 
 /* Flip 3D (flashcard) */
 .flip { perspective: 1400px; }
-.flip-inner { position: relative; transform-style: preserve-3d; transition: transform 640ms var(--ease); }
+.flip-inner { display: grid; transform-style: preserve-3d; transition: transform 640ms var(--ease); }
 .flip.is-flipped .flip-inner { transform: rotateY(180deg); }
-.flip-face { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
-.flip-back { position: absolute; inset: 0; transform: rotateY(180deg); }
+/* Frente e verso empilhados na mesma célula: a altura acompanha o lado maior */
+.flip-face { grid-area: 1 / 1; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.flip-back { transform: rotateY(180deg); }
 
 @media (prefers-reduced-motion: reduce) {
   html.motion [data-reveal] { opacity: 1; transform: none; transition: none; }

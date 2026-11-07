@@ -89,7 +89,7 @@
     limpar(box);
     state.materias.forEach(function (m) {
       box.append(h('button', {
-        class: 'subj', type: 'button', text: m.nome,
+        class: 'subj', type: 'button', text: m.nome, 'data-mark': chaveCor(m.cor),
         'aria-current': state.atual && state.atual.id === m.id ? 'true' : 'false',
         onclick: function () { selecionar(m.id); }
       }));
@@ -117,7 +117,7 @@
     document.title = (m ? m.nome + ' — ' : '') + 'Studiy';
 
     if (!state.perfil.emailVerificado) {
-      var reenviar = h('button', { class: 'btn btn-ghost btn-sm', type: 'button', text: 'Reenviar link' });
+      var reenviar = h('button', { class: 'btn btn-secondary btn-sm', type: 'button', text: 'Reenviar link' });
       reenviar.addEventListener('click', async function () {
         reenviar.disabled = true;
         try { var r = await api.post('/api/auth/reenviar-verificacao', { email: state.perfil.email }, false); toast(r.mensagem); }
@@ -135,7 +135,7 @@
           h('li', { text: 'Crie uma matéria e escolha a cor que combina com ela.' }),
           h('li', { text: 'Use "Enviar PDF" para subir o material (texto selecionável, até 10 MB).' }),
           h('li', { text: 'Gere o resumo e os flashcards e volte todo dia para revisar.' })),
-        h('button', { class: 'btn btn-grad i-check', type: 'button', text: 'Criar matéria', onclick: abrirNovaMateria })));
+        h('button', { class: 'btn btn-accent i-check', type: 'button', text: 'Criar matéria', onclick: abrirNovaMateria })));
       return;
     }
 
@@ -148,7 +148,7 @@
         onclick: function () { mudarCor(s.key); }
       }));
     });
-    sw.append(h('button', { class: 'btn btn-ghost btn-sm grow i-trash', type: 'button', text: 'Excluir matéria', onclick: excluirMateria }));
+    sw.append(h('button', { class: 'btn btn-secondary btn-sm grow i-trash', type: 'button', text: 'Excluir matéria', onclick: excluirMateria }));
     content.append(sw);
 
     /* Cartões de status */
@@ -156,17 +156,17 @@
     var barra = h('div', { class: 'bar', title: g.xpParaProximoNivel + ' XP para o próximo nível' }, h('span'));
     barra.firstChild.style.width = g.percentualNivel + '%';
     content.append(h('div', { class: 'stats' },
-      h('div', { class: 'stat stat-dark' }, h('div', { class: 'label', text: 'Sequência' }), h('div', { class: 'value', text: g.streakAtual + (g.streakAtual === 1 ? ' dia' : ' dias') })),
-      h('div', { class: 'stat stat-grad' }, h('div', { class: 'label', text: 'Nível ' + g.nivel }), h('div', { class: 'value', text: g.xp + ' XP' }), barra),
-      h('div', { class: 'stat stat-deep' }, h('div', { class: 'label', text: 'Revisões de hoje' }), h('div', { class: 'value', text: m.flashcardsPendentes + (m.flashcardsPendentes === 1 ? ' cartão' : ' cartões') }))));
+      h('div', { class: 'stat' }, h('div', { class: 'label', text: 'Sequência' }), h('div', { class: 'value' }, h('span', { 'data-count': '', text: g.streakAtual }), h('small', { text: g.streakAtual === 1 ? ' dia' : ' dias' }))),
+      h('div', { class: 'stat' }, h('div', { class: 'label', text: 'Nível ' + g.nivel }), h('div', { class: 'value' }, h('span', { 'data-count': '', text: g.xp }), h('small', { text: ' XP' })), barra),
+      h('div', { class: 'stat' }, h('div', { class: 'label', text: 'Revisões de hoje' }), h('div', { class: 'value' }, h('span', { 'data-count': '', text: m.flashcardsPendentes }), h('small', { text: m.flashcardsPendentes === 1 ? ' cartão' : ' cartões' })))));
 
     /* Materiais */
     var mat = h('section', { class: 'panel' }, h('h2', { text: 'Materiais' }));
     mat.append(h('p', { class: 'hint-text', text: state.perfil.regraUso }));
     if (!state.pdfs.length) mat.append(h('p', { class: 'empty', text: 'Nenhum PDF ainda. Use "Enviar PDF" para começar.' }));
     state.pdfs.forEach(function (p) {
-      var bResumo = h('button', { class: 'btn btn-grad btn-sm i-sparkle', type: 'button', text: 'Resumo' });
-      var bCards = h('button', { class: 'btn btn-ghost btn-sm i-sparkle', type: 'button', text: 'Flashcards' });
+      var bResumo = h('button', { class: 'btn btn-accent btn-sm i-sparkle', type: 'button', text: 'Resumo' });
+      var bCards = h('button', { class: 'btn btn-secondary btn-sm i-sparkle', type: 'button', text: 'Flashcards' });
       bResumo.addEventListener('click', function () { gerar(p.id, 'RESUMO', [bResumo, bCards], bResumo); });
       bCards.addEventListener('click', function () { gerar(p.id, 'FLASHCARD', [bResumo, bCards], bCards); });
       mat.append(h('div', { class: 'row' }, h('span', { class: 'name', text: p.nomeArquivo }), h('span', { class: 'actions' }, bResumo, bCards)));
@@ -189,6 +189,7 @@
     });
 
     content.append(h('div', { class: 'panels' }, ordemDosPaineis(m, mat, rev)), h('div', { class: 'panels' }, res));
+    if (window.Motion) Motion.observar(content); // números sobem (data-count)
   }
 
   /* Ordem dos dois painéis principais (no celular, o primeiro fica no topo da tela).
@@ -227,6 +228,7 @@
     var rotulo = ativo.textContent;
     botoes.forEach(function (b) { b.disabled = true; });
     ativo.textContent = 'Gerando...';
+    ativo.setAttribute('aria-busy', 'true');
     try {
       await api.post('/api/materias/' + state.atual.id + '/gerar', { pdfId: pdfId, tipo: tipo });
       await Promise.all([recarregarPerfil(), recarregarMaterias()]);
@@ -237,6 +239,7 @@
       falha(e);
       botoes.forEach(function (b) { b.disabled = false; });
       ativo.textContent = rotulo;
+      ativo.removeAttribute('aria-busy');
     }
   }
 
@@ -248,13 +251,13 @@
     var form = new FormData();
     form.append('arquivo', arquivo);
     var btn = $('#uploadBtn');
-    btn.disabled = true; btn.textContent = 'Enviando...';
+    btn.disabled = true; btn.textContent = 'Enviando...'; btn.setAttribute('aria-busy', 'true');
     try {
       await api.upload('/api/materias/' + state.atual.id + '/pdfs', form);
       toast('PDF enviado. Agora gere o resumo ou os flashcards.');
       await selecionar(state.atual.id);
     } catch (e) { falha(e); }
-    finally { btn.disabled = false; btn.textContent = 'Enviar PDF'; }
+    finally { btn.disabled = false; btn.textContent = 'Enviar PDF'; btn.removeAttribute('aria-busy'); }
   });
 
   /* ---------- Nova matéria ---------- */
@@ -306,18 +309,26 @@
         return;
       }
       var c = fila[i];
-      var resposta = h('div', { class: 'card-a', text: c.resposta, hidden: true });
+      // Flashcard com flip 3D (css/motion.css): frente = pergunta, verso = resposta
+      var cartao = h('div', { class: 'flip flashcard' }, h('div', { class: 'flip-inner' },
+        h('div', { class: 'flip-face flip-front' }, h('p', { class: 'card-label', text: 'Pergunta' }), h('p', { class: 'card-q', text: c.pergunta })),
+        h('div', { class: 'flip-face flip-back', 'aria-hidden': 'true' }, h('p', { class: 'card-label', text: 'Resposta' }), h('div', { class: 'card-a', text: c.resposta }))));
       var notas = h('div', { class: 'rate', hidden: true });
       opcoes.forEach(function (o) {
-        notas.append(h('button', { class: 'btn btn-grad btn-sm', type: 'button', text: o.rotulo, onclick: async function () {
+        notas.append(h('button', { class: 'btn btn-accent btn-sm', type: 'button', text: o.rotulo, onclick: async function () {
           try { await api.post('/api/materias/' + state.atual.id + '/flashcards/' + c.id + '/revisar', { resposta: o.valor }); i++; mostrar(); }
           catch (e) { falha(e); }
         } }));
       });
-      var ver = h('button', { class: 'btn btn-dark', type: 'button', text: 'Ver resposta' });
-      ver.addEventListener('click', function () { resposta.hidden = false; notas.hidden = false; ver.hidden = true; });
-      box.append(h('p', { class: 'empty', text: 'Cartão ' + (i + 1) + ' de ' + fila.length }),
-        h('p', { class: 'card-q', text: c.pergunta }), resposta, ver, notas);
+      var ver = h('button', { class: 'btn btn-primary', type: 'button', text: 'Ver resposta' });
+      ver.addEventListener('click', function () {
+        cartao.classList.add('is-flipped');
+        cartao.querySelector('.flip-back').removeAttribute('aria-hidden');
+        cartao.querySelector('.flip-front').setAttribute('aria-hidden', 'true');
+        notas.hidden = false; ver.hidden = true;
+        notas.querySelector('button').focus();
+      });
+      box.append(h('p', { class: 'empty', text: 'Cartão ' + (i + 1) + ' de ' + fila.length }), cartao, ver, notas);
     }
     mostrar();
     dlg.showModal();
@@ -346,7 +357,7 @@
     pintarAvatar($('#dlgAvatar'), p);
     $('#avatarDel').hidden = !p.avatar;
     if (p.admin && !$('#adminLink')) { // o servidor diz quem é admin; o painel em si exige MFA
-      $('#sideName').after(h('a', { id: 'adminLink', class: 'btn btn-ghost btn-sm', href: 'admin.html', text: 'Admin' }));
+      $('#sideName').after(h('a', { id: 'adminLink', class: 'btn btn-secondary btn-sm', href: 'admin.html', text: 'Admin' }));
     }
   }
   function accMsg(texto, ok) {

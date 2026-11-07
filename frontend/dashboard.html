@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="css/buttons.css">
 <link rel="stylesheet" href="css/motion.css">
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/painel.css">
 <script src="js/theme.js"></script>
 <script src="js/motion.js" defer></script>
 <script src="js/botao.js" defer></script>
@@ -20,9 +21,13 @@
 <body>
 <div class="app" id="app" data-subject="verde">
   <aside class="side" aria-label="Menu lateral">
-    <a class="logo" href="index.html">Studiy</a>
+    <a class="logo" href="index.html">STUDIY<span class="logo-dot">.</span></a>
     <a class="home-link" href="index.html">← Voltar para a home</a>
-    <nav aria-label="Matérias"><h2>MATÉRIAS</h2><div class="subj-list" id="subjectList"></div></nav>
+    <nav aria-label="Matérias"><h2>Matérias</h2><div class="subj-list" id="subjectList"></div></nav>
+    <div class="side-soon" aria-label="Em breve" role="group">
+      <span class="subj is-soon" aria-disabled="true">Ranking <small>Em breve</small></span>
+      <span class="subj is-soon" aria-disabled="true">Questionário <small>Em breve</small></span>
+    </div>
     <div class="side-foot">
       <div class="usage">
         <div class="top"><span id="planName">Plano</span><a id="upgradeLink" href="pagamento.html">Assinar Pro</a></div>
@@ -43,7 +48,7 @@
       <h1 id="subjectTitle">Studiy</h1>
       <div class="head-actions">
         
-        <button class="btn btn-grad i-upload" id="uploadBtn" type="button" hidden>Enviar PDF</button>
+        <button class="btn btn-accent i-upload" id="uploadBtn" type="button" hidden>Enviar PDF</button>
         <input id="fileInput" type="file" accept="application/pdf,.pdf" hidden>
       </div>
     </div>
@@ -57,14 +62,14 @@
     <div id="newMsg" class="msg error" role="alert" hidden></div>
     <div class="field"><label for="newName">Nome</label><input id="newName" type="text" maxlength="100" required></div>
     <fieldset class="swatches"><legend>Cor</legend><span id="newSwatches" class="swatches"></span></fieldset>
-    <div class="dlg-actions"><button class="btn btn-ghost" type="button" data-close>Cancelar</button><button class="btn btn-grad i-check" type="submit">Criar</button></div>
+    <div class="dlg-actions"><button class="btn btn-secondary" type="button" data-close>Cancelar</button><button class="btn btn-accent i-check" type="submit">Criar</button></div>
   </form>
 </dialog>
 
 <dialog id="reviewDialog" aria-labelledby="revTitle">
   <h2 id="revTitle">Revisão</h2>
   <div id="reviewBody"></div>
-  <div class="dlg-actions"><button class="btn btn-ghost" type="button" data-close>Fechar</button></div>
+  <div class="dlg-actions"><button class="btn btn-secondary" type="button" data-close>Fechar</button></div>
 </dialog>
 
 <dialog id="accountDialog" class="wide" aria-labelledby="accTitle">
@@ -76,8 +81,8 @@
       <p class="acc-name" id="dlgName"></p>
       <p class="empty" id="dlgEmail"></p>
       <div class="acc-actions">
-        <button class="btn btn-grad btn-sm i-upload" id="avatarBtn" type="button">Escolher foto</button>
-        <button class="btn btn-ghost btn-sm i-trash" id="avatarDel" type="button">Remover foto</button>
+        <button class="btn btn-accent btn-sm i-upload" id="avatarBtn" type="button">Escolher foto</button>
+        <button class="btn btn-secondary btn-sm i-trash" id="avatarDel" type="button">Remover foto</button>
         <input id="avatarFile" type="file" accept="image/png,image/jpeg,image/webp" hidden>
       </div>
       <p class="hint-text">PNG, JPEG ou WebP. A imagem é recortada em quadrado e reduzida automaticamente.</p>
@@ -86,7 +91,7 @@
 
   <form id="nameForm" class="acc-section" novalidate>
     <div class="field"><label for="accNome">Nome</label><input id="accNome" type="text" maxlength="100" autocomplete="name" required></div>
-    <button class="btn btn-grad btn-sm i-check" type="submit">Salvar nome</button>
+    <button class="btn btn-accent btn-sm i-check" type="submit">Salvar nome</button>
   </form>
 
   <details class="acc-section">
@@ -94,7 +99,7 @@
     <form id="emailForm" novalidate>
       <div class="field"><label for="accNovoEmail">Novo e-mail</label><input id="accNovoEmail" type="email" maxlength="254" autocomplete="email" required></div>
       <div class="field"><label for="accSenhaEmail">Senha atual</label><input id="accSenhaEmail" type="password" autocomplete="current-password" required></div>
-      <button class="btn btn-grad btn-sm i-check" type="submit">Alterar e-mail</button>
+      <button class="btn btn-accent btn-sm i-check" type="submit">Alterar e-mail</button>
     </form>
   </details>
 
@@ -103,25 +108,25 @@
     <form id="passForm" novalidate>
       <div class="field"><label for="accSenhaAtual">Senha atual</label><input id="accSenhaAtual" type="password" autocomplete="current-password" required></div>
       <div class="field"><label for="accSenhaNova">Nova senha</label><input id="accSenhaNova" type="password" autocomplete="new-password" minlength="8" maxlength="72" required><p class="hint">De 8 a 72 caracteres. Suas outras sessões serão encerradas.</p></div>
-      <button class="btn btn-grad btn-sm i-check" type="submit">Alterar senha</button>
+      <button class="btn btn-accent btn-sm i-check" type="submit">Alterar senha</button>
     </form>
   </details>
 
   <div class="acc-section">
     <h3>Seus dados</h3>
     <div class="acc-actions">
-      <button class="btn btn-ghost btn-sm i-download" id="exportBtn" type="button">Exportar meus dados</button>
-      <button class="btn btn-dark btn-sm i-user" id="logoutBtn" type="button">Sair</button>
+      <button class="btn btn-secondary btn-sm i-download" id="exportBtn" type="button">Exportar meus dados</button>
+      <button class="btn btn-tertiary btn-sm i-user" id="logoutBtn" type="button">Sair</button>
     </div>
     <p class="hint-text"><a href="privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a> · <a href="termos.html" target="_blank" rel="noopener">Termos</a></p>
-    <button class="btn btn-danger btn-sm i-trash" id="delStart" type="button">Excluir minha conta</button>
+    <button class="btn btn-destructive btn-sm i-trash" id="delStart" type="button">Excluir minha conta</button>
     <form id="delForm" hidden>
       <p>Isso apaga sua conta e todo o conteúdo, sem volta. Confirme com sua senha:</p>
       <div class="field"><label for="delPass">Senha</label><input id="delPass" type="password" autocomplete="current-password" required></div>
-      <button class="btn btn-danger btn-sm" type="submit">Excluir definitivamente</button>
+      <button class="btn btn-destructive btn-sm" type="submit">Excluir definitivamente</button>
     </form>
   </div>
-  <div class="dlg-actions"><button class="btn btn-ghost btn-sm" type="button" data-close>Fechar</button></div>
+  <div class="dlg-actions"><button class="btn btn-secondary btn-sm" type="button" data-close>Fechar</button></div>
 </dialog>
 
 <div class="toasts" id="toasts" role="status" aria-live="polite"></div>
