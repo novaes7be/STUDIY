@@ -35,6 +35,12 @@
 .subj.add { color: var(--text-muted); font-size: var(--fs-md); }
 .subj.add:hover { color: var(--text); }
 
+/* Ranking: fora da lista de matérias, com marcador próprio (barra preta) */
+.side-extra { display: grid; padding-top: 12px; border-top: 1px solid var(--line); }
+#rankingBtn::before { content: ""; flex: none; width: 10px; height: 10px; border-radius: 3px; background: var(--text); transition: width var(--dur-2) var(--ease-spring); }
+#rankingBtn[aria-current="true"] { color: var(--text); font-weight: 800; }
+#rankingBtn[aria-current="true"]::before { width: 22px; }
+
 /* Itens reservados: não interativos, com etiqueta */
 .side-soon { display: grid; padding-top: 12px; border-top: 1px solid var(--line); }
 .subj.is-soon { cursor: default; color: var(--text-muted); opacity: .75; }
@@ -114,17 +120,44 @@ details.resumo summary { display: flex; align-items: center; min-height: 44px; c
 .card-a { white-space: pre-wrap; overflow-wrap: anywhere; font-size: var(--fs-lg); }
 .rate { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 14px; }
 
+/* ---------- Ranking ---------- */
+.rank-tabs { display: inline-flex; gap: 4px; padding: 4px; border-radius: var(--r-btn); box-shadow: inset 0 0 0 1px var(--line); align-self: flex-start; }
+.rank-tabs .btn[aria-pressed="true"] { --b-bg: var(--text); --b-fg: var(--bg); --b-h: var(--text); }
+.rank-meta { margin: 0; color: var(--text-muted); font-size: var(--fs-sm); }
+.rank-meta strong { color: var(--text); }
+.rank-offline { color: var(--warn); }
+.rank-me { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 20px; padding: 20px 22px; border-radius: var(--r-card); background: var(--accent); color: var(--on-accent); }
+.rank-me .card-label { width: 100%; color: inherit; opacity: .85; }
+.rank-me-pos { margin: 0; font-size: clamp(56px, 7vw, 96px); font-weight: 900; letter-spacing: -.055em; line-height: .9; font-variant-numeric: tabular-nums; }
+.rank-me-pos small { font-size: .5em; }
+.rank-me-val { margin: 0; font-size: var(--fs-lg); font-weight: 700; }
+.rank-cta { display: grid; gap: 8px; justify-items: start; }
+.rank-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--text); }
+.rank-row { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; align-items: center; gap: 12px; min-height: 52px; padding: 0 8px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.rank-pos { font-weight: 800; color: var(--text-muted); }
+.rank-nome { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.rank-val { color: var(--text-muted); font-weight: 600; }
+.rank-row.is-top { min-height: 68px; }
+.rank-row.is-top .rank-pos { font-size: var(--fs-2xl); font-weight: 900; letter-spacing: -.04em; color: var(--text); }
+.rank-row.is-top .rank-nome { font-size: var(--fs-lg); font-weight: 800; }
+.rank-row.is-voce { background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); }
+/* Esqueleto só no primeiro acesso (depois há sempre uma prévia salva) */
+.rank-skel { background: linear-gradient(90deg, var(--surface-2) 0, var(--line) 50%, var(--surface-2) 100%) 0 0 / 200% 100%; animation: rank-brilho 1.2s linear infinite; }
+@keyframes rank-brilho { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .rank-skel { animation: none; } }
+
 /* ---------- Celular/tablet: a barra lateral vira um cabeçalho compacto ---------- */
 @media (max-width: 900px) {
   .app { grid-template-columns: 1fr; }
   .side {
     position: static; height: auto; overflow: visible; padding: 12px 16px; gap: 10px 8px;
-    display: grid; grid-template-columns: 1fr auto; grid-template-areas: "logo foot" "subj subj" "usage usage";
+    display: grid; grid-template-columns: 1fr auto; grid-template-areas: "logo foot" "subj subj" "rank rank" "usage usage";
     align-items: center; border-right: 0; border-bottom: 1px solid var(--line);
   }
   .side .logo { grid-area: logo; }
   .home-link, .side h2, .side-soon { display: none; }
   .side nav { grid-area: subj; min-width: 0; }
+  .side .side-extra { grid-area: rank; display: flex; padding: 0; border: 0; }
   .subj-list { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; scroll-snap-type: x proximity; scrollbar-width: none; }
   .subj-list::-webkit-scrollbar { display: none; }
   .subj { width: auto; flex: none; padding: 0 14px; font-size: 15px; border-radius: var(--r-pill); box-shadow: inset 0 0 0 1px var(--line); scroll-snap-align: start; }

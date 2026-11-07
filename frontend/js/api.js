@@ -12,10 +12,18 @@
     this.status = status; this.message = message; this.fields = fields || null;
   }
 
+  /* Prévias salvas no navegador (ex.: ranking) são da sessão: somem no login e no logout,
+     para ninguém ver a "sua posição" de outra conta no mesmo computador. */
+  function limparPrevias() {
+    try {
+      Object.keys(localStorage).forEach(function (k) { if (k.indexOf('studiy-previa-') === 0) localStorage.removeItem(k); });
+    } catch (e) { /* storage bloqueado */ }
+  }
+
   var hint = {
     get: function () { try { return sessionStorage.getItem(HINT_KEY) === '1'; } catch (e) { return false; } },
-    set: function () { try { sessionStorage.setItem(HINT_KEY, '1'); } catch (e) { /* ignora */ } },
-    clear: function () { try { sessionStorage.removeItem(HINT_KEY); } catch (e) { /* ignora */ } }
+    set: function () { limparPrevias(); try { sessionStorage.setItem(HINT_KEY, '1'); } catch (e) { /* ignora */ } },
+    clear: function () { limparPrevias(); try { sessionStorage.removeItem(HINT_KEY); } catch (e) { /* ignora */ } }
   };
 
   function lerCookie(nome) {

@@ -3,7 +3,7 @@
 (function () {
   'use strict';
   var CFG = window.STUDIY;
-  var state = { perfil: null, materias: [], atual: null, pdfs: [], resumos: [] };
+  var state = { perfil: null, materias: [], atual: null, pdfs: [], resumos: [], tela: 'materia', rankingTipo: 'SEMANA' };
 
   var $ = function (sel) { return document.querySelector(sel); };
   var app = $('#app');
@@ -68,6 +68,7 @@
   }
 
   async function selecionar(id) {
+    sairDoRanking();
     state.atual = state.materias.find(function (m) { return m.id === id; }) || null;
     state.pdfs = []; state.resumos = [];
     if (state.atual) {
@@ -90,11 +91,115 @@
     state.materias.forEach(function (m) {
       box.append(h('button', {
         class: 'subj', type: 'button', text: m.nome, 'data-mark': chaveCor(m.cor),
-        'aria-current': state.atual && state.atual.id === m.id ? 'true' : 'false',
+        'aria-current': state.tela === 'materia' && state.atual && state.atual.id === m.id ? 'true' : 'false',
         onclick: function () { selecionar(m.id); }
       }));
     });
     box.append(h('button', { class: 'subj add', type: 'button', text: '+ Nova matéria', onclick: abrirNovaMateria }));
+    $('#rankingBtn').setAttribute('aria-current', state.tela === 'ranking' ? 'true' : 'false');
+  }
+
+  /* ---------- Ranking ----------
+     A API só lê uma "foto" pré-calculada no servidor. Aqui: mostra na hora a última foto
+     salva no navegador (prévia), busca a nova em segundo plano e troca sem spinner; com a
+     tela aberta, confere de novo a cada minuto. Só exibe o que vem pronto da API. */
+  var PREVIA = 'studiy-previa-ranking-';
+  var rankingTimer = null;
+
+  function lerPrevia(tipo) {
+    try { return JSON.parse(localStorage.getItem(PREVIA + tipo) || 'null'); } catch (e) { return null; }
+  }
+  function salvarPrevia(tipo, dados) {
+    try { localStorage.setItem(PREVIA + tipo, JSON.stringify(dados)); } catch (e) { /* storage cheio ou bloqueado */ }
+  }
+  function haQuanto(iso) {
+    var min = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+    return min < 1 ? 'agora há pouco' : min === 1 ? 'há 1 minuto' : 'há ' + min + ' minutos';
+  }
+
+  function abrirRanking() {
+    state.tela = 'ranking';
+    renderLateral();
+    $('#uploadBtn').hidden = true;
+    $('#subjectTitle').textContent = 'Ranking';
+    document.title = 'Ranking — Studiy';
+    carregarRanking(state.rankingTipo);
+    clearInterval(rankingTimer);
+    rankingTimer = setInterval(function () { if (!document.hidden) carregarRanking(state.rankingTipo, true); }, 60000);
+  }
+  function sairDoRanking() {
+    state.tela = 'materia';
+    clearInterval(rankingTimer);
+    rankingTimer = null;
+  }
+
+  async function carregarRanking(tipo, silencioso) {
+    state.rankingTipo = tipo;
+    var previa = lerPrevia(tipo);
+    if (!silencioso) renderRanking(previa, tipo, false);       // prévia na hora (ou esqueleto)
+    try {
+      var novo = await api.get('/api/ranking?tipo=' + encodeURIComponent(tipo));
+      if (state.tela !== 'ranking' || state.rankingTipo !== tipo) return;  // usuário já saiu ou trocou de aba
+      salvarPrevia(tipo, novo);
+      if (!previa || JSON.stringify(previa) !== JSON.stringify(novo) || !silencioso) renderRanking(novo, tipo, false);
+      else if (novo.geradoEm) $('.rank-meta span').textContent = ' · atualizado ' + haQuanto(novo.geradoEm);  // só o relógio
+    } catch (e) {
+      if (state.tela === 'ranking' && state.rankingTipo === tipo && !silencioso) renderRanking(previa, tipo, true);
+    }
+  }
+
+  function renderRanking(d, tipo, offline) {
+    var content = $('#content');
+    limpar(content);
+    var abas = h('div', { class: 'rank-tabs', role: 'group', 'aria-label': 'Quadro do ranking' });
+    [['SEMANA', 'Semana'], ['SEQUENCIA', 'Sequência'], ['XP', 'XP']].forEach(function (t) {
+      abas.append(h('button', {
+        class: 'btn btn-tertiary btn-sm', type: 'button', text: t[1], 'aria-pressed': t[0] === tipo ? 'true' : 'false',
+        onclick: function () { if (t[0] !== state.rankingTipo) carregarRanking(t[0]); }
+      }));
+    });
+    content.append(abas);
+
+    if (!d) {  // primeira vez, sem prévia: esqueleto em vez de spinner
+      var esq = h('ol', { class: 'rank-list is-loading', 'aria-busy': 'true', 'aria-label': 'Carregando ranking' });
+      for (var i = 0; i < 6; i++) esq.append(h('li', { class: 'rank-row rank-skel' }));
+      content.append(offline ? h('p', { class: 'msg error', role: 'alert', text: 'Não foi possível carregar o ranking agora.' }) : esq);
+      return;
+    }
+
+    content.append(h('p', { class: 'rank-meta' },
+      h('strong', { text: d.titulo }),
+      h('span', { text: d.geradoEm ? ' · atualizado ' + haQuanto(d.geradoEm) : ' · sendo calculado' }),
+      offline ? h('span', { class: 'rank-offline', text: ' · sem conexão, mostrando a última versão' }) : ''));
+
+    if (!d.participando) {
+      content.append(h('section', { class: 'panel rank-cta' },
+        h('h2', { text: 'Entre no ranking' }),
+        h('p', { class: 'hint-text', text: 'Escolha um apelido no seu perfil. Só o apelido aparece para os outros; seu nome e e-mail nunca.' }),
+        h('button', { class: 'btn btn-accent btn-sm btn-arrow', type: 'button', text: 'Escolher apelido',
+          onclick: function () { $('#accountBtn').click(); } })));
+    } else if (d.voce) {
+      content.append(h('section', { class: 'rank-me' },
+        h('p', { class: 'card-label', text: 'Sua posição' }),
+        h('p', { class: 'rank-me-pos' }, h('span', { text: d.voce.posicao }), h('small', { text: 'º' })),
+        h('p', { class: 'rank-me-val', text: d.voce.valor + ' ' + d.unidade })));
+    } else {
+      content.append(h('p', { class: 'hint-text', text: 'Você ainda não pontuou neste quadro. Revise alguns cartões e volte aqui.' }));
+    }
+
+    if (!d.itens.length) {
+      content.append(h('p', { class: 'empty', text: 'Ninguém pontuou neste quadro ainda.' }));
+    } else {
+      var lista = h('ol', { class: 'rank-list' });
+      d.itens.forEach(function (it) {
+        lista.append(h('li', { class: 'rank-row' + (it.voce ? ' is-voce' : '') + (it.posicao <= 3 ? ' is-top' : '') },
+          h('span', { class: 'rank-pos', text: it.posicao + 'º' }),
+          h('span', { class: 'rank-nome', text: it.apelido + (it.voce ? ' (você)' : '') }),
+          h('span', { class: 'rank-val', text: it.valor + ' ' + d.unidade })));
+      });
+      content.append(lista);
+    }
+    if (window.Motion) Motion.observar(content);
   }
 
   function renderUso() {
@@ -477,6 +582,8 @@
   document.querySelectorAll('[data-close]').forEach(function (b) {
     b.addEventListener('click', function () { b.closest('dialog').close(); });
   });
+
+  $('#rankingBtn').addEventListener('click', abrirRanking);
 
   init();
 })();
