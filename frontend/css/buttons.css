@@ -1,0 +1,98 @@
+/* ==========================================================================
+   STUDIY — BOTÕES (.btn + variantes). Somente tokens (css/tokens.css).
+   Tamanhos: .btn-sm 44 · .btn 52 · .btn-lg 60.
+   Variantes: primary · accent · secondary · tertiary · destructive · light · ghost-dark.
+   Ícone à esquerda só com classe i-*; seta à direita com .btn-arrow.
+   Carregando: aria-busy="true" + disabled (ver js/botao.js).
+   ========================================================================== */
+.btn {
+  --isz: 18px;
+  --b-bg: transparent; --b-fg: var(--text); --b-bd: transparent; --b-sh: none; --b-h: var(--b-bg);
+  position: relative;
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  min-height: var(--btn-h); padding: 0 22px;
+  border: 0; border-radius: var(--r-btn);
+  background: var(--b-bg); color: var(--b-fg);
+  box-shadow: inset 0 0 0 1px var(--b-bd), var(--b-sh);
+  font: inherit; font-weight: 650; font-size: var(--fs-md); line-height: 1.2; letter-spacing: -.01em;
+  text-decoration: none; white-space: nowrap;
+  cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--dur-1) var(--ease), color var(--dur-1) var(--ease),
+              box-shadow var(--dur-1) var(--ease), transform var(--dur-1) var(--ease), opacity var(--dur-1) var(--ease);
+}
+.btn:not([disabled]):not([aria-disabled="true"]):hover { background: var(--b-h); transform: translateY(-1px) scale(1.02); }
+.btn:not([disabled]):not([aria-disabled="true"]):active { transform: scale(.97); transition-duration: var(--dur-press); }
+.btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.btn[disabled], .btn[aria-disabled="true"] { opacity: .55; cursor: not-allowed; }
+
+.btn-sm { --isz: 16px; min-height: var(--btn-h-sm); padding: 0 16px; border-radius: var(--r-btn-sm); font-size: var(--fs-sm); }
+.btn-lg { --isz: 20px; min-height: var(--btn-h-lg); padding: 0 28px; border-radius: var(--r-btn-lg); font-size: var(--fs-lg); }
+.btn-block { width: 100%; }
+
+/* Ícone à esquerda */
+.btn[class*=" i-"]::before, .btn[class^="i-"]::before {
+  content: ""; flex: none; width: var(--isz); height: var(--isz); background-color: currentColor;
+  -webkit-mask: var(--ico) center / contain no-repeat; mask: var(--ico) center / contain no-repeat;
+}
+
+/* Seta à direita: desliza 3px no hover com mola */
+.btn-arrow::after {
+  content: ""; flex: none; width: var(--isz); height: var(--isz); background-color: currentColor;
+  -webkit-mask: var(--ico-arrow-right) center / contain no-repeat; mask: var(--ico-arrow-right) center / contain no-repeat;
+  transition: transform var(--dur-2) var(--ease-spring);
+}
+.btn-arrow:not([disabled]):hover::after { transform: translateX(3px); }
+
+/* ---------- Variantes ---------- */
+.btn-primary     { --b-bg: var(--text); --b-fg: var(--bg); --b-h: color-mix(in srgb, var(--text) 86%, var(--bg)); --b-sh: var(--hi), var(--shadow-1); }
+.btn-accent      { --b-bg: var(--accent); --b-fg: var(--on-accent); --b-h: var(--accent-strong); --b-sh: var(--hi), 0 1px 2px color-mix(in srgb, var(--accent) 30%, transparent), 0 6px 16px color-mix(in srgb, var(--accent) 22%, transparent); }
+.btn-secondary   { --b-bg: var(--surface); --b-fg: var(--text); --b-bd: var(--line); --b-h: var(--surface-2); --b-sh: var(--shadow-1); }
+.btn-tertiary    { --b-bg: transparent; --b-fg: var(--text); --b-h: var(--hover-tint); }
+.btn-destructive { --b-bg: var(--danger); --b-fg: var(--on-danger); --b-h: color-mix(in srgb, var(--danger) 88%, black); --b-sh: var(--hi), var(--shadow-1); }
+/* Sobre superfícies coloridas/escuras (CTA azul, plano Pro, seção preta) */
+.btn-light       { --b-bg: var(--c-white); --b-fg: var(--c-black); --b-h: var(--c-gray-50); --b-sh: var(--shadow-1); }
+.btn-ghost-dark  { --b-bg: transparent; --b-fg: var(--c-white); --b-bd: rgba(255, 255, 255, .32); --b-h: rgba(255, 255, 255, .1); }
+
+/* Ponto vermelho de notificação (ex.: "Entrar" na nav) */
+.btn-dot::after {
+  content: ""; position: absolute; top: 9px; right: 9px; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--dot); box-shadow: 0 0 0 2px var(--surface);
+}
+
+/* ---------- Carregando: spinner no lugar do ícone ---------- */
+.btn[aria-busy="true"] { cursor: progress; }
+.btn[aria-busy="true"]::before {
+  content: ""; flex: none; width: var(--isz); height: var(--isz); border-radius: 50%;
+  -webkit-mask: none; mask: none; background: none;
+  border: 2px solid currentColor; border-right-color: transparent;
+  animation: btn-gira .7s linear infinite;
+}
+.btn[aria-busy="true"].btn-arrow::after { display: none; }
+@keyframes btn-gira { to { transform: rotate(360deg); } }
+
+/* ---------- Botão só de ícone (tema, fechar) ---------- */
+.icon-btn {
+  width: var(--control-h); height: var(--control-h); flex: none; border-radius: var(--r-btn);
+  border: 0; background: transparent; color: var(--text); cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: background-color var(--dur-1) var(--ease), transform var(--dur-1) var(--ease);
+}
+.icon-btn:hover { background: var(--hover-tint); }
+.icon-btn:active { transform: scale(.94); transition-duration: var(--dur-press); }
+.icon-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+/* ---------- Classes antigas → variantes novas (somem quando o HTML/JS for migrado) ---------- */
+.btn-grad   { --b-bg: var(--accent); --b-fg: var(--on-accent); --b-h: var(--accent-strong); --b-sh: var(--hi), var(--shadow-1); }
+.btn-ghost  { --b-bg: var(--surface); --b-fg: var(--text); --b-bd: var(--line); --b-h: var(--surface-2); --b-sh: var(--shadow-1); }
+.btn-dark   { --b-bg: transparent; --b-fg: var(--text); --b-h: var(--hover-tint); }
+.btn-danger { --b-bg: var(--danger); --b-fg: var(--on-danger); --b-h: color-mix(in srgb, var(--danger) 88%, black); }
+
+@media (prefers-reduced-motion: reduce) {
+  .btn, .btn::after, .icon-btn { transition: none; }
+  .btn:not([disabled]):hover, .btn:not([disabled]):active { transform: none; }
+  .btn[aria-busy="true"]::before { animation-duration: 2s; }
+}
+
+:root {
+  --ico-arrow-right: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14M13 6l6 6-6 6'/%3E%3C/svg%3E");
+}
