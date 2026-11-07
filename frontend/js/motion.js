@@ -8,7 +8,9 @@
   var reduz = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   var temIO = 'IntersectionObserver' in window;
   var CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ#%&$@01';
-  var PASSO = 45;
+  var PASSO = 60;            // ms entre quadros do scramble
+  var TICKS_POR_LETRA = 2;   // ~120 ms por letra revelada
+  var TROCA = 0.3;           // chance de uma letra cifrada mudar de símbolo a cada quadro
   var fmt = new Intl.NumberFormat('pt-BR');
 
   if (!reduz && temIO) document.documentElement.classList.add('motion');
@@ -35,23 +37,30 @@
     return lista;
   }
 
+  function sorteia() { return CHARS[(Math.random() * CHARS.length) | 0]; }
+
+  /* Suave: uma letra se revela a cada TICKS_POR_LETRA passos, e cada letra ainda
+     cifrada só troca de símbolo com chance TROCA por passo (em vez de piscar sempre). */
   function embaralhar(el) {
     if (reduz || el._scrambling) return;
     el._scrambling = true;
     var partes = el._partes || (el._partes = textos(el));
     var total = partes.reduce(function (s, p) { return s + p.original.length; }, 0);
-    var revelados = 0;
+    var cifra = partes.map(function (p) { return p.original.split('').map(sorteia); });
+    var passo = 0;
     var timer = setInterval(function () {
-      var resta = revelados;
-      partes.forEach(function (p) {
+      var resta = Math.floor(passo / TICKS_POR_LETRA);
+      partes.forEach(function (p, i) {
         var s = '';
         for (var k = 0; k < p.original.length; k++) {
           var c = p.original[k];
-          s += (resta-- > 0 || c === ' ' || c === '\n') ? c : CHARS[(Math.random() * CHARS.length) | 0];
+          if (resta-- > 0 || c === ' ' || c === '\n') { s += c; continue; }
+          if (Math.random() < TROCA) cifra[i][k] = sorteia();
+          s += cifra[i][k];
         }
         p.no.nodeValue = s;
       });
-      if (++revelados > total) {
+      if (++passo > total * TICKS_POR_LETRA) {
         clearInterval(timer);
         partes.forEach(function (p) { p.no.nodeValue = p.original; });
         el._scrambling = false;
