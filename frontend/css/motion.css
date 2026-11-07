@@ -1,0 +1,31 @@
+/* ==========================================================================
+   STUDIY — MOTION. Pares com js/motion.js (data-reveal, data-scramble, data-count).
+   O estado escondido só vale com html.motion (posto pelo JS): sem JS, tudo aparece.
+   ========================================================================== */
+html.motion [data-reveal] {
+  opacity: 0; transform: translateY(56px);
+  transition: opacity var(--dur-reveal) var(--ease), transform var(--dur-reveal) var(--ease);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+html.motion [data-reveal].is-in { opacity: 1; transform: none; }
+
+/* Texto embaralhado: largura de dígitos fixa reduz o "tremor" enquanto troca letras */
+[data-scramble] { font-variant-numeric: tabular-nums; }
+[data-count] { font-variant-numeric: tabular-nums; }
+
+/* Flip 3D (flashcard) */
+.flip { perspective: 1400px; }
+.flip-inner { position: relative; transform-style: preserve-3d; transition: transform 640ms var(--ease); }
+.flip.is-flipped .flip-inner { transform: rotateY(180deg); }
+.flip-face { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.flip-back { position: absolute; inset: 0; transform: rotateY(180deg); }
+
+@media (prefers-reduced-motion: reduce) {
+  html.motion [data-reveal] { opacity: 1; transform: none; transition: none; }
+  .flip-inner { transition: none; }
+  /* Sem giro: troca de face por opacidade */
+  .flip.is-flipped .flip-inner { transform: none; }
+  .flip .flip-back { transform: none; opacity: 0; }
+  .flip.is-flipped .flip-front { opacity: 0; }
+  .flip.is-flipped .flip-back { opacity: 1; }
+}

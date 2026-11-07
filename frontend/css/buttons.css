@@ -7,7 +7,7 @@
    ========================================================================== */
 .btn {
   --isz: 18px;
-  --b-bg: transparent; --b-fg: var(--text); --b-bd: transparent; --b-sh: none; --b-h: var(--b-bg);
+  --b-bg: transparent; --b-fg: var(--text); --b-bd: transparent; --b-sh: 0 0 #0000; --b-h: var(--b-bg);
   position: relative;
   display: inline-flex; align-items: center; justify-content: center; gap: 10px;
   min-height: var(--btn-h); padding: 0 22px;
@@ -23,7 +23,7 @@
 .btn:not([disabled]):not([aria-disabled="true"]):hover { background: var(--b-h); transform: translateY(-1px) scale(1.02); }
 .btn:not([disabled]):not([aria-disabled="true"]):active { transform: scale(.97); transition-duration: var(--dur-press); }
 .btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
-.btn[disabled], .btn[aria-disabled="true"] { opacity: .55; cursor: not-allowed; }
+.btn[disabled]:not([aria-busy="true"]), .btn[aria-disabled="true"] { opacity: .55; cursor: not-allowed; }
 
 .btn-sm { --isz: 16px; min-height: var(--btn-h-sm); padding: 0 16px; border-radius: var(--r-btn-sm); font-size: var(--fs-sm); }
 .btn-lg { --isz: 20px; min-height: var(--btn-h-lg); padding: 0 28px; border-radius: var(--r-btn-lg); font-size: var(--fs-lg); }
@@ -47,8 +47,8 @@
 .btn-primary     { --b-bg: var(--text); --b-fg: var(--bg); --b-h: color-mix(in srgb, var(--text) 86%, var(--bg)); --b-sh: var(--hi), var(--shadow-1); }
 .btn-accent      { --b-bg: var(--accent); --b-fg: var(--on-accent); --b-h: var(--accent-strong); --b-sh: var(--hi), 0 1px 2px color-mix(in srgb, var(--accent) 30%, transparent), 0 6px 16px color-mix(in srgb, var(--accent) 22%, transparent); }
 .btn-secondary   { --b-bg: var(--surface); --b-fg: var(--text); --b-bd: var(--line); --b-h: var(--surface-2); --b-sh: var(--shadow-1); }
-.btn-tertiary    { --b-bg: transparent; --b-fg: var(--text); --b-h: var(--hover-tint); }
-.btn-destructive { --b-bg: var(--danger); --b-fg: var(--on-danger); --b-h: color-mix(in srgb, var(--danger) 88%, black); --b-sh: var(--hi), var(--shadow-1); }
+.btn-tertiary    { --b-bg: color-mix(in srgb, var(--hover-tint) 55%, transparent); --b-fg: var(--text); --b-h: var(--hover-tint); }
+.btn-destructive { --b-bg: var(--c-red-700); --b-fg: var(--c-white); --b-bd: color-mix(in srgb, var(--c-red-700) 70%, black); --b-h: color-mix(in srgb, var(--c-red-700) 88%, black); --b-sh: var(--hi), 0 1px 2px rgba(217, 45, 32, .3), 0 6px 16px rgba(217, 45, 32, .2); }
 /* Sobre superfícies coloridas/escuras (CTA azul, plano Pro, seção preta) */
 .btn-light       { --b-bg: var(--c-white); --b-fg: var(--c-black); --b-h: var(--c-gray-50); --b-sh: var(--shadow-1); }
 .btn-ghost-dark  { --b-bg: transparent; --b-fg: var(--c-white); --b-bd: rgba(255, 255, 255, .32); --b-h: rgba(255, 255, 255, .1); }
@@ -85,7 +85,7 @@
 .btn-grad   { --b-bg: var(--accent); --b-fg: var(--on-accent); --b-h: var(--accent-strong); --b-sh: var(--hi), var(--shadow-1); }
 .btn-ghost  { --b-bg: var(--surface); --b-fg: var(--text); --b-bd: var(--line); --b-h: var(--surface-2); --b-sh: var(--shadow-1); }
 .btn-dark   { --b-bg: transparent; --b-fg: var(--text); --b-h: var(--hover-tint); }
-.btn-danger { --b-bg: var(--danger); --b-fg: var(--on-danger); --b-h: color-mix(in srgb, var(--danger) 88%, black); }
+.btn-danger { --b-bg: var(--c-red-700); --b-fg: var(--c-white); --b-h: color-mix(in srgb, var(--c-red-700) 88%, black); }
 
 @media (prefers-reduced-motion: reduce) {
   .btn, .btn::after, .icon-btn { transition: none; }
