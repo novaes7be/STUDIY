@@ -1,34 +1,38 @@
-/* Tela de assinatura do Pro. Cores: somente tokens (css/tokens.css). */
-.pay { max-width: 980px; margin: 0 auto; padding: 32px 20px 64px; }
-.pay .logo { color: var(--link); display: inline-block; margin-bottom: 18px; }
-.pay h1 { font-size: clamp(30px, 4vw, 44px); font-weight: 800; letter-spacing: -.03em; margin-bottom: 8px; }
-.pay .sub { color: var(--text-muted); font-size: 18px; max-width: 640px; }
-.pay-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 28px; }
-.pay-summary { background: var(--hero-grad); color: var(--hero-fg); border-radius: 28px; padding: 32px; }
-.pay-summary h2 { font-size: 20px; margin-bottom: 6px; }
-.pay-summary .amount { font-size: 52px; font-weight: 800; letter-spacing: -.03em; margin-bottom: 18px; }
-.pay-summary .amount small { font-size: 16px; font-weight: 500; color: var(--hero-fg-muted); }
-.pay-summary ul { margin: 0 0 18px; padding-left: 20px; display: grid; gap: 8px; }
-.pay-summary .hint-text { color: var(--hero-fg-muted); margin: 0; }
-.pay-form { background: var(--surface); border: 2px solid var(--surface-border); border-radius: 28px; padding: 28px; }
-.pay-form fieldset { border: 0; padding: 0; margin: 0 0 18px; display: grid; gap: 12px; }
-.pay-form legend { font-weight: 800; font-size: 18px; margin-bottom: 12px; padding: 0; }
+/* Tela de assinatura do Pro. Cores e forma: somente tokens (css/tokens.css). */
+.pay { max-width: 1120px; margin: 0 auto; padding: 24px clamp(16px, 4vw, 40px) 96px; }
+.pay .logo { display: block; margin-bottom: 40px; color: var(--text); text-decoration: none; }
+.pay h1 { margin-bottom: 16px; font-size: clamp(44px, 8vw, 120px); font-weight: 900; letter-spacing: -.055em; line-height: .88; text-transform: uppercase; }
+.pay .sub { color: var(--text-muted); font-size: var(--fs-lg); max-width: 36em; }
+.pay-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--text); align-items: start; }
+/* Resumo do plano = bloco de marca (a mesma superfície do Pro na landing) */
+.pay-summary { background: var(--brand-bg); color: var(--brand-fg); border-radius: var(--r-card); padding: 32px; }
+.pay-summary h2 { font-size: var(--fs-xl); margin-bottom: 6px; }
+.pay-summary .amount { font-size: clamp(56px, 6vw, 88px); font-weight: 900; letter-spacing: -.055em; line-height: 1; margin-bottom: 18px; font-variant-numeric: tabular-nums; }
+.pay-summary .amount small { font-size: var(--fs-md); font-weight: 500; color: var(--brand-fg-muted); }
+.pay-summary ul { list-style: none; margin: 0 0 18px; padding: 0; display: grid; gap: 10px; }
+.pay-summary li { display: flex; gap: 10px; }
+.pay-summary li::before { content: ""; flex: none; width: 18px; height: 18px; margin-top: 3px; background: var(--brand-accent); -webkit-mask: var(--ico-check) center / contain no-repeat; mask: var(--ico-check) center / contain no-repeat; }
+.pay-summary .hint-text { color: var(--brand-fg-muted); margin: 0; }
+.pay-form { background: var(--surface); border-radius: var(--r-card); padding: 28px; box-shadow: inset 0 0 0 1px var(--line); }
+.pay-form fieldset { border: 0; padding: 0; margin: 0 0 18px; display: grid; gap: 10px; }
+.pay-form legend { font-weight: 750; font-size: var(--fs-lg); margin-bottom: 12px; padding: 0; }
+/* Opções de pagamento: linhas selecionáveis com rádio visível (estado não depende só de cor) */
 .pay-opt { display: block; cursor: pointer; }
 .pay-opt input { position: absolute; opacity: 0; width: 1px; height: 1px; }
-.pay-opt-body { position: relative; display: grid; gap: 2px; padding: 16px 52px 16px 18px; border: 2px solid var(--card-edge); border-radius: 18px; background: var(--card-bg); transition: border-color .2s, background .2s, transform .2s; }
+.pay-opt-body { position: relative; display: grid; gap: 2px; min-height: 64px; padding: 14px 52px 14px 16px; border-radius: var(--r-md); background: var(--surface); box-shadow: inset 0 0 0 1.5px var(--control-line); transition: box-shadow var(--dur-1) var(--ease), background-color var(--dur-1) var(--ease); }
 .pay-opt-body strong { font-size: 17px; }
-.pay-opt-body small { color: var(--text-muted); font-size: 14px; }
-.pay-opt-body::after { content: ""; position: absolute; right: 18px; top: 50%; width: 20px; height: 20px; margin-top: -10px; border-radius: 50%; border: 2px solid var(--card-edge); transition: background .2s, border-color .2s, box-shadow .2s; }
-.pay-opt:hover .pay-opt-body { border-color: var(--card-edge-hover); transform: translateY(-2px); }
-.pay-opt input:checked + .pay-opt-body { border-color: var(--card-edge-hover); background: var(--icon-chip-bg); }
-.pay-opt input:checked + .pay-opt-body::after { border-color: var(--card-edge-hover); background: var(--card-edge-hover); box-shadow: inset 0 0 0 4px var(--icon-chip-bg); }
+.pay-opt-body small { color: var(--text-muted); font-size: var(--fs-sm); }
+.pay-opt-body::after { content: ""; position: absolute; right: 16px; top: 50%; width: 22px; height: 22px; margin-top: -11px; border-radius: 50%; box-shadow: inset 0 0 0 2px var(--control-line); background: var(--surface); transition: box-shadow var(--dur-1) var(--ease), background-color var(--dur-1) var(--ease); }
+.pay-opt:hover .pay-opt-body { box-shadow: inset 0 0 0 1.5px var(--accent); }
+.pay-opt input:checked + .pay-opt-body { background: var(--accent-soft); box-shadow: inset 0 0 0 2px var(--accent); }
+.pay-opt input:checked + .pay-opt-body::after { background: var(--accent); box-shadow: inset 0 0 0 5px var(--accent-soft), inset 0 0 0 7px var(--accent); }
 .pay-opt input:focus-visible + .pay-opt-body { outline: 3px solid var(--focus); outline-offset: 2px; }
 .pay-form .hint-text { margin: 14px 0 0; }
-.status-card { max-width: 560px; margin: 28px auto 0; background: var(--surface); border: 2px solid var(--surface-border); border-radius: 28px; padding: 36px; text-align: center; }
-.status-card h2 { font-size: 26px; letter-spacing: -.02em; margin-bottom: 10px; }
+.status-card { max-width: 560px; margin: 28px auto 0; background: var(--surface); border-radius: var(--r-lg); padding: 36px; text-align: center; box-shadow: var(--shadow-2), inset 0 0 0 1px var(--line); animation: entra var(--dur-2) var(--ease); }
+.status-card h2 { font-size: var(--fs-2xl); letter-spacing: -.03em; margin-bottom: 10px; }
 .status-card p { color: var(--text-muted); }
 .status-card .btn { margin-top: 12px; }
-.status-ok { border-color: var(--card-edge-hover); }
-.sim-box { margin-top: 18px; padding: 16px; border-radius: 18px; background: var(--msg-info-bg); color: var(--msg-info-fg); }
+.status-ok { box-shadow: var(--shadow-2), inset 0 0 0 2px var(--accent); }
+.sim-box { margin-top: 18px; padding: 16px; border-radius: var(--r-md); background: var(--info-soft); color: var(--info); }
 .sim-box p { color: inherit; margin-bottom: 8px; }
-@media (max-width: 800px) { .pay-grid { grid-template-columns: 1fr; } }
+@media (max-width: 800px) { .pay-grid { grid-template-columns: 1fr; } .pay-summary { padding: 24px; } .pay-summary .amount { font-size: 56px; } }

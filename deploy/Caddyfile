@@ -16,6 +16,8 @@
 	handle {
 		# Mesma política da <meta> gerada no build, agora como header (frame-ancestors só vale aqui).
 		header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self' {$API_ORIGIN}; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
+		# Arquivos sem hash no nome: revalida sempre (ETag), para um deploy nunca servir CSS/JS velho
+		header Cache-Control "no-cache"
 		root * /srv
 		file_server
 	}

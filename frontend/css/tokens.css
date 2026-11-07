@@ -1,237 +1,175 @@
 /* ==========================================================================
-   STUDIY — TOKENS DE COR (única fonte de verdade das cores do site)
-   Regra: nenhum outro arquivo CSS/JS usa cor literal; só var(--...).
-   Paleta: roxo + rosa + azul pastéis.
+   STUDIY — DESIGN TOKENS (única fonte de verdade de cor, tipo, raio, sombra e movimento)
+   Regra: nenhum outro CSS/JS usa cor literal; só var(--...).
 
-   PADRONIZAÇÃO (cada cor tem UM papel; nunca todas juntas na mesma seção):
-   - Roxo      = ação principal (botões, links, foco, barras) e as seções de destaque.
-   - Lilás     = fundos suaves (hero, chamada final, cartões secundários).
-   - Rosa      = SÓ detalhes pequenos (selo, destaque pontual) e a cor de matéria "Rosa".
-   - Azul past.= SÓ informação (avisos, dicas) e a cor de matéria "Azul".
-   - Vermelho  = SÓ ações destrutivas e erros.
-   BOTÕES: .btn-grad = primário (roxo) · .btn-ghost = secundário (contorno) ·
-           .btn-light = primário sobre fundo escuro · .btn-dark = menu · .btn-danger = excluir.
+   Estilo: EDITORIAL SUÍÇO COM MOVIMENTO. Preto e branco fazem o trabalho; o azul é
+   a única cor de ação; índigo marca o Pro; vermelho é só ponto/notificação.
+
+   Contraste (WCAG, calculado sobre os hex abaixo):
+   claro  texto 19.8 · secundário 6.6 (5.9 sobre superfície) · azul 5.1 · borda de campo 3.4 · perigo 4.8
+   escuro texto 19.8 · secundário 7.7 (6.7 sobre superfície) · azul claro 7.0 (6.1 sobre superfície)
+   Por que o azul muda no escuro: #3B5BFF sobre #0A0A0A dá 3.9:1, abaixo de 4.5 para texto.
    ========================================================================== */
 
-/* 1) PRIMITIVAS ---------------------------------------------------------- */
+/* 1) PRIMITIVAS ------------------------------------------------------------ */
 :root {
+  --c-black: #0a0a0a;
   --c-white: #ffffff;
-  --c-ink-900: #2e2159;
-  --c-ink-950: #17102f;
-  --c-night-950: #120d26;
-  --c-night-800: #251c4d;
-  --c-night-700: #1d1640;
-  --c-night-line: #3a2f73;
+  --c-gray-50: #f2f2f4;
+  --c-gray-100: #e3e3e6;
+  --c-gray-400: #8a8a94;
+  --c-gray-500: #6e6e78;
+  --c-gray-600: #5c5c66;
+  --c-gray-300: #a1a1aa;
+  --c-gray-850: #1c1c1c;
+  --c-gray-800: #2a2a2e;
 
-  --c-primary-700: #5b3fd9;
-  --c-primary-600: #7c5cd6;
-  --c-primary-500: #8f72e6;
-  --c-primary-300: #b9a4fa;
-  --c-primary-200: #d9c9fa;
-  --c-primary-100: #e9dffc;
-  --c-primary-50: #f1eafe;
-  --c-primary-25: #fbf8ff;
-  --c-primary-line: #e2d7f7;
-
-  --c-pink-100: #fad3e4;
-  --c-pink-800: #7a1f4b;
-  --c-pink-600: #c2487f;
-  --c-info-100: #cfe4fa;
-  --c-info-800: #173f6b;
-  --c-info-600: #3a74b8;
-
-  --c-red-600: #d62828;
-  --c-red-300: #ff9a9a;
-  --c-red-800: #9c1a1a;
-
-  --c-slate-600: #6e6392;
-  --c-slate-300: #b6aadb;
-
-  --c-err-bg-light: #ffe6e6;
-  --c-err-fg-light: #8a1111;
-  --c-err-bg-dark: #3a1015;
-  --c-err-fg-dark: #ffb3b3;
-
-  --c-overlay-white-30: rgba(255, 255, 255, .3);
-  --c-overlay-night-60: rgba(18, 13, 38, .6);
-  --c-shadow: rgba(46, 33, 89, .28);
+  --c-blue-600: #3b5bff;
+  --c-blue-300: #7b93ff;
+  --c-indigo-600: #5b3fd9;
+  --c-indigo-700: #3a33d1;
+  --c-red-600: #e5251b;
+  --c-red-700: #d92d20;
+  --c-red-300: #ff6b5e;
+  --c-amber-700: #8a5300; --c-amber-300: #e8c172;
 }
 
-/* 2) SEMÂNTICAS — TEMA CLARO (padrão) ------------------------------------- */
+/* 2) SEMÂNTICAS — CLARO (padrão) -------------------------------------------- */
 :root {
-  --bg-from: var(--c-primary-25);
-  --bg-via: var(--c-primary-50);
-  --bg-to: var(--c-primary-100);
-
-  --text: var(--c-ink-900);
-  --text-muted: var(--c-slate-600);
-  --link: var(--c-primary-600);
-  --focus: var(--c-primary-600);
-  --primary-strong: var(--c-primary-700);
-
+  --bg: var(--c-white);
   --surface: var(--c-white);
-  --surface-border: var(--c-primary-line);
-  --input-bg: var(--c-white);
-  --row-line: var(--c-primary-line);
+  --surface-2: var(--c-gray-50);           /* cartões preenchidos, trilhos, nav em pílula */
+  --text: var(--c-black);
+  --text-muted: var(--c-gray-600);
+  --line: var(--c-gray-100);               /* borda fina de cartão e botão secundário */
+  --control-line: var(--c-gray-400);       /* borda de campo: 3.4:1 */
 
-  --brand-grad: linear-gradient(135deg, var(--c-primary-600), var(--c-primary-700));
-  --hero-grad: linear-gradient(135deg, var(--c-primary-50) 0%, var(--c-primary-100) 55%, var(--c-primary-200) 100%);
-  --band-grad: linear-gradient(135deg, var(--c-primary-700), var(--c-ink-900));
-  --btn-grad: var(--brand-grad);
+  --accent: var(--c-blue-600);
+  --accent-strong: color-mix(in srgb, var(--c-blue-600) 85%, black);
+  --accent-soft: color-mix(in srgb, var(--c-blue-600) 10%, transparent);  /* tint de cartão */
+  --on-accent: var(--c-white);
+  --link: var(--accent);
+  --focus: var(--c-blue-600);
+  --dot: var(--c-red-600);                 /* pontos e notificações */
 
-  --on-brand: var(--c-white);
-  --on-brand-muted: #efe9ff;
-  --hero-fg: var(--c-ink-900);
-  --hero-fg-muted: #4b3f7a;
+  --indigo: var(--c-indigo-600);
+  --indigo-strong: var(--c-indigo-700);
+  --indigo-soft: color-mix(in srgb, var(--c-indigo-600) 10%, transparent);
+  --red-soft: color-mix(in srgb, var(--c-red-600) 10%, transparent);
 
-  --ink-card-bg: var(--c-ink-900);
-  --ink-card-edge: transparent;
-  --step-1-bg: var(--c-primary-600);
-  --step-2-bg: var(--brand-grad);
-  --price-free-bg: var(--c-primary-600);
+  --danger: var(--c-red-700);   --danger-soft: var(--red-soft);  --on-danger: var(--c-white);
+  --warn: var(--c-amber-700);   --warn-soft: color-mix(in srgb, var(--c-amber-700) 10%, transparent);
+  --info: var(--accent);        --info-soft: var(--accent-soft);
 
-  --toggle-bg: var(--c-primary-100);
-  --toggle-fg: var(--c-primary-600);
-  --toggle-ring: var(--c-primary-600);
+  /* Superfícies invertidas: seção "Como funciona" (preta) e plano Pro (índigo) */
+  --invert-bg: var(--c-black);
+  --invert-fg: var(--c-white);
+  --invert-fg-muted: var(--c-gray-300);
+  --brand-bg: var(--indigo-strong);
+  --brand-fg: var(--c-white);
+  --brand-fg-muted: color-mix(in srgb, var(--c-white) 78%, transparent);
+  --brand-accent: var(--c-white);
 
-  --msg-err-bg: var(--c-err-bg-light);
-  --msg-err-fg: var(--c-err-fg-light);
-  --msg-info-bg: var(--c-info-100);
-  --msg-info-fg: var(--c-info-800);
-
-  --badge-bg: var(--c-pink-100);
-  --badge-fg: var(--c-pink-800);
-
-  --side-bg: var(--c-ink-900);
-  --usage-bg: var(--c-white);
-  --usage-fg: var(--c-ink-900);
-  --danger: var(--c-red-600);
-  --swatch-ring: var(--c-white);
-  --backdrop: var(--c-overlay-night-60);
-  --shadow: var(--c-shadow);
-  --bar-on-brand: var(--c-overlay-white-30);
-  --bar-fill-on-brand: var(--c-white);
+  --backdrop: rgba(10, 10, 10, .5);
+  --hover-tint: rgba(110, 110, 120, .12);  /* botão terciário */
+  --hi: inset 0 1px 0 rgba(255, 255, 255, .18);  /* highlight interno dos botões */
+  --shadow-1: 0 1px 2px rgba(10, 10, 10, .06), 0 1px 1px rgba(10, 10, 10, .04);
+  --shadow-2: 0 14px 36px rgba(10, 10, 10, .12), 0 2px 6px rgba(10, 10, 10, .06);
 }
 
-/* 2b) SEMÂNTICAS — TEMA ESCURO -------------------------------------------- */
+/* 2b) SEMÂNTICAS — ESCURO ---------------------------------------------------- */
 [data-theme="dark"] {
-  --bg-from: var(--c-night-950);
-  --bg-via: #181133;
-  --bg-to: #211848;
+  --bg: var(--c-black);
+  --surface: var(--c-gray-850);
+  --surface-2: var(--c-gray-850);
+  --text: var(--c-white);
+  --text-muted: var(--c-gray-300);
+  --line: var(--c-gray-800);
+  --control-line: var(--c-gray-500);       /* 3.4:1 sobre a superfície */
 
-  --text: #f3efff;
-  --text-muted: var(--c-slate-300);
-  --link: var(--c-primary-300);
-  --focus: var(--c-primary-300);
-  --primary-strong: var(--c-primary-300);
+  --accent: var(--c-blue-300);
+  --accent-strong: color-mix(in srgb, var(--c-blue-300) 85%, white);
+  --accent-soft: color-mix(in srgb, var(--c-blue-600) 18%, transparent);
+  --on-accent: var(--c-black);             /* 7.0:1 */
+  --focus: var(--c-blue-300);
+  --dot: var(--c-red-300);
 
-  --surface: var(--c-night-700);
-  --surface-border: var(--c-night-line);
-  --input-bg: var(--c-night-800);
-  --row-line: var(--c-night-line);
+  --indigo-soft: color-mix(in srgb, var(--c-indigo-600) 22%, transparent);
+  --red-soft: color-mix(in srgb, var(--c-red-600) 18%, transparent);
+  --danger: var(--c-red-300);   --on-danger: var(--c-black);
+  --warn: var(--c-amber-300);
 
-  --hero-grad: linear-gradient(135deg, #2a1f63 0%, #34277a 55%, #3d2e8c 100%);
-  --hero-fg: #f3efff;
-  --hero-fg-muted: var(--c-primary-200);
+  /* Seção invertida no escuro: superfície #1C1C1C para se separar do fundo */
+  --invert-bg: var(--c-gray-850);
 
-  --ink-card-bg: var(--c-ink-950);
-  --ink-card-edge: var(--c-night-line);
-
-  --toggle-bg: var(--c-night-800);
-  --toggle-fg: var(--c-primary-300);
-  --toggle-ring: var(--c-primary-300);
-
-  --msg-err-bg: var(--c-err-bg-dark);
-  --msg-err-fg: var(--c-err-fg-dark);
-  --msg-info-bg: #14233b;
-  --msg-info-fg: var(--c-info-100);
-
-  --badge-bg: #3a1530;
-  --badge-fg: var(--c-pink-100);
-
-  --side-bg: var(--c-ink-950);
-  --usage-bg: var(--c-night-800);
-  --usage-fg: #f3efff;
-  --danger: var(--c-red-300);
-  --swatch-ring: var(--c-night-950);
+  --backdrop: rgba(0, 0, 0, .65);
+  --hover-tint: rgba(161, 161, 170, .14);
+  --hi: inset 0 1px 0 rgba(255, 255, 255, .08);
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, .4);
+  --shadow-2: 0 16px 40px rgba(0, 0, 0, .55), 0 2px 6px rgba(0, 0, 0, .35);
 }
 
-/* 3) PALETA DA MATÉRIA (o usuário escolhe; o painel inteiro acompanha) -----
-   As chaves (azul, roxo, vermelho, grafite) são gravadas no banco: não renomeie.
-   "vermelho" agora é o ROSA; o nome exibido está em js/config.js. */
-[data-subject="roxo"] {
-  --s-a: #7c5cd6; --s-b: #5b3fd9; --s-l1: #f1eafe; --s-l2: #e3d7fb;
-  --s-d1: #181133; --s-d2: #211848; --s-lite: #b9a4fa; --s-pd: #1d1640;
-}
-[data-subject="azul"] {
-  --s-a: #3a74b8; --s-b: #2f5f96; --s-l1: #eaf3fd; --s-l2: #d5e7fa;
-  --s-d1: #0f1a2b; --s-d2: #14233b; --s-lite: #9cc5f0; --s-pd: #13213a;
-}
-[data-subject="vermelho"] {
-  --s-a: #c2487f; --s-b: #9e3566; --s-l1: #fdeef5; --s-l2: #fadcea;
-  --s-d1: #2a1020; --s-d2: #3a1530; --s-lite: #f4a6c8; --s-pd: #2b1424;
-}
-[data-subject="grafite"] {
-  --s-a: #3a3355; --s-b: #1e1a33; --s-l1: #f0eef5; --s-l2: #e0dcea;
-  --s-d1: #0e0c18; --s-d2: #151223; --s-lite: #c9c3dc; --s-pd: #17142a;
-}
+/* 3) COR DA MATÉRIA ----------------------------------------------------------
+   As chaves ficam gravadas no banco: não renomeie.
+   --s-a = cor no tema claro (texto branco por cima ≥ 4.5:1)
+   --s-d = cor no tema escuro (texto preto por cima ≥ 4.5:1) */
+[data-subject="azul"]     { --s-a: #3b5bff; --s-d: #7b93ff; }
+[data-subject="roxo"]     { --s-a: #5b3fd9; --s-d: #a597f0; }
+[data-subject="vermelho"] { --s-a: #d92d20; --s-d: #ff6b5e; }
+[data-subject="verde"]    { --s-a: #13804a; --s-d: #4cc98a; }
+[data-subject="grafite"]  { --s-a: #0a0a0a; --s-d: #e3e3e6; }
 
-/* Como a paleta da matéria vira cores do painel */
-.app {
-  --bg-via: var(--s-l1);
-  --bg-to: var(--s-l2);
-  --link: var(--s-a);
-  --focus: var(--s-a);
+/* Dentro do painel, a cor da matéria vira a cor de ação */
+.app[data-subject] {
   --accent: var(--s-a);
-  --accent-text: var(--s-a);
-  --accent-grad: linear-gradient(135deg, var(--s-a), var(--s-b));
-  --btn-grad: var(--accent-grad);
-  --panel-bg: var(--c-white);
-  --panel-border: var(--s-a);
-  --toggle-fg: var(--s-a);
-  --toggle-ring: var(--s-a);
+  --accent-strong: color-mix(in srgb, var(--s-a) 85%, black);
+  --accent-soft: color-mix(in srgb, var(--s-a) 10%, transparent);
 }
-[data-theme="dark"] .app {
-  --bg-via: var(--s-d1);
-  --bg-to: var(--s-d2);
-  --link: var(--s-lite);
-  --focus: var(--s-lite);
-  --accent-text: var(--s-lite);
-  --panel-bg: var(--s-pd);
-  --panel-border: var(--s-lite);
-  --toggle-fg: var(--s-lite);
-  --toggle-ring: var(--s-lite);
+[data-theme="dark"] .app[data-subject] {
+  --accent: var(--s-d);
+  --accent-strong: color-mix(in srgb, var(--s-d) 85%, white);
+  --accent-soft: color-mix(in srgb, var(--s-d) 16%, transparent);
 }
 
-/* Amostras de cor do seletor */
-.swatch[data-k="roxo"] { background: #7c5cd6; }
-.swatch[data-k="azul"] { background: #3a74b8; }
-.swatch[data-k="vermelho"] { background: #c2487f; }
-.swatch[data-k="grafite"] { background: #3a3355; }
+/* Amostras do seletor e marcadores da lista mostram a cor do tema atual */
+.swatch[data-k], [data-mark] { --sw: var(--s-a); }
+.swatch[data-k="azul"], [data-mark="azul"]         { --s-a: #3b5bff; --s-d: #7b93ff; }
+.swatch[data-k="roxo"], [data-mark="roxo"]         { --s-a: #5b3fd9; --s-d: #a597f0; }
+.swatch[data-k="vermelho"], [data-mark="vermelho"] { --s-a: #d92d20; --s-d: #ff6b5e; }
+.swatch[data-k="verde"], [data-mark="verde"]       { --s-a: #13804a; --s-d: #4cc98a; }
+.swatch[data-k="grafite"], [data-mark="grafite"]   { --s-a: #0a0a0a; --s-d: #e3e3e6; }
+[data-theme="dark"] .swatch[data-k], [data-theme="dark"] [data-mark] { --sw: var(--s-d); }
 
-/* 4) NAVBAR, BOTÕES E CARTÕES INTERATIVOS --------------------------------- */
+/* 4) FORMA, TIPO E MOVIMENTO --------------------------------------------------- */
 :root {
-  --nav-bg: var(--c-white);
-  --nav-fg: var(--c-ink-900);
-  --nav-glow: var(--c-primary-100);
-  --nav-active-fg: var(--c-primary-600);
-  --spot: var(--c-overlay-white-30);          /* brilho que segue o mouse nos botões */
-  --btn-light-bg: var(--c-white);
-  --btn-light-fg: var(--c-primary-600);
-  --btn-light-hover-bg: var(--c-primary-50);
-  --card-bg: var(--surface);
-  --card-edge: var(--surface-border);
-  --card-edge-hover: var(--c-primary-600);
-  --icon-chip-bg: var(--c-primary-100);
-  --icon-chip-fg: var(--c-primary-600);
-}
-[data-theme="dark"] {
-  --nav-bg: var(--c-night-800);
-  --nav-fg: #f3efff;
-  --nav-glow: var(--c-night-line);
-  --nav-active-fg: var(--c-primary-200);
-  --btn-light-hover-bg: var(--c-primary-100);
-  --card-edge-hover: var(--c-primary-300);
-  --icon-chip-bg: var(--c-night-800);
-  --icon-chip-fg: var(--c-primary-300);
+  --r-btn-sm: 8px;
+  --r-btn: 10px;
+  --r-btn-lg: 12px;
+  --r-card: 14px;
+  /* Aliases usados pelo CSS existente até as próximas etapas */
+  --r-sm: var(--r-btn-sm);
+  --r-md: var(--r-card);
+  --r-lg: var(--r-card);
+  --r-pill: 999px;           /* só a nav da landing */
+
+  --font: 'Inter Tight', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --fs-xs: 13px; --fs-sm: 14px; --fs-md: 16px; --fs-lg: 18px;
+  --fs-xl: 22px; --fs-2xl: 28px; --fs-3xl: 40px;
+  --fs-display: clamp(56px, 10vw, 168px);
+  --fw-display: 900;
+  --ls-display: -.055em;
+  --lh-display: .88;
+
+  --btn-h-sm: 44px;
+  --btn-h: 52px;
+  --btn-h-lg: 60px;
+  --control-h: 44px;         /* alvo mínimo de toque */
+  --control-h-sm: 44px;
+
+  --ease: cubic-bezier(.2, .8, .2, 1);
+  --ease-spring: cubic-bezier(.34, 1.56, .64, 1);  /* seta do botão: passa do ponto e volta */
+  --dur-press: 120ms;
+  --dur-1: 220ms;
+  --dur-2: 320ms;
+  --dur-reveal: 700ms;
 }

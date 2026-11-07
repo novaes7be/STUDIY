@@ -41,7 +41,7 @@
   box.appendChild(lista);
 
   var acoes = el('div', 'onb-actions');
-  var ok = el('button', 'btn btn-grad', 'Entendi, vamos lá');
+  var ok = el('button', 'btn btn-accent', 'Entendi, vamos lá');
   ok.type = 'button';
   acoes.appendChild(ok);
   box.appendChild(acoes);

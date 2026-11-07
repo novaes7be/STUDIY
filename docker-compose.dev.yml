@@ -1,0 +1,96 @@
+# Ambiente de DESENVOLVIMENTO completo, sem IDE e sem .env:
+#   docker compose -f docker-compose.dev.yml up --build
+# Site + API: http://localhost:8090   ·   E-mails enviados (Mailpit): http://localhost:8025
+#
+# - Usa o perfil dev (segredos PÚBLICOS de desenvolvimento; a StartupGuard impede usá-los em prod).
+# - O front é reconstruído sozinho (serviço "front") quando um arquivo de frontend/ muda:
+#   edite e recarregue a página. Mesma CSP/config da produção (API na mesma origem).
+#   Mudou o backend? Rode o mesmo comando de novo (o --build recompila a API).
+# - Para IA de verdade: ANTHROPIC_API_KEY=... docker compose -f docker-compose.dev.yml up --build
+name: studiy-dev
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: studiy
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pgdata-dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d studiy"]
+      interval: 3s
+      retries: 20
+
+  # Caixa de e-mail falsa: tudo que a API "envia" (confirmação, aviso, senha) aparece em :8025
+  mail:
+    image: axllent/mailpit:v1.21
+    ports:
+      - "127.0.0.1:8025:8025"
+
+  api:
+    build: ./backend
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      DB_URL: jdbc:postgresql://db:5432/studiy
+      FRONT_URL: http://localhost:8090
+      CORS_ORIGINS: http://localhost:8090
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      SPRING_MAIL_HOST: mail
+      SPRING_MAIL_PORT: "1025"
+      MAIL_FROM: nao-responda@studiy.local
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "false"
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "false"
+    depends_on:
+      db:
+        condition: service_healthy
+    expose:
+      - "8080"
+
+  # Roda deploy/build-front.sh e repete a cada mudança em frontend/ (saída: build/front-docker)
+  front:
+    image: alpine:3.20
+    working_dir: /app
+    environment:
+      API_ORIGIN: ""
+      SAIDA: /app/build/front-docker
+    volumes:
+      - ./frontend:/app/frontend:ro
+      - ./deploy/build-front.sh:/app/deploy/build-front.sh:ro
+      - ./build:/app/build
+    command:
+      - sh
+      - -c
+      - |
+        apk add --no-cache bash grep sed findutils >/dev/null
+        bash deploy/build-front.sh dev && touch /tmp/marca
+        while sleep 2; do
+          if [ -n "$$(find frontend -type f -newer /tmp/marca | head -n 1)" ]; then
+            touch /tmp/marca && bash deploy/build-front.sh dev
+          fi
+        done
+    healthcheck:
+      test: ["CMD", "test", "-f", "/app/build/front-docker/index.html"]
+      interval: 2s
+      retries: 30
+
+  # Mesmo Caddyfile de produção, em HTTP na porta 80 (DOMAIN=":80"), servindo o front gerado
+  web:
+    image: caddy:2
+    environment:
+      DOMAIN: ":80"
+      API_ORIGIN: ""
+    ports:
+      - "127.0.0.1:8090:80"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./build/front-docker:/srv:ro
+    depends_on:
+      api:
+        condition: service_started
+      front:
+        condition: service_healthy
+
+volumes:
+  pgdata-dev:

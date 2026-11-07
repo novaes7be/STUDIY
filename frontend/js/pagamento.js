@@ -27,6 +27,7 @@
     if (!metodo) { msg('Escolha cartão ou Pix.'); return; }
     var botao = $('#payForm button[type="submit"]');
     botao.disabled = true;
+    botao.setAttribute('aria-busy', 'true'); // spinner (css/buttons.css)
     try {
       // Preço, plano e endereço de volta são decididos pelo servidor; aqui só vai o método.
       var r = await api.post('/api/pagamentos/checkout', { metodo: metodo });
@@ -36,6 +37,7 @@
     } catch (e) {
       msg(e.message || 'Não foi possível iniciar o pagamento.');
       botao.disabled = false;
+      botao.removeAttribute('aria-busy');
     }
   });
 
@@ -89,6 +91,7 @@
     $('#again').addEventListener('click', function () { $('#again').hidden = true; tentativas = 0; verificar(); });
     $('#simBtn').addEventListener('click', async function () {
       this.disabled = true;
+      this.setAttribute('aria-busy', 'true');
       try { await api.post('/api/pagamentos/' + encodeURIComponent(pedidoId) + '/simular'); }
       catch (e) { mostrarStatus('Não foi possível simular', e.message, false); }
       verificar();

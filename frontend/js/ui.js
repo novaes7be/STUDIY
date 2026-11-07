@@ -1,17 +1,8 @@
 /* Interações visuais: navbar (destaque que desliza, seção ativa, encolhe no scroll, menu mobile),
-   animação de entrada das seções e brilho que segue o cursor nos botões. Sem dependências. */
+   animação de entrada das seções Sem dependências. */
 (function () {
   'use strict';
   var reduz = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  /* Brilho do botão acompanha o mouse (delegação: vale para botões criados depois) */
-  document.addEventListener('pointermove', function (ev) {
-    var b = ev.target.closest && ev.target.closest('.btn');
-    if (!b) return;
-    var r = b.getBoundingClientRect();
-    b.style.setProperty('--mx', (ev.clientX - r.left) + 'px');
-    b.style.setProperty('--my', (ev.clientY - r.top) + 'px');
-  }, { passive: true });
 
   /* Entrada suave das seções */
   var alvos = document.querySelectorAll('.reveal');

@@ -11,7 +11,10 @@
     msg.hidden = false;
   }
   function busy(on) {
-    document.querySelectorAll('button[type="submit"]').forEach(function (b) { b.disabled = on; });
+    document.querySelectorAll('button[type="submit"]').forEach(function (b) {
+      b.disabled = on;
+      if (on) b.setAttribute('aria-busy', 'true'); else b.removeAttribute('aria-busy'); // spinner (css/buttons.css)
+    });
   }
   function entrar() {
     api.marcarLogado(); // a sessão em si fica nos cookies HttpOnly que o servidor gravou

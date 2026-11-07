@@ -6,13 +6,14 @@
 
   window.STUDIY = {
     API_BASE: base.indexOf('__') === 0 ? '' : base,
-    // Chaves da paleta da matéria (o servidor só aceita estas). As CORES ficam em css/tokens.css.
+    // Chaves da paleta da matéria (o servidor só aceita estas). As CORES ficam em css/tokens.css ([data-subject] e .swatch[data-k]).
     SUBJECTS: [
+      { key: 'verde', label: 'Verde' },
       { key: 'azul', label: 'Azul' },
       { key: 'roxo', label: 'Roxo' },
       { key: 'vermelho', label: 'Rosa' },
       { key: 'grafite', label: 'Grafite' }
     ],
-    DEFAULT_SUBJECT: 'roxo'
+    DEFAULT_SUBJECT: 'verde'
   };
 })();
