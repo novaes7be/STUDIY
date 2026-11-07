@@ -183,7 +183,7 @@ Em **Settings → Branches → Add rule** para `main`:
 
 ## Design (tokens, botões e movimento)
 
-Estilo editorial suíço: preto e branco fazem o trabalho, títulos gigantes em caixa alta (Inter Tight 900). Tudo vem de três arquivos reutilizados em todas as páginas:
+Estilo editorial com movimento: preto e branco fazem o trabalho, títulos gigantes em caixa alta (Inter Tight 900). Tudo vem de três arquivos reutilizados em todas as páginas:
 
 - `frontend/css/tokens.css`: primitivas `--c-*` e papéis semânticos para claro e escuro. Azul `#3B5BFF` é a única cor de ação; índigo marca o Pro; vermelho só em pontos, notificações e excluir. No escuro, o azul de texto vira `#7B93FF` para manter contraste AA.
 - `frontend/css/buttons.css`: `.btn` com `btn-primary`, `btn-accent`, `btn-secondary`, `btn-tertiary`, `btn-destructive`, `btn-light` e `btn-ghost-dark`; tamanhos `btn-sm` (44), padrão (52) e `btn-lg` (60); `btn-arrow` e `btn-dot`. Ação assíncrona: `aria-busy="true"` mostra o spinner (`js/botao.js` faz isso por você).
