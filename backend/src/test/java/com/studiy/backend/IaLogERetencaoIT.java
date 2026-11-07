@@ -1,10 +1,12 @@
 package com.studiy.backend;
 
 import com.studiy.backend.model.IaChamada;
+import com.studiy.backend.model.RevisaoLog;
 import com.studiy.backend.model.SessaoRefresh;
 import com.studiy.backend.model.TipoGeracao;
 import com.studiy.backend.model.Usuario;
 import com.studiy.backend.repository.IaChamadaRepository;
+import com.studiy.backend.repository.RevisaoLogRepository;
 import com.studiy.backend.repository.SessaoRefreshRepository;
 import com.studiy.backend.service.RetencaoService;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -32,6 +34,7 @@ class IaLogERetencaoIT extends IntegracaoBase {
     @Autowired IaChamadaRepository iaChamadas;
     @Autowired SessaoRefreshRepository sessoes;
     @Autowired RetencaoService retencao;
+    @Autowired RevisaoLogRepository revisoesLog;
 
     static byte[] pdfComTexto(String texto) throws Exception {
         try (PDDocument doc = new PDDocument(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
@@ -91,12 +94,16 @@ class IaLogERetencaoIT extends IntegracaoBase {
                 .sucesso(true).criadoEm(LocalDateTime.now().minusDays(400)).build());
         IaChamada recente = iaChamadas.save(IaChamada.builder().usuario(u).tipo(TipoGeracao.RESUMO).modelo("m")
                 .sucesso(true).criadoEm(LocalDateTime.now()).build());
+        RevisaoLog revisaoAntiga = revisoesLog.save(new RevisaoLog(u.getId(), LocalDateTime.now().minusDays(120)));
+        RevisaoLog revisaoRecente = revisoesLog.save(new RevisaoLog(u.getId(), LocalDateTime.now().minusDays(3)));
 
         retencao.limpar();
 
         assertThat(sessoes.findById(vencida.getId())).isEmpty();
         assertThat(iaChamadas.findById(antiga.getId())).isEmpty();
         assertThat(iaChamadas.findById(recente.getId())).isPresent();
+        assertThat(revisoesLog.findById(revisaoAntiga.getId())).isEmpty();
+        assertThat(revisoesLog.findById(revisaoRecente.getId())).isPresent();
         assertThat(usuarios.findByEmail(s.email()).orElseThrow().getResetTokenHash()).isNull();
         // a sessão válida do login continua funcionando
         assertThat(sessoes.count()).isPositive();
