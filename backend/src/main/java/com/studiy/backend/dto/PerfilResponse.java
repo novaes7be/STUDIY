@@ -24,5 +24,6 @@ public record PerfilResponse(
         boolean emailVerificado,
         boolean onboardingPendente,
         boolean admin,
-        boolean mfaAtivo
+        boolean mfaAtivo,
+        String apelido
 ) {}

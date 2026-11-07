@@ -4,13 +4,16 @@ import com.studiy.backend.dto.FlashcardRequest;
 import com.studiy.backend.dto.FlashcardResponse;
 import com.studiy.backend.dto.RevisarFlashcardRequest;
 import com.studiy.backend.model.Flashcard;
+import com.studiy.backend.model.RevisaoLog;
 import com.studiy.backend.model.Usuario;
 import com.studiy.backend.repository.FlashcardRepository;
+import com.studiy.backend.repository.RevisaoLogRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -23,11 +26,14 @@ public class FlashcardService {
     private final FlashcardRepository flashcardRepository;
     private final MateriaService materiaService;
     private final GamificacaoService gamificacaoService;
+    private final RevisaoLogRepository revisoesLog;
 
-    public FlashcardService(FlashcardRepository flashcardRepository, MateriaService materiaService, GamificacaoService gamificacaoService) {
+    public FlashcardService(FlashcardRepository flashcardRepository, MateriaService materiaService, GamificacaoService gamificacaoService,
+                            RevisaoLogRepository revisoesLog) {
         this.flashcardRepository = flashcardRepository;
         this.materiaService = materiaService;
         this.gamificacaoService = gamificacaoService;
+        this.revisoesLog = revisoesLog;
     }
 
     public List<FlashcardResponse> listarTodos(Usuario usuario, Long materiaId) {
@@ -86,6 +92,7 @@ public class FlashcardService {
 
         Flashcard salvo = flashcardRepository.save(f);
         gamificacaoService.registrarAtividade(usuario);
+        revisoesLog.save(new RevisaoLog(usuario.getId(), LocalDateTime.now()));
 
         return paraResponse(salvo);
     }

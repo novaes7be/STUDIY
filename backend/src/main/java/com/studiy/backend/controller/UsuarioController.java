@@ -61,6 +61,11 @@ public class UsuarioController {
         return usuarioService.concluirOnboarding(usuarioAtual.resolver(auth));
     }
 
+    @PutMapping("/apelido")
+    public PerfilResponse apelido(Authentication auth, @Valid @RequestBody PerfilDtos.ApelidoRequest request) {
+        return usuarioService.definirApelido(usuarioAtual.resolver(auth), request.apelido());
+    }
+
     @PutMapping("/avatar")
     public PerfilResponse avatar(Authentication auth, @Valid @RequestBody PerfilDtos.AvatarRequest request) {
         return usuarioService.definirAvatar(usuarioAtual.resolver(auth), request.avatar());

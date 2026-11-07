@@ -107,4 +107,8 @@ public class Usuario {
     private Integer streakAtual = 0;
 
     private LocalDate ultimaAtividade;
+
+    /** Apelido público do ranking; null = fora do ranking. */
+    @jakarta.persistence.Column(length = 20)
+    private String apelido;
 }

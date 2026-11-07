@@ -32,7 +32,8 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(corpo);
     }
 
-    @ExceptionHandler({HttpMessageNotReadableException.class, MissingServletRequestPartException.class})
+    @ExceptionHandler({HttpMessageNotReadableException.class, MissingServletRequestPartException.class,
+            org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class})
     public ResponseEntity<Map<String, Object>> requisicaoInvalida(Exception ex) {
         return ResponseEntity.badRequest().body(Map.of("erro", "Requisição inválida"));
     }

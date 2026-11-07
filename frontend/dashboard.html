@@ -24,8 +24,8 @@
     <a class="logo" href="index.html">STUDIY<span class="logo-dot">.</span></a>
     <a class="home-link" href="index.html">← Voltar para a home</a>
     <nav aria-label="Matérias"><h2>Matérias</h2><div class="subj-list" id="subjectList"></div></nav>
+    <nav class="side-extra" aria-label="Comunidade"><button class="subj" id="rankingBtn" type="button" aria-current="false">Ranking</button></nav>
     <div class="side-soon" aria-label="Em breve" role="group">
-      <span class="subj is-soon" aria-disabled="true">Ranking <small>Em breve</small></span>
       <span class="subj is-soon" aria-disabled="true">Questionário <small>Em breve</small></span>
     </div>
     <div class="side-foot">
@@ -92,6 +92,11 @@
   <form id="nameForm" class="acc-section" novalidate>
     <div class="field"><label for="accNome">Nome</label><input id="accNome" type="text" maxlength="100" autocomplete="name" required></div>
     <button class="btn btn-accent btn-sm i-check" type="submit">Salvar nome</button>
+  </form>
+
+  <form id="apelidoForm" class="acc-section" novalidate>
+    <div class="field"><label for="accApelido">Apelido no ranking</label><input id="accApelido" type="text" maxlength="20" autocomplete="nickname" spellcheck="false" aria-describedby="apelidoDica"><p class="hint" id="apelidoDica">De 3 a 20 letras, números, ponto, hífen ou sublinhado. Só o apelido aparece no ranking, nunca seu nome ou e-mail. Deixe vazio para sair do ranking.</p></div>
+    <button class="btn btn-accent btn-sm i-check" type="submit">Salvar apelido</button>
   </form>
 
   <details class="acc-section">

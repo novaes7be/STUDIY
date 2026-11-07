@@ -1,6 +1,7 @@
 package com.studiy.backend.service;
 
 import com.studiy.backend.repository.IaChamadaRepository;
+import com.studiy.backend.repository.RevisaoLogRepository;
 import com.studiy.backend.repository.SessaoRefreshRepository;
 import com.studiy.backend.repository.UsuarioRepository;
 import org.slf4j.Logger;
@@ -25,14 +26,20 @@ public class RetencaoService {
     private final SessaoRefreshRepository sessoes;
     private final UsuarioRepository usuarios;
     private final IaChamadaRepository iaChamadas;
+    private final RevisaoLogRepository revisoesLog;
     private final int diasLogIa;
+    private final int diasRevisoes;
 
     public RetencaoService(SessaoRefreshRepository sessoes, UsuarioRepository usuarios, IaChamadaRepository iaChamadas,
-                           @Value("${studiy.retencao.ia-dias}") int diasLogIa) {
+                           RevisaoLogRepository revisoesLog,
+                           @Value("${studiy.retencao.ia-dias}") int diasLogIa,
+                           @Value("${studiy.retencao.revisoes-dias}") int diasRevisoes) {
         this.sessoes = sessoes;
         this.usuarios = usuarios;
         this.iaChamadas = iaChamadas;
         this.diasLogIa = diasLogIa;
+        this.revisoesLog = revisoesLog;
+        this.diasRevisoes = diasRevisoes;
     }
 
     @Scheduled(cron = "${studiy.retencao.cron}")
@@ -43,7 +50,8 @@ public class RetencaoService {
         int reset = usuarios.limparTokensResetExpirados(agora);
         int verif = usuarios.limparTokensVerificacaoExpirados(agora);
         int ia = iaChamadas.apagarAnterioresA(agora.minusDays(diasLogIa));
-        log.info("Retenção: {} refresh tokens, {} tokens de senha, {} tokens de verificação, {} registros de IA removidos.",
-                refresh, reset, verif, ia);
+        int rev = revisoesLog.apagarAnterioresA(agora.minusDays(diasRevisoes));
+        log.info("Retenção: {} refresh tokens, {} tokens de senha, {} tokens de verificação, {} registros de IA, {} revisões removidos.",
+                refresh, reset, verif, ia, rev);
     }
 }
