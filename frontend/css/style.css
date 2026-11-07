@@ -51,13 +51,13 @@ html[data-theme="dark"] .i-moon { display: none; }
 .field { margin-bottom: 16px; }
 .field label { display: block; font-weight: 600; font-size: var(--fs-sm); margin-bottom: 6px; }
 .field input:not([type="checkbox"]):not([type="radio"]):not([type="file"]) {
-  width: 100%; min-height: var(--control-h); padding: 10px 14px;
+  width: 100%; min-height: var(--btn-h); padding: 12px 16px;
   font: inherit; color: var(--text); background: var(--surface);
-  border: 1.5px solid var(--control-line); border-radius: var(--r-sm);
+  border: 1px solid var(--control-line); border-radius: var(--r-btn);
   transition: border-color var(--dur-1) var(--ease), box-shadow var(--dur-1) var(--ease);
 }
 .field input:hover { border-color: var(--text-muted); }
-.field input:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.field input:focus-visible { outline: none; border-color: var(--focus); box-shadow: 0 0 0 2px var(--focus); }
 .field input[aria-invalid="true"], .field input:user-invalid { border-color: var(--danger); }
 .field .hint { font-size: var(--fs-xs); color: var(--text-muted); margin: 6px 0 0; }
 .check { display: flex; gap: 10px; align-items: flex-start; font-size: var(--fs-sm); margin-bottom: 18px; }
@@ -66,32 +66,34 @@ html[data-theme="dark"] .i-moon { display: none; }
 /* ---------- Mensagens (sempre ícone + texto: nunca só cor) ---------- */
 .msg { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: var(--r-sm); font-size: var(--fs-sm); margin-bottom: 16px; overflow-wrap: anywhere; }
 .msg::before { content: ""; flex: none; width: 18px; height: 18px; margin-top: 1px; background: currentColor; -webkit-mask: var(--ico-info) center / contain no-repeat; mask: var(--ico-info) center / contain no-repeat; }
-.msg.error { background: var(--danger-soft); color: var(--danger); }
+.msg.error { background: var(--danger-soft); color: var(--text); box-shadow: inset 3px 0 0 var(--danger); }
+.msg.error::before { background: var(--danger); }
 .msg.error::before { -webkit-mask-image: var(--ico-alert); mask-image: var(--ico-alert); }
-.msg.info { background: var(--info-soft); color: var(--info); }
+.msg.info { background: var(--info-soft); color: var(--text); box-shadow: inset 3px 0 0 var(--info); }
+.msg.info::before { background: var(--info); }
 .msg .btn { margin-left: auto; }
 
 /* ---------- Marca ---------- */
-.logo { font-size: 22px; font-weight: 800; letter-spacing: -.035em; color: inherit; text-decoration: none; }
+/* Tipografia editorial compartilhada (landing, auth, painel) */
+.wrap { width: 100%; max-width: 1360px; margin-inline: auto; padding-inline: clamp(16px, 4vw, 48px); }
+.display {
+  margin: 0; font-size: var(--fs-display); font-weight: var(--fw-display);
+  letter-spacing: var(--ls-display); line-height: var(--lh-display);
+  text-transform: uppercase; text-wrap: initial;
+}
+.logo-dot { color: var(--dot); }
+
+.logo { font-size: 20px; font-weight: 900; letter-spacing: -.04em; color: inherit; text-decoration: none; }
 
 /* Landing: css/landing.css */
-/* ---------- Autenticação ---------- */
-.auth { min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 72px 20px 32px; }
-.auth-card { width: min(420px, 100%); background: var(--surface); border-radius: var(--r-lg); padding: 32px; box-shadow: var(--shadow-2), inset 0 0 0 1px var(--line); }
-.auth-card .logo { color: var(--accent); display: inline-block; margin-bottom: 20px; }
-.auth-card h1 { font-size: var(--fs-2xl); letter-spacing: -.03em; margin-bottom: 6px; }
-.auth-card p.sub { color: var(--text-muted); margin-bottom: 24px; }
-.auth-card .btn-block { margin-top: 8px; }
-.auth-links { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 20px; font-size: var(--fs-sm); }
-.auth-links a { min-height: var(--control-h); display: inline-flex; align-items: center; }
-.auth-top { position: fixed; top: 16px; right: 16px; }
-@media (max-width: 480px) { .auth-card { padding: 24px 20px; } }
-
+/* Autenticação: css/auth.css. Compartilhados com pagamento, admin e páginas legais: */
+.auth-top { position: fixed; top: 16px; right: 16px; z-index: 10; }
 /* "Voltar": link discreto, não um segundo botão competindo com o principal */
-.back-home { display: inline-flex; align-items: center; gap: 6px; min-height: var(--control-h); margin: -8px 0 8px; padding: 0; background: none; box-shadow: none; color: var(--text-muted); font-size: var(--fs-sm); font-weight: 600; text-decoration: none; }
-.back-home::before { content: ""; width: 16px; height: 16px; background: currentColor; -webkit-mask: var(--ico-arrow-left) center / contain no-repeat; mask: var(--ico-arrow-left) center / contain no-repeat; transition: transform var(--dur-1) var(--ease); }
-.back-home:hover { color: var(--text); background: none; box-shadow: none; }
+.back-home { display: inline-flex; align-items: center; gap: 6px; min-height: var(--control-h); margin-bottom: 24px; color: var(--text-muted); font-size: var(--fs-sm); font-weight: 600; text-decoration: none; }
+.back-home::before { content: ""; width: 16px; height: 16px; background: currentColor; -webkit-mask: var(--ico-arrow-left) center / contain no-repeat; mask: var(--ico-arrow-left) center / contain no-repeat; transition: transform var(--dur-2) var(--ease-spring); }
+.back-home:hover { color: var(--text); }
 .back-home:hover::before { transform: translateX(-3px); }
+
 
 /* ---------- Páginas legais ---------- */
 .legal { max-width: 760px; margin: 0 auto; padding: 32px 22px 72px; }
