@@ -1,4 +1,4 @@
-# Design do Studiy — editorial suíço com movimento
+# Design do Studiy — editorial com movimento
 
 Capturas do redesign do frontend. As telas do painel, flashcard, perfil e pagamento usam **dados de exemplo** (API simulada só para a captura); nada aqui vem de contas reais. Capturadas com "reduzir movimento" ligado, por isso os títulos aparecem já resolvidos (sem o efeito de embaralhar).
 
