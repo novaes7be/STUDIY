@@ -1,19 +1,19 @@
 /* Tela de assinatura do Pro. Cores e forma: somente tokens (css/tokens.css). */
-.pay { max-width: 980px; margin: 0 auto; padding: 32px 20px 72px; }
-.pay .logo { color: var(--accent); display: inline-block; margin-bottom: 18px; }
-.pay h1 { font-size: clamp(28px, 4vw, 40px); font-weight: 800; letter-spacing: -.035em; margin-bottom: 8px; }
+.pay { max-width: 1120px; margin: 0 auto; padding: 24px clamp(16px, 4vw, 40px) 96px; }
+.pay .logo { display: block; margin-bottom: 40px; color: var(--text); text-decoration: none; }
+.pay h1 { margin-bottom: 16px; font-size: clamp(44px, 8vw, 120px); font-weight: 900; letter-spacing: -.055em; line-height: .88; text-transform: uppercase; }
 .pay .sub { color: var(--text-muted); font-size: var(--fs-lg); max-width: 36em; }
-.pay-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 28px; align-items: start; }
+.pay-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--text); align-items: start; }
 /* Resumo do plano = bloco de marca (a mesma superfície do Pro na landing) */
-.pay-summary { background: var(--brand-bg); color: var(--brand-fg); border-radius: var(--r-lg); padding: 32px; box-shadow: var(--shadow-2); }
+.pay-summary { background: var(--brand-bg); color: var(--brand-fg); border-radius: var(--r-card); padding: 32px; }
 .pay-summary h2 { font-size: var(--fs-xl); margin-bottom: 6px; }
-.pay-summary .amount { font-size: 52px; font-weight: 800; letter-spacing: -.04em; margin-bottom: 18px; font-variant-numeric: tabular-nums; }
+.pay-summary .amount { font-size: clamp(56px, 6vw, 88px); font-weight: 900; letter-spacing: -.055em; line-height: 1; margin-bottom: 18px; font-variant-numeric: tabular-nums; }
 .pay-summary .amount small { font-size: var(--fs-md); font-weight: 500; color: var(--brand-fg-muted); }
 .pay-summary ul { list-style: none; margin: 0 0 18px; padding: 0; display: grid; gap: 10px; }
 .pay-summary li { display: flex; gap: 10px; }
 .pay-summary li::before { content: ""; flex: none; width: 18px; height: 18px; margin-top: 3px; background: var(--brand-accent); -webkit-mask: var(--ico-check) center / contain no-repeat; mask: var(--ico-check) center / contain no-repeat; }
 .pay-summary .hint-text { color: var(--brand-fg-muted); margin: 0; }
-.pay-form { background: var(--surface); border-radius: var(--r-lg); padding: 28px; box-shadow: var(--shadow-1), inset 0 0 0 1px var(--line); }
+.pay-form { background: var(--surface); border-radius: var(--r-card); padding: 28px; box-shadow: inset 0 0 0 1px var(--line); }
 .pay-form fieldset { border: 0; padding: 0; margin: 0 0 18px; display: grid; gap: 10px; }
 .pay-form legend { font-weight: 750; font-size: var(--fs-lg); margin-bottom: 12px; padding: 0; }
 /* Opções de pagamento: linhas selecionáveis com rádio visível (estado não depende só de cor) */
@@ -35,4 +35,4 @@
 .status-ok { box-shadow: var(--shadow-2), inset 0 0 0 2px var(--accent); }
 .sim-box { margin-top: 18px; padding: 16px; border-radius: var(--r-md); background: var(--info-soft); color: var(--info); }
 .sim-box p { color: inherit; margin-bottom: 8px; }
-@media (max-width: 800px) { .pay-grid { grid-template-columns: 1fr; } .pay-summary { padding: 24px; } .pay-summary .amount { font-size: 44px; } }
+@media (max-width: 800px) { .pay-grid { grid-template-columns: 1fr; } .pay-summary { padding: 24px; } .pay-summary .amount { font-size: 56px; } }

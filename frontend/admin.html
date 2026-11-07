@@ -35,23 +35,23 @@
       </div>
       <form id="mfaForm" novalidate>
         <div class="field"><label for="codigo">Código de 6 dígitos</label><input id="codigo" inputmode="numeric" autocomplete="one-time-code" pattern="\d{6}" maxlength="6" required></div>
-        <button class="btn btn-grad btn-block" type="submit">Confirmar</button>
+        <button class="btn btn-accent btn-block" type="submit">Confirmar</button>
       </form>
     </section>
 
     <!-- Dados (somente leitura, já formatados pela API) -->
     <section id="dados" hidden>
       <nav class="admin-tabs" aria-label="Seções">
-        <button class="btn btn-ghost btn-sm" type="button" data-aba="usuarios" aria-pressed="true">Usuários</button>
-        <button class="btn btn-ghost btn-sm" type="button" data-aba="pedidos" aria-pressed="false">Pedidos</button>
-        <button class="btn btn-ghost btn-sm" type="button" data-aba="uso-ia" aria-pressed="false">Uso de IA</button>
+        <button class="btn btn-secondary btn-sm" type="button" data-aba="usuarios" aria-pressed="true">Usuários</button>
+        <button class="btn btn-secondary btn-sm" type="button" data-aba="pedidos" aria-pressed="false">Pedidos</button>
+        <button class="btn btn-secondary btn-sm" type="button" data-aba="uso-ia" aria-pressed="false">Uso de IA</button>
       </nav>
       <p class="hint" id="resumo"></p>
       <div class="admin-table-wrap"><table class="admin-table" id="tabela"></table></div>
       <div class="admin-pager">
-        <button class="btn btn-ghost btn-sm" type="button" id="anterior">Anterior</button>
+        <button class="btn btn-secondary btn-sm" type="button" id="anterior">Anterior</button>
         <span id="paginaInfo"></span>
-        <button class="btn btn-ghost btn-sm" type="button" id="proxima">Próxima</button>
+        <button class="btn btn-secondary btn-sm" type="button" id="proxima">Próxima</button>
       </div>
     </section>
   </div>

@@ -81,12 +81,6 @@
 .icon-btn:active { transform: scale(.94); transition-duration: var(--dur-press); }
 .icon-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 
-/* ---------- Classes antigas → variantes novas (somem quando o HTML/JS for migrado) ---------- */
-.btn-grad   { --b-bg: var(--accent); --b-fg: var(--on-accent); --b-h: var(--accent-strong); --b-sh: var(--hi), var(--shadow-1); }
-.btn-ghost  { --b-bg: var(--surface); --b-fg: var(--text); --b-bd: var(--line); --b-h: var(--surface-2); --b-sh: var(--shadow-1); }
-.btn-dark   { --b-bg: transparent; --b-fg: var(--text); --b-h: var(--hover-tint); }
-.btn-danger { --b-bg: var(--c-red-700); --b-fg: var(--c-white); --b-h: color-mix(in srgb, var(--c-red-700) 88%, black); }
-
 @media (prefers-reduced-motion: reduce) {
   .btn, .btn::after, .icon-btn { transition: none; }
   .btn:not([disabled]):hover, .btn:not([disabled]):active { transform: none; }
