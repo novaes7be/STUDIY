@@ -53,3 +53,14 @@ jobs:
         with:
           fetch-depth: 0
       - run: docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.30.1 git /repo --redact --verbose
+
+  imagens:
+    name: Imagens Docker (backend e site)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      # Garante que atualizações de imagem base (Dependabot) realmente compilam antes do merge
+      - name: Imagem do backend
+        run: docker build -t studiy-api:ci backend
+      - name: Imagem do site
+        run: docker build -f deploy/Dockerfile -t studiy-web:ci .
