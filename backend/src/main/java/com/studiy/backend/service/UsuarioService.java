@@ -77,7 +77,8 @@ public class UsuarioService {
                 u.isEmailVerificado(),
                 !u.isOnboardingConcluido(),
                 u.getPapel() == com.studiy.backend.model.Papel.ADMIN,
-                u.isMfaAtivo());
+                u.isMfaAtivo(),
+                u.getApelido());
     }
 
     public PerfilResponse concluirOnboarding(Usuario u) {
@@ -91,6 +92,32 @@ public class UsuarioService {
     public PerfilResponse atualizarNome(Usuario u, String nome) {
         u.setNome(nome.trim());
         usuarioRepository.save(u);
+        return perfil(u);
+    }
+
+    /** Nomes que imitam a equipe do Studiy não podem virar apelido público. */
+    private static final java.util.Set<String> APELIDOS_RESERVADOS =
+            java.util.Set.of("admin", "administrador", "studiy", "suporte", "moderador", "equipe", "oficial", "sistema");
+
+    /** Define ou remove (vazio/null) o apelido do ranking. Validação de formato no DTO; aqui unicidade e reservados. */
+    public PerfilResponse definirApelido(Usuario u, String apelido) {
+        String a = apelido == null ? "" : apelido.trim();
+        if (a.isEmpty()) {
+            u.setApelido(null);
+        } else {
+            if (APELIDOS_RESERVADOS.contains(a.toLowerCase(Locale.ROOT))) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Esse apelido não está disponível.");
+            }
+            if (usuarioRepository.existsByApelidoIgnoreCaseAndIdNot(a, u.getId())) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Esse apelido já está em uso.");
+            }
+            u.setApelido(a);
+        }
+        try {
+            usuarioRepository.saveAndFlush(u);
+        } catch (org.springframework.dao.DataIntegrityViolationException e) { // corrida entre dois cadastros iguais
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Esse apelido já está em uso.");
+        }
         return perfil(u);
     }
 
@@ -174,6 +201,7 @@ public class UsuarioService {
         Map<String, Object> out = new LinkedHashMap<>();
         Map<String, Object> conta = new LinkedHashMap<>();
         conta.put("nome", u.getNome());
+        conta.put("apelido", u.getApelido());
         conta.put("email", u.getEmail());
         conta.put("plano", u.planoEfetivo());
         conta.put("planoExpiraEm", u.getPlanoExpiraEm());

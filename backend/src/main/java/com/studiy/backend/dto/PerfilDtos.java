@@ -20,5 +20,10 @@ public final class PerfilDtos {
             @NotBlank @Size(min = 8, max = 72, message = "A nova senha deve ter entre 8 e 72 caracteres") String novaSenha) {}
 
     /** avatar = data URL (png/jpeg/webp) ou vazio/null para remover a foto. */
+    /** Apelido do ranking: 3 a 20 letras, números, ponto, hífen ou sublinhado. Vazio/null = sair do ranking. */
+    public record ApelidoRequest(
+            @jakarta.validation.constraints.Pattern(regexp = "^$|^[A-Za-z0-9_.-]{3,20}$",
+                    message = "Use de 3 a 20 letras, números, ponto, hífen ou sublinhado") String apelido) {}
+
     public record AvatarRequest(@Size(max = 200000) String avatar) {}
 }
