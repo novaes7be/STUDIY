@@ -13,6 +13,20 @@ html.motion [data-reveal].is-in { opacity: 1; transform: none; }
 [data-scramble] { font-variant-numeric: tabular-nums; }
 [data-count] { font-variant-numeric: tabular-nums; }
 
+/* Brilho que segue o cursor: camada fixa atrás de todo o conteúdo (z-index -1),
+   então só aparece onde o fundo da página aparece. Posição em --mx/--my (js/motion.js). */
+.cursor-glow {
+  position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: 0;
+  background: radial-gradient(520px circle at var(--mx, 50%) var(--my, 30%),
+    color-mix(in srgb, var(--c-blue-600) 9%, transparent), transparent 70%);
+  transition: opacity 600ms var(--ease);
+}
+.cursor-glow.on { opacity: 1; }
+[data-theme="dark"] .cursor-glow {
+  background: radial-gradient(520px circle at var(--mx, 50%) var(--my, 30%),
+    color-mix(in srgb, var(--c-blue-600) 16%, transparent), transparent 70%);
+}
+
 /* Flip 3D (flashcard) */
 .flip { perspective: 1400px; }
 .flip-inner { display: grid; transform-style: preserve-3d; transition: transform 640ms var(--ease); }

@@ -106,6 +106,33 @@
     if (ioCount) ioCount.observe(el); else contar(el);
   }
 
+  /* ---------- Brilho do cursor (só no fundo; css/motion.css .cursor-glow) ----------
+     Só com mouse/trackpad e sem "reduzir movimento". O brilho persegue o ponteiro com
+     atraso (interpolação de 12% por quadro) e o loop para quando alcança o alvo. */
+  function brilhoDoCursor() {
+    if (reduz || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+    var raiz = document.documentElement;
+    var camada = document.createElement('div');
+    camada.className = 'cursor-glow';
+    camada.setAttribute('aria-hidden', 'true');
+    document.body.prepend(camada);
+    var alvo = { x: innerWidth / 2, y: innerHeight / 3 }, atual = { x: alvo.x, y: alvo.y }, rodando = false;
+    function quadro() {
+      atual.x += (alvo.x - atual.x) * .12;
+      atual.y += (alvo.y - atual.y) * .12;
+      raiz.style.setProperty('--mx', atual.x.toFixed(1) + 'px');
+      raiz.style.setProperty('--my', atual.y.toFixed(1) + 'px');
+      if (Math.abs(alvo.x - atual.x) + Math.abs(alvo.y - atual.y) > .5) requestAnimationFrame(quadro);
+      else rodando = false;
+    }
+    addEventListener('pointermove', function (e) {
+      alvo.x = e.clientX; alvo.y = e.clientY;
+      camada.classList.add('on');
+      if (!rodando) { rodando = true; requestAnimationFrame(quadro); }
+    }, { passive: true });
+    document.addEventListener('pointerleave', function () { camada.classList.remove('on'); });
+  }
+
   /* ---------- API ---------- */
   function observar(raiz) {
     raiz = raiz || document;
@@ -118,6 +145,7 @@
   }
 
   window.Motion = { observar: observar, contar: contar, embaralhar: embaralhar };
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { observar(); });
-  else observar();
+  function iniciar() { observar(); brilhoDoCursor(); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar);
+  else iniciar();
 })();
