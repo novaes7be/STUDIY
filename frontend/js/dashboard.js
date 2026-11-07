@@ -106,6 +106,9 @@
   var PREVIA = 'studiy-previa-ranking-';
   var rankingTimer = null;
 
+  function esquecerPreviasDoRanking() {
+    ['SEMANA', 'SEQUENCIA', 'XP'].forEach(function (t) { try { localStorage.removeItem(PREVIA + t); } catch (e) { /* ignora */ } });
+  }
   function lerPrevia(tipo) {
     try { return JSON.parse(localStorage.getItem(PREVIA + tipo) || 'null'); } catch (e) { return null; }
   }
@@ -484,6 +487,7 @@
     $('#accMsg').hidden = true;
     $('#delForm').hidden = true;
     $('#accNome').value = state.perfil.nome;
+    $('#accApelido').value = state.perfil.apelido || '';
     ['accNovoEmail', 'accSenhaEmail', 'accSenhaAtual', 'accSenhaNova', 'delPass'].forEach(function (id) { $('#' + id).value = ''; });
     renderPerfil();
     $('#accountDialog').showModal();
@@ -495,6 +499,18 @@
       state.perfil = await api.put('/api/usuarios/me', { nome: $('#accNome').value.trim() });
       renderPerfil();
     }, 'Nome atualizado.', ev.submitter);
+  });
+
+  $('#apelidoForm').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var saindo = !$('#accApelido').value.trim();
+    acao(async function () {
+      state.perfil = await api.put('/api/usuarios/me/apelido', { apelido: $('#accApelido').value.trim() });
+      $('#accApelido').value = state.perfil.apelido || '';
+      esquecerPreviasDoRanking();          // a participação mudou: a prévia salva ficou velha
+      if (state.tela === 'ranking') carregarRanking(state.rankingTipo);
+      renderPerfil();
+    }, saindo ? 'Você saiu do ranking.' : 'Apelido salvo. Você aparece no ranking na próxima atualização (até 5 minutos).', ev.submitter);
   });
 
   $('#emailForm').addEventListener('submit', function (ev) {
