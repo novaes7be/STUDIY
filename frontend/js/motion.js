@@ -158,12 +158,54 @@
       if (Math.abs(alvo.x - atual.x) + Math.abs(alvo.y - atual.y) > .5) requestAnimationFrame(quadro);
       else rodando = false;
     }
+    /* Destaque que vira o controle (efeito "highlight" do iPadOS): sobre um item clicável de
+       fundo transparente, o brilho recua e um retângulo translúcido assume a forma do item,
+       com paralaxe de até 2 px na direção do ponteiro. Fica acima do conteúdo, mas com
+       mix-blend (css/motion.css) só tinge o fundo: texto preto/branco não muda de cor. */
+    var ALVOS = '.nav-links .btn, .subj:not(.is-soon), .faq summary, .btn-tertiary, .footer nav a, ' +
+      '.auth-links a, details.resumo summary, .back-home, .home-link';
+    var hl = document.createElement('div'), sobre = null;
+    hl.className = 'cursor-hl';
+    hl.setAttribute('aria-hidden', 'true');
+    document.body.append(hl);
+    raiz.classList.add('hl-on');
+
+    function posicionar() {
+      if (!sobre) return;
+      if (!sobre.isConnected) { soltar(); return; }  // o painel re-renderizou o item
+      var r = sobre.getBoundingClientRect(), cs = getComputedStyle(sobre);
+      var dx = Math.max(-2, Math.min(2, (alvo.x - (r.left + r.width / 2)) * .04));
+      var dy = Math.max(-2, Math.min(2, (alvo.y - (r.top + r.height / 2)) * .08));
+      hl.style.transform = 'translate(' + (r.left + dx).toFixed(1) + 'px,' + (r.top + dy).toFixed(1) + 'px)';
+      hl.style.width = r.width + 'px';
+      hl.style.height = r.height + 'px';
+      hl.style.borderRadius = parseFloat(cs.borderTopLeftRadius) > 0 ? cs.borderTopLeftRadius : '8px';
+      hl.style.background = cs.getPropertyValue('--accent-soft');  // herda a cor da matéria no painel
+    }
+    function soltar() { sobre = null; hl.classList.remove('on'); camada.classList.remove('recolhido'); }
+
+    document.addEventListener('pointerover', function (e) {
+      var t = e.target.closest ? e.target.closest(ALVOS) : null;
+      if (t === sobre) return;
+      if (!t) { soltar(); return; }
+      var primeira = !sobre;
+      sobre = t;
+      if (primeira) {  // nasce já no lugar do item, sem voar do canto da tela
+        hl.style.transition = 'none'; posicionar(); void hl.offsetWidth; hl.style.transition = '';
+      }
+      posicionar();
+      hl.classList.add('on');
+      camada.classList.add('recolhido');
+    });
+    addEventListener('scroll', posicionar, { passive: true });
+
     addEventListener('pointermove', function (e) {
       alvo.x = e.clientX; alvo.y = e.clientY;
       camada.classList.add('on');
+      if (sobre) posicionar();
       if (!rodando) { rodando = true; requestAnimationFrame(quadro); }
     }, { passive: true });
-    document.addEventListener('pointerleave', function () { camada.classList.remove('on'); });
+    document.addEventListener('pointerleave', function () { camada.classList.remove('on'); soltar(); });
   }
 
   /* ---------- API ---------- */

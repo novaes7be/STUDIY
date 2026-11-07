@@ -29,6 +29,22 @@ html.motion [data-reveal].is-in { opacity: 1; transform: none; }
   background: radial-gradient(360px circle at var(--mx, 50%) var(--my, 30%),
     color-mix(in srgb, var(--c-blue-600) 16%, transparent), transparent 70%);
 }
+.cursor-glow.on.recolhido { opacity: .35; }
+
+/* Destaque que vira o controle (js/motion.js): retângulo que desliza entre os itens.
+   multiply/screen fazem a cor só tingir o fundo, sem alterar texto preto (claro) ou branco (escuro). */
+.cursor-hl {
+  position: fixed; left: 0; top: 0; z-index: 55; pointer-events: none; opacity: 0;
+  mix-blend-mode: multiply;
+  transition: transform 260ms var(--ease-spring), width 260ms var(--ease), height 260ms var(--ease),
+              border-radius 260ms var(--ease), opacity 180ms var(--ease);
+}
+.cursor-hl.on { opacity: 1; }
+[data-theme="dark"] .cursor-hl { mix-blend-mode: screen; }
+/* Com o destaque ligado, os itens não pintam o próprio hover (senão o tom dobra) */
+html.hl-on .subj:hover { background: none; }
+html.hl-on .nav-links .btn, html.hl-on .btn-tertiary { --b-h: var(--b-bg); }
+
 /* Grade revelada (só em páginas com body[data-grade], ex.: landing): 12 colunas da
    largura da tela e linhas a cada 96 px, visíveis só dentro do raio do cursor. */
 body[data-grade] .cursor-glow::after {
