@@ -5,6 +5,10 @@ Plataforma de estudos: organize matérias, envie PDFs e receba resumo + flashcar
 Licença MIT. Repositório público: todo o código é tratado como visível a atacantes. **Nenhuma regra de
 negócio, cálculo, permissão ou segredo fica no front**; ele só exibe dados prontos da API.
 
+![Landing do Studiy](docs/design/telas/02-landing-escuro.png)
+
+**[Ver a galeria de design](docs/design/README.md)**: todas as telas (claro, escuro e celular) e os trechos de código mais relevantes do redesign.
+
 ```
 frontend/            front estático (index, login, cadastro, dashboard, pagamento, admin, termos, privacidade...)
 ├── css/tokens.css   TODAS as cores (constantes). Edite aqui para mudar o visual.
