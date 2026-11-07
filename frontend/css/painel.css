@@ -151,3 +151,32 @@ details.resumo summary { display: flex; align-items: center; min-height: 44px; c
   .stats { grid-template-columns: 1fr 1fr; }
   .stat:last-child { grid-column: 1 / -1; }
 }
+
+/* ---------- Perfil (diálogo "Meu perfil"): nome gigante ---------- */
+dialog.profile { width: min(920px, calc(100vw - 32px)); padding: clamp(24px, 4vw, 48px); border-radius: var(--r-card); }
+dialog.profile #accTitle { margin: 0 0 20px; font-size: var(--fs-xs); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); }
+.profile .acc-head { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px 24px; align-items: end; padding-bottom: 24px; border-bottom: 1px solid var(--text); }
+.profile .avatar.lg { width: 96px; height: 96px; border-radius: var(--r-card); font-size: 34px; font-weight: 900; background: var(--accent); color: var(--on-accent); }
+.profile .acc-name {
+  margin: 0; font-size: clamp(44px, 8vw, 112px); font-weight: 900; letter-spacing: -.055em; line-height: .88;
+  text-transform: uppercase; overflow-wrap: anywhere; hyphens: auto;
+}
+.profile #dlgEmail { margin: 10px 0 0; font-size: var(--fs-lg); }
+.profile .acc-head > div:last-child { min-width: 0; }
+.profile .acc-head .acc-actions, .profile .acc-head .hint-text { grid-column: 1 / -1; }
+.profile .acc-actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0 8px; }
+.profile .acc-section { margin-top: 0; padding: 20px 0; border-top: 0; border-bottom: 1px solid var(--line); }
+.profile .acc-section h3, .profile details.acc-section summary { font-size: var(--fs-xl); font-weight: 800; letter-spacing: -.03em; }
+.profile details.acc-section summary { display: flex; align-items: center; justify-content: space-between; min-height: 44px; cursor: pointer; list-style: none; }
+.profile details.acc-section summary::-webkit-details-marker { display: none; }
+.profile details.acc-section summary::after { content: "+"; font-size: 24px; font-weight: 400; transition: transform var(--dur-1) var(--ease-spring); }
+.profile details.acc-section[open] summary::after { transform: rotate(45deg); }
+.profile .acc-section form { max-width: 480px; }
+.profile #delStart { margin-top: 12px; }
+.profile #delForm { max-width: 480px; margin-top: 16px; padding: 16px; border-radius: var(--r-card); background: var(--danger-soft); box-shadow: inset 3px 0 0 var(--danger); }
+
+@media (max-width: 600px) {
+  dialog.profile { width: 100vw; max-width: 100vw; height: 100dvh; max-height: 100dvh; margin: 0; border-radius: 0; padding: 20px 16px; }
+  .profile .acc-head { grid-template-columns: 1fr; }
+  .profile .avatar.lg { width: 72px; height: 72px; font-size: 26px; }
+}

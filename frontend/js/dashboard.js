@@ -366,10 +366,12 @@
     m.className = 'msg ' + (ok ? 'info' : 'error');
     m.hidden = false;
   }
-  async function acao(fn, okTexto) {
+  async function acao(fn, okTexto, botao) {
     $('#accMsg').hidden = true;
+    var pronto = botao && window.Botao ? Botao.carregando(botao) : function () {}; // spinner enquanto espera
     try { await fn(); if (okTexto) accMsg(okTexto, true); }
     catch (e) { accMsg(e.message || 'Algo deu errado.', false); }
+    finally { pronto(); }
   }
 
   $('#accountBtn').addEventListener('click', function () {
@@ -387,7 +389,7 @@
     acao(async function () {
       state.perfil = await api.put('/api/usuarios/me', { nome: $('#accNome').value.trim() });
       renderPerfil();
-    }, 'Nome atualizado.');
+    }, 'Nome atualizado.', ev.submitter);
   });
 
   $('#emailForm').addEventListener('submit', function (ev) {
@@ -397,7 +399,7 @@
       state.perfil = await api.get('/api/usuarios/me');
       $('#accNovoEmail').value = ''; $('#accSenhaEmail').value = '';
       renderPerfil();
-    }, 'E-mail atualizado.');
+    }, 'E-mail atualizado.', ev.submitter);
   });
 
   $('#passForm').addEventListener('submit', function (ev) {
@@ -405,7 +407,7 @@
     acao(async function () {
       await api.put('/api/usuarios/me/senha', { senhaAtual: $('#accSenhaAtual').value, novaSenha: $('#accSenhaNova').value });
       $('#accSenhaAtual').value = ''; $('#accSenhaNova').value = '';
-    }, 'Senha alterada. As outras sessões foram encerradas.');
+    }, 'Senha alterada. As outras sessões foram encerradas.', ev.submitter);
   });
 
   /* Foto: recorta em quadrado e reduz para 256x256 no navegador (fica leve) antes de enviar */
@@ -438,13 +440,13 @@
       var dataUrl = await prepararFoto(arquivo);
       state.perfil = await api.put('/api/usuarios/me/avatar', { avatar: dataUrl });
       renderPerfil();
-    }, 'Foto atualizada.');
+    }, 'Foto atualizada.', $('#avatarBtn'));
   });
   $('#avatarDel').addEventListener('click', function () {
     acao(async function () {
       state.perfil = await api.put('/api/usuarios/me/avatar', { avatar: null });
       renderPerfil();
-    }, 'Foto removida.');
+    }, 'Foto removida.', $('#avatarDel'));
   });
 
   /* ---------- Sair, exportar e excluir (LGPD) ---------- */
@@ -454,12 +456,14 @@
     window.location.href = 'login.html';
   });
   $('#exportBtn').addEventListener('click', async function () {
+    var pronto = Botao.carregando($('#exportBtn'), 'Preparando…');
     try {
       var dados = await api.get('/api/usuarios/me/exportar');
       var blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
       var a = h('a', { href: URL.createObjectURL(blob), download: 'meus-dados-studiy.json' });
       document.body.append(a); a.click(); a.remove();
     } catch (e) { accMsg(e.message, false); }
+    finally { pronto(); }
   });
   $('#delStart').addEventListener('click', function () { $('#delForm').hidden = false; $('#delPass').focus(); });
   $('#delForm').addEventListener('submit', function (ev) {
@@ -468,7 +472,7 @@
       await api.del('/api/usuarios/me', { senha: $('#delPass').value });
       api.esquecerSessao();
       window.location.href = 'index.html';
-    });
+    }, null, ev.submitter);
   });
   document.querySelectorAll('[data-close]').forEach(function (b) {
     b.addEventListener('click', function () { b.closest('dialog').close(); });
