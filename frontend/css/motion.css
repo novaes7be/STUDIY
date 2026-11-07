@@ -17,13 +17,13 @@ html.motion [data-reveal].is-in { opacity: 1; transform: none; }
    então só aparece onde o fundo da página aparece. Posição em --mx/--my (js/motion.js). */
 .cursor-glow {
   position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: 0;
-  background: radial-gradient(520px circle at var(--mx, 50%) var(--my, 30%),
-    color-mix(in srgb, var(--c-blue-600) 9%, transparent), transparent 70%);
+  background: radial-gradient(360px circle at var(--mx, 50%) var(--my, 30%),
+    color-mix(in srgb, var(--c-blue-600) 14%, transparent), transparent 70%);
   transition: opacity 600ms var(--ease);
 }
 .cursor-glow.on { opacity: 1; }
 [data-theme="dark"] .cursor-glow {
-  background: radial-gradient(520px circle at var(--mx, 50%) var(--my, 30%),
+  background: radial-gradient(360px circle at var(--mx, 50%) var(--my, 30%),
     color-mix(in srgb, var(--c-blue-600) 16%, transparent), transparent 70%);
 }
 
