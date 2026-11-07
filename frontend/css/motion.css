@@ -11,6 +11,9 @@ html.motion [data-reveal].is-in { opacity: 1; transform: none; }
 
 /* Texto embaralhado: largura de dígitos fixa reduz o "tremor" enquanto troca letras */
 [data-scramble] { font-variant-numeric: tabular-nums; }
+/* Caixas do scramble (js/motion.js): largura travada por letra, palavra sem quebra interna */
+.sc-w { white-space: nowrap; }
+.sc-c { display: inline-block; text-align: center; letter-spacing: 0; }
 [data-count] { font-variant-numeric: tabular-nums; }
 
 /* Brilho que segue o cursor: camada fixa atrás de todo o conteúdo (z-index -1),

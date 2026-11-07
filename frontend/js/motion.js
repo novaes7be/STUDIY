@@ -30,11 +30,50 @@
     if (ioReveal) ioReveal.observe(el); else el.classList.add('is-in');
   }
 
-  /* ---------- data-scramble ---------- */
+  /* ---------- data-scramble ----------
+     A fonte é proporcional: trocar "I" por "@" alarga a palavra, muda a quebra de linha e o
+     tamanho do bloco. Por isso, antes de animar, cada letra vira uma caixa com a largura REAL
+     que ela ocupa (medida com Range, já com kerning e letter-spacing) e cada palavra fica sem
+     quebra interna. Os símbolos trocam dentro das caixas; o layout não se mexe. No fim, os
+     nós de texto originais voltam no lugar das caixas. */
   function textos(el) {
     var lista = [], w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
-    while (w.nextNode()) lista.push({ no: w.currentNode, original: w.currentNode.nodeValue });
+    while (w.nextNode()) if (w.currentNode.nodeValue.trim()) lista.push(w.currentNode);
     return lista;
+  }
+
+  function larguras(no) {
+    var r = document.createRange(), s = no.nodeValue, ws = [];
+    for (var k = 0; k < s.length; k++) {
+      r.setStart(no, k); r.setEnd(no, k + 1);
+      var a = r.getBoundingClientRect(), w = a.width;
+      if (k + 1 < s.length) {  // avanço até a próxima letra, se ela estiver na mesma linha
+        r.setStart(no, k + 1); r.setEnd(no, k + 2);
+        var b = r.getBoundingClientRect();
+        if (Math.abs(b.top - a.top) < 1 && b.left > a.left) w = b.left - a.left;
+      }
+      ws.push(w);
+    }
+    return ws;
+  }
+
+  function travar(no) {
+    var s = no.nodeValue, ws = larguras(no), caixas = [];
+    var envelope = document.createElement('span'), palavra = null;
+    envelope.className = 'sc';
+    for (var k = 0; k < s.length; k++) {
+      var c = s[k];
+      if (/\s/.test(c)) { envelope.append(c); palavra = null; continue; }
+      if (!palavra) { palavra = document.createElement('span'); palavra.className = 'sc-w'; envelope.append(palavra); }
+      var caixa = document.createElement('span');
+      caixa.className = 'sc-c';
+      caixa.style.width = ws[k].toFixed(2) + 'px';
+      caixa.textContent = c;
+      palavra.append(caixa);
+      caixas.push({ el: caixa, original: c, cifra: sorteia() });
+    }
+    no.replaceWith(envelope);
+    return { no: no, envelope: envelope, caixas: caixas };
   }
 
   function sorteia() { return CHARS[(Math.random() * CHARS.length) | 0]; }
@@ -44,25 +83,19 @@
   function embaralhar(el) {
     if (reduz || el._scrambling) return;
     el._scrambling = true;
-    var partes = el._partes || (el._partes = textos(el));
-    var total = partes.reduce(function (s, p) { return s + p.original.length; }, 0);
-    var cifra = partes.map(function (p) { return p.original.split('').map(sorteia); });
+    var partes = textos(el).map(travar);
+    var caixas = [].concat.apply([], partes.map(function (p) { return p.caixas; }));
     var passo = 0;
     var timer = setInterval(function () {
-      var resta = Math.floor(passo / TICKS_POR_LETRA);
-      partes.forEach(function (p, i) {
-        var s = '';
-        for (var k = 0; k < p.original.length; k++) {
-          var c = p.original[k];
-          if (resta-- > 0 || c === ' ' || c === '\n') { s += c; continue; }
-          if (Math.random() < TROCA) cifra[i][k] = sorteia();
-          s += cifra[i][k];
-        }
-        p.no.nodeValue = s;
+      var revelados = Math.floor(passo / TICKS_POR_LETRA);
+      caixas.forEach(function (c, i) {
+        if (i < revelados) { c.el.textContent = c.original; return; }
+        if (Math.random() < TROCA) c.cifra = sorteia();
+        c.el.textContent = c.cifra;
       });
-      if (++passo > total * TICKS_POR_LETRA) {
+      if (++passo > caixas.length * TICKS_POR_LETRA) {
         clearInterval(timer);
-        partes.forEach(function (p) { p.no.nodeValue = p.original; });
+        partes.forEach(function (p) { p.envelope.replaceWith(p.no); });
         el._scrambling = false;
       }
     }, PASSO);
