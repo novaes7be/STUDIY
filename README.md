@@ -12,8 +12,8 @@ negócio, cálculo, permissão ou segredo fica no front**; ele só exibe dados p
 ```
 frontend/            front estático (index, login, cadastro, dashboard, pagamento, admin, termos, privacidade...)
 ├── css/tokens.css   TODAS as cores (constantes). Edite aqui para mudar o visual.
-├── fonts/           Plus Jakarta Sans hospedada localmente (licença OFL)
-└── js/              config (gerado no build), api, auth, dashboard, pagamento, admin, onboarding, theme, ui
+├── fonts/           Inter Tight hospedada localmente (licença OFL)
+└── js/              config (gerado no build), api, auth, dashboard, pagamento, admin, onboarding, theme, ui, motion, botao
 backend/             API Spring Boot 3 (Java 17) + PostgreSQL + Flyway
 deploy/              build-front.sh (front por ambiente), Dockerfile do site, Caddyfile
 .github/             CI, CodeQL, auditoria de dependências, dependabot
@@ -181,14 +181,16 @@ Em **Settings → Branches → Add rule** para `main`:
   security updates, Secret scanning e Push protection.
 - (Opcional) Fixar as actions por SHA em vez de tag; o dependabot de `github-actions` mantém atualizado.
 
-## Cores (tokens)
+## Design (tokens, botões e movimento)
 
-Paleta: roxo, rosa e azul pastéis, em `frontend/css/tokens.css` (primitivas `--c-*`, semânticas claro/escuro e paleta da matéria). Cada cor tem um papel só:
+Estilo editorial suíço: preto e branco fazem o trabalho, títulos gigantes em caixa alta (Inter Tight 900). Tudo vem de três arquivos reutilizados em todas as páginas:
 
-- Roxo: ação principal (botões, links, foco, barras) e seções de destaque. Lilás: fundos suaves (hero, chamada final).
-- Rosa: só detalhes pequenos (selo, destaque pontual). Azul pastel: só avisos e dicas. Vermelho: só excluir e erros.
-- Botões: `.btn-grad` primário, `.btn-ghost` secundário, `.btn-light` primário sobre fundo escuro, `.btn-dark` menu, `.btn-danger` excluir.
-- Cores de matéria: as chaves `azul|roxo|vermelho|grafite` ficam no banco, então não mudam; "vermelho" agora exibe o Rosa. Para criar uma nova, adicione um bloco `[data-subject="x"]`, um `.swatch[data-k="x"]`, a chave em `js/config.js` e no `@Pattern` de `MateriaRequest`.
+- `frontend/css/tokens.css`: primitivas `--c-*` e papéis semânticos para claro e escuro. Azul `#3B5BFF` é a única cor de ação; índigo marca o Pro; vermelho só em pontos, notificações e excluir. No escuro, o azul de texto vira `#7B93FF` para manter contraste AA.
+- `frontend/css/buttons.css`: `.btn` com `btn-primary`, `btn-accent`, `btn-secondary`, `btn-tertiary`, `btn-destructive`, `btn-light` e `btn-ghost-dark`; tamanhos `btn-sm` (44), padrão (52) e `btn-lg` (60); `btn-arrow` e `btn-dot`. Ação assíncrona: `aria-busy="true"` mostra o spinner (`js/botao.js` faz isso por você).
+- `frontend/css/motion.css` + `frontend/js/motion.js`: `data-reveal`, `data-scramble`, `data-count` e flip 3D; tudo desligado com "reduzir movimento".
+- Cores de matéria: as chaves `azul|roxo|vermelho|verde|grafite` ficam no banco e não mudam. Para criar uma nova, adicione `[data-subject="x"]` e `[data-mark="x"]` em `tokens.css`, a chave em `js/config.js` e no `@Pattern` de `MateriaRequest`.
+
+Capturas de todas as telas: [galeria de design](docs/design/README.md).
 
 ## Segurança implementada
 
