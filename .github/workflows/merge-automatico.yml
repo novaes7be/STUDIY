@@ -1,0 +1,65 @@
+name: Merge automático (Dependabot)
+
+# Quando um workflow termina num PR do Dependabot, confere TODOS os checks do commit.
+# Se todos passaram, aprova e faz o merge (squash). Se algum falhou, não faz nada.
+# Se ainda há check rodando, sai e espera o próximo workflow terminar.
+#
+# Segurança (repo público): só age em PRs abertos pelo Dependabot e a partir deste repo;
+# nunca faz checkout nem executa código do PR. PRs de pessoas nunca são mergeados aqui.
+on:
+  workflow_run:
+    workflows: [CI, CodeQL, Auditoria de dependências]
+    types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: read
+
+concurrency:
+  group: merge-automatico-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: false
+
+jobs:
+  merge:
+    name: Merge se todos os checks passaram
+    if: >-
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.actor.login == 'dependabot[bot]' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Conferir checks e fazer merge
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
+          BRANCH: ${{ github.event.workflow_run.head_branch }}
+        run: |
+          set -euo pipefail
+
+          # PR aberto do Dependabot cujo último commit é exatamente o que foi testado
+          pr=$(gh pr list -R "$REPO" --head "$BRANCH" --state open \
+                 --json number,author,headRefOid \
+                 --jq ".[] | select(.author.login == \"app/dependabot\" and .headRefOid == \"$SHA\") | .number")
+          if [ -z "$pr" ]; then echo "Nenhum PR do Dependabot aberto para $SHA."; exit 0; fi
+
+          # Situação de todos os checks do commit: nome, status e conclusão
+          checks=$(gh api "repos/$REPO/commits/$SHA/check-runs" --paginate \
+                     --jq '.check_runs[] | "\(.status)\t\(.conclusion // "-")\t\(.name)"')
+          echo "$checks"
+          [ -n "$checks" ] || { echo "Sem checks ainda."; exit 0; }
+
+          if grep -qv '^completed' <<<"$checks"; then
+            echo "Ainda há checks rodando; o próximo workflow que terminar tenta de novo."; exit 0
+          fi
+          if awk -F'\t' '$2 !~ /^(success|skipped|neutral)$/ { ruim = 1 } END { exit !ruim }' <<<"$checks"; then
+            echo "Algum check falhou; PR #$pr fica para revisão manual."; exit 0
+          fi
+
+          # A aprovação só funciona se o repo permitir que Actions aprovem PRs;
+          # sem proteção de branch ela não é exigida para o merge.
+          gh pr review "$pr" -R "$REPO" --approve -b "Aprovado automaticamente: todos os checks passaram." \
+            || echo "Aprovação automática desativada nas configurações do repositório; seguindo com o merge."
+          gh pr merge "$pr" -R "$REPO" --squash --delete-branch
+          echo "PR #$pr mergeado."
