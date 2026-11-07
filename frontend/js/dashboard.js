@@ -188,7 +188,17 @@
         h('div', { class: 'prewrap', text: r.conteudo })));
     });
 
-    content.append(h('div', { class: 'panels' }, mat, rev), h('div', { class: 'panels' }, res));
+    content.append(h('div', { class: 'panels' }, ordemDosPaineis(m, mat, rev)), h('div', { class: 'panels' }, res));
+  }
+
+  /* Ordem dos dois painéis principais (no celular, o primeiro fica no topo da tela).
+     m = matéria atual (m.flashcardsPendentes vem do servidor); state.pdfs = PDFs desta matéria.
+     Devolve um DocumentFragment com os painéis na ordem escolhida. */
+  function ordemDosPaineis(m, mat, rev) {
+    var frag = document.createDocumentFragment();
+    // TODO(human): decidir qual painel vem primeiro e anexar os dois em frag
+    frag.append(mat, rev);
+    return frag;
   }
 
   /* ---------- Ações ---------- */

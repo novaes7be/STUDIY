@@ -1,237 +1,159 @@
 /* ==========================================================================
-   STUDIY — TOKENS DE COR (única fonte de verdade das cores do site)
-   Regra: nenhum outro arquivo CSS/JS usa cor literal; só var(--...).
-   Paleta: roxo + rosa + azul pastéis.
+   STUDIY — DESIGN TOKENS (única fonte de verdade de cor, tipo, raio, sombra e movimento)
+   Regra: nenhum outro CSS/JS usa cor literal; só var(--...).
 
-   PADRONIZAÇÃO (cada cor tem UM papel; nunca todas juntas na mesma seção):
-   - Roxo      = ação principal (botões, links, foco, barras) e as seções de destaque.
-   - Lilás     = fundos suaves (hero, chamada final, cartões secundários).
-   - Rosa      = SÓ detalhes pequenos (selo, destaque pontual) e a cor de matéria "Rosa".
-   - Azul past.= SÓ informação (avisos, dicas) e a cor de matéria "Azul".
-   - Vermelho  = SÓ ações destrutivas e erros.
-   BOTÕES: .btn-grad = primário (roxo) · .btn-ghost = secundário (contorno) ·
-           .btn-light = primário sobre fundo escuro · .btn-dark = menu · .btn-danger = excluir.
+   Tese: ESTUDO COMO CULTIVO (paleta Forest & Sage). Sequência de dias, nível e revisão
+   espaçada são crescimento; o verde carrega isso sem ilustração.
+
+   Papéis (uma cor = um significado):
+   - Ação (verde floresta)  botões primários, links, foco, progresso. Usado com parcimônia.
+   - Superfícies neutras     fundo, cartões e painéis em cinza-esverdeado quase branco/quase preto.
+   - Sinais                  perigo (só excluir e erros), aviso, informação.
+   - Cor da matéria          o usuário escolhe; substitui a cor de ação dentro do painel.
+
+   Contraste (WCAG, calculado sobre os hex abaixo; texto ≥ 4.5:1, bordas de controle ≥ 3:1):
+   claro  texto 12.5 · secundário 5.9 · ação 5.8 · borda de controle 3.2 · perigo 6.5
+   escuro texto 13.1 · secundário 7.5 · ação 7.1 · borda de controle 3.4 · perigo 7.8
    ========================================================================== */
 
-/* 1) PRIMITIVAS ---------------------------------------------------------- */
+/* 1) PRIMITIVAS ------------------------------------------------------------ */
 :root {
+  --c-forest-950: #0d1a17;
+  --c-forest-900: #142824;
+  --c-forest-850: #1a332d;
+  --c-forest-800: #16352f;
+  --c-forest-700: #2c5646;
+  --c-forest-600: #3c6f5b;
+  --c-sage-500: #5d7d71;
+  --c-sage-400: #7a978c;
+  --c-sage-300: #8fb9a8;
+  --c-sage-200: #c6d8d0;
+  --c-sage-150: #dfe8e4;
+  --c-sage-100: #e3ece8;
+  --c-sage-50: #eef3f1;
+  --c-mist: #f7f9f8;
   --c-white: #ffffff;
-  --c-ink-900: #2e2159;
-  --c-ink-950: #17102f;
-  --c-night-950: #120d26;
-  --c-night-800: #251c4d;
-  --c-night-700: #1d1640;
-  --c-night-line: #3a2f73;
+  --c-ink-muted: #4d665d;
+  --c-ink-muted-dark: #a3bab1;
+  --c-text-dark: #e6eeea;
 
-  --c-primary-700: #5b3fd9;
-  --c-primary-600: #7c5cd6;
-  --c-primary-500: #8f72e6;
-  --c-primary-300: #b9a4fa;
-  --c-primary-200: #d9c9fa;
-  --c-primary-100: #e9dffc;
-  --c-primary-50: #f1eafe;
-  --c-primary-25: #fbf8ff;
-  --c-primary-line: #e2d7f7;
-
-  --c-pink-100: #fad3e4;
-  --c-pink-800: #7a1f4b;
-  --c-pink-600: #c2487f;
-  --c-info-100: #cfe4fa;
-  --c-info-800: #173f6b;
-  --c-info-600: #3a74b8;
-
-  --c-red-600: #d62828;
-  --c-red-300: #ff9a9a;
-  --c-red-800: #9c1a1a;
-
-  --c-slate-600: #6e6392;
-  --c-slate-300: #b6aadb;
-
-  --c-err-bg-light: #ffe6e6;
-  --c-err-fg-light: #8a1111;
-  --c-err-bg-dark: #3a1015;
-  --c-err-fg-dark: #ffb3b3;
-
-  --c-overlay-white-30: rgba(255, 255, 255, .3);
-  --c-overlay-night-60: rgba(18, 13, 38, .6);
-  --c-shadow: rgba(46, 33, 89, .28);
+  --c-red-700: #b3261e;  --c-red-50: #fbe9e7;  --c-red-300: #f2a49c;  --c-red-950: #3a1714;
+  --c-amber-700: #8a5300; --c-amber-50: #fbf1de; --c-amber-300: #e8c172; --c-amber-950: #33260d;
+  --c-blue-700: #2f5f8a;  --c-blue-50: #e7f0f8;  --c-blue-300: #9cc3e6;  --c-blue-950: #12253a;
 }
 
-/* 2) SEMÂNTICAS — TEMA CLARO (padrão) ------------------------------------- */
+/* 2) SEMÂNTICAS — CLARO (padrão) -------------------------------------------- */
 :root {
-  --bg-from: var(--c-primary-25);
-  --bg-via: var(--c-primary-50);
-  --bg-to: var(--c-primary-100);
-
-  --text: var(--c-ink-900);
-  --text-muted: var(--c-slate-600);
-  --link: var(--c-primary-600);
-  --focus: var(--c-primary-600);
-  --primary-strong: var(--c-primary-700);
-
+  --bg: var(--c-mist);
   --surface: var(--c-white);
-  --surface-border: var(--c-primary-line);
-  --input-bg: var(--c-white);
-  --row-line: var(--c-primary-line);
+  --surface-2: var(--c-sage-50);          /* afundado: faixas, trilhos, campos desabilitados */
+  --text: var(--c-forest-800);
+  --text-muted: var(--c-ink-muted);
+  --line: var(--c-sage-150);              /* divisória decorativa (não precisa de 3:1) */
+  --control-line: var(--c-sage-400);      /* borda de campo/controle: 3.17:1 */
 
-  --brand-grad: linear-gradient(135deg, var(--c-primary-600), var(--c-primary-700));
-  --hero-grad: linear-gradient(135deg, var(--c-primary-50) 0%, var(--c-primary-100) 55%, var(--c-primary-200) 100%);
-  --band-grad: linear-gradient(135deg, var(--c-primary-700), var(--c-ink-900));
-  --btn-grad: var(--brand-grad);
+  --accent: var(--c-forest-600);
+  --accent-strong: var(--c-forest-700);   /* hover/pressionado */
+  --accent-soft: var(--c-sage-100);       /* fundo de selecionado */
+  --on-accent: var(--c-white);
+  --link: var(--accent);
+  --focus: var(--accent);
 
-  --on-brand: var(--c-white);
-  --on-brand-muted: #efe9ff;
-  --hero-fg: var(--c-ink-900);
-  --hero-fg-muted: #4b3f7a;
+  --danger: var(--c-red-700);   --danger-soft: var(--c-red-50);   --on-danger: var(--c-white);
+  --warn: var(--c-amber-700);   --warn-soft: var(--c-amber-50);
+  --info: var(--c-blue-700);    --info-soft: var(--c-blue-50);
 
-  --ink-card-bg: var(--c-ink-900);
-  --ink-card-edge: transparent;
-  --step-1-bg: var(--c-primary-600);
-  --step-2-bg: var(--brand-grad);
-  --price-free-bg: var(--c-primary-600);
+  /* Bloco de marca (hero da landing, plano Pro): a ÚNICA superfície escura no tema claro */
+  --brand-bg: var(--c-forest-800);
+  --brand-fg: var(--c-sage-150);
+  --brand-fg-muted: var(--c-sage-200);
+  --brand-accent: var(--c-sage-300);
 
-  --toggle-bg: var(--c-primary-100);
-  --toggle-fg: var(--c-primary-600);
-  --toggle-ring: var(--c-primary-600);
-
-  --msg-err-bg: var(--c-err-bg-light);
-  --msg-err-fg: var(--c-err-fg-light);
-  --msg-info-bg: var(--c-info-100);
-  --msg-info-fg: var(--c-info-800);
-
-  --badge-bg: var(--c-pink-100);
-  --badge-fg: var(--c-pink-800);
-
-  --side-bg: var(--c-ink-900);
-  --usage-bg: var(--c-white);
-  --usage-fg: var(--c-ink-900);
-  --danger: var(--c-red-600);
-  --swatch-ring: var(--c-white);
-  --backdrop: var(--c-overlay-night-60);
-  --shadow: var(--c-shadow);
-  --bar-on-brand: var(--c-overlay-white-30);
-  --bar-fill-on-brand: var(--c-white);
+  --backdrop: rgba(13, 26, 23, .48);
+  --shadow-1: 0 1px 2px rgba(22, 53, 47, .06), 0 1px 1px rgba(22, 53, 47, .04);
+  --shadow-2: 0 12px 32px rgba(22, 53, 47, .14), 0 2px 6px rgba(22, 53, 47, .06);
 }
 
-/* 2b) SEMÂNTICAS — TEMA ESCURO -------------------------------------------- */
+/* 2b) SEMÂNTICAS — ESCURO ---------------------------------------------------- */
 [data-theme="dark"] {
-  --bg-from: var(--c-night-950);
-  --bg-via: #181133;
-  --bg-to: #211848;
+  --bg: var(--c-forest-950);
+  --surface: var(--c-forest-900);
+  --surface-2: var(--c-forest-850);
+  --text: var(--c-text-dark);
+  --text-muted: var(--c-ink-muted-dark);
+  --line: #23403a;
+  --control-line: var(--c-sage-500);      /* 3.41:1 sobre a superfície */
 
-  --text: #f3efff;
-  --text-muted: var(--c-slate-300);
-  --link: var(--c-primary-300);
-  --focus: var(--c-primary-300);
-  --primary-strong: var(--c-primary-300);
+  --accent: var(--c-sage-300);
+  --accent-strong: #a9cbbd;
+  --accent-soft: #1f3d36;
+  --on-accent: var(--c-forest-950);       /* texto escuro sobre o verde claro: 8.2:1 */
 
-  --surface: var(--c-night-700);
-  --surface-border: var(--c-night-line);
-  --input-bg: var(--c-night-800);
-  --row-line: var(--c-night-line);
+  --danger: var(--c-red-300);   --danger-soft: var(--c-red-950);  --on-danger: var(--c-forest-950);
+  --warn: var(--c-amber-300);   --warn-soft: var(--c-amber-950);
+  --info: var(--c-blue-300);    --info-soft: var(--c-blue-950);
 
-  --hero-grad: linear-gradient(135deg, #2a1f63 0%, #34277a 55%, #3d2e8c 100%);
-  --hero-fg: #f3efff;
-  --hero-fg-muted: var(--c-primary-200);
+  --brand-bg: var(--c-forest-850);
+  --brand-fg: var(--c-text-dark);
+  --brand-fg-muted: var(--c-ink-muted-dark);
+  --brand-accent: var(--c-sage-300);
 
-  --ink-card-bg: var(--c-ink-950);
-  --ink-card-edge: var(--c-night-line);
-
-  --toggle-bg: var(--c-night-800);
-  --toggle-fg: var(--c-primary-300);
-  --toggle-ring: var(--c-primary-300);
-
-  --msg-err-bg: var(--c-err-bg-dark);
-  --msg-err-fg: var(--c-err-fg-dark);
-  --msg-info-bg: #14233b;
-  --msg-info-fg: var(--c-info-100);
-
-  --badge-bg: #3a1530;
-  --badge-fg: var(--c-pink-100);
-
-  --side-bg: var(--c-ink-950);
-  --usage-bg: var(--c-night-800);
-  --usage-fg: #f3efff;
-  --danger: var(--c-red-300);
-  --swatch-ring: var(--c-night-950);
+  --backdrop: rgba(0, 0, 0, .6);
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, .3);
+  --shadow-2: 0 16px 40px rgba(0, 0, 0, .45), 0 2px 6px rgba(0, 0, 0, .3);
 }
 
-/* 3) PALETA DA MATÉRIA (o usuário escolhe; o painel inteiro acompanha) -----
-   As chaves (azul, roxo, vermelho, grafite) são gravadas no banco: não renomeie.
-   "vermelho" agora é o ROSA; o nome exibido está em js/config.js. */
-[data-subject="roxo"] {
-  --s-a: #7c5cd6; --s-b: #5b3fd9; --s-l1: #f1eafe; --s-l2: #e3d7fb;
-  --s-d1: #181133; --s-d2: #211848; --s-lite: #b9a4fa; --s-pd: #1d1640;
-}
-[data-subject="azul"] {
-  --s-a: #3a74b8; --s-b: #2f5f96; --s-l1: #eaf3fd; --s-l2: #d5e7fa;
-  --s-d1: #0f1a2b; --s-d2: #14233b; --s-lite: #9cc5f0; --s-pd: #13213a;
-}
-[data-subject="vermelho"] {
-  --s-a: #c2487f; --s-b: #9e3566; --s-l1: #fdeef5; --s-l2: #fadcea;
-  --s-d1: #2a1020; --s-d2: #3a1530; --s-lite: #f4a6c8; --s-pd: #2b1424;
-}
-[data-subject="grafite"] {
-  --s-a: #3a3355; --s-b: #1e1a33; --s-l1: #f0eef5; --s-l2: #e0dcea;
-  --s-d1: #0e0c18; --s-d2: #151223; --s-lite: #c9c3dc; --s-pd: #17142a;
-}
+/* 3) COR DA MATÉRIA ----------------------------------------------------------
+   As chaves ficam gravadas no banco: não renomeie ("vermelho" é exibido como Rosa).
+   --s-a = cor no tema claro (texto branco por cima ≥ 5.8:1)
+   --s-d = cor no tema escuro (texto escuro por cima ≥ 7.1:1) */
+[data-subject="verde"]    { --s-a: #3c6f5b; --s-d: #8fb9a8; }
+[data-subject="azul"]     { --s-a: #2f5f8a; --s-d: #9cc3e6; }
+[data-subject="roxo"]     { --s-a: #6b4f94; --s-d: #c3b1e6; }
+[data-subject="vermelho"] { --s-a: #a3406c; --s-d: #eea8c6; }
+[data-subject="grafite"]  { --s-a: #3f4b47; --s-d: #c3cdc9; }
 
-/* Como a paleta da matéria vira cores do painel */
-.app {
-  --bg-via: var(--s-l1);
-  --bg-to: var(--s-l2);
-  --link: var(--s-a);
-  --focus: var(--s-a);
+/* Dentro do painel, a cor da matéria vira a cor de ação */
+.app[data-subject] {
   --accent: var(--s-a);
-  --accent-text: var(--s-a);
-  --accent-grad: linear-gradient(135deg, var(--s-a), var(--s-b));
-  --btn-grad: var(--accent-grad);
-  --panel-bg: var(--c-white);
-  --panel-border: var(--s-a);
-  --toggle-fg: var(--s-a);
-  --toggle-ring: var(--s-a);
+  --accent-strong: color-mix(in srgb, var(--s-a) 82%, black);
+  --accent-soft: color-mix(in srgb, var(--s-a) 11%, white);
 }
-[data-theme="dark"] .app {
-  --bg-via: var(--s-d1);
-  --bg-to: var(--s-d2);
-  --link: var(--s-lite);
-  --focus: var(--s-lite);
-  --accent-text: var(--s-lite);
-  --panel-bg: var(--s-pd);
-  --panel-border: var(--s-lite);
-  --toggle-fg: var(--s-lite);
-  --toggle-ring: var(--s-lite);
+[data-theme="dark"] .app[data-subject] {
+  --accent: var(--s-d);
+  --accent-strong: color-mix(in srgb, var(--s-d) 85%, white);
+  --accent-soft: color-mix(in srgb, var(--s-d) 14%, var(--c-forest-900));
 }
 
-/* Amostras de cor do seletor */
-.swatch[data-k="roxo"] { background: #7c5cd6; }
-.swatch[data-k="azul"] { background: #3a74b8; }
-.swatch[data-k="vermelho"] { background: #c2487f; }
-.swatch[data-k="grafite"] { background: #3a3355; }
+/* Amostras do seletor mostram a cor do tema atual */
+.swatch[data-k="verde"]    { --sw: #3c6f5b; }
+.swatch[data-k="azul"]     { --sw: #2f5f8a; }
+.swatch[data-k="roxo"]     { --sw: #6b4f94; }
+.swatch[data-k="vermelho"] { --sw: #a3406c; }
+.swatch[data-k="grafite"]  { --sw: #3f4b47; }
+[data-theme="dark"] .swatch[data-k="verde"]    { --sw: #8fb9a8; }
+[data-theme="dark"] .swatch[data-k="azul"]     { --sw: #9cc3e6; }
+[data-theme="dark"] .swatch[data-k="roxo"]     { --sw: #c3b1e6; }
+[data-theme="dark"] .swatch[data-k="vermelho"] { --sw: #eea8c6; }
+[data-theme="dark"] .swatch[data-k="grafite"]  { --sw: #c3cdc9; }
 
-/* 4) NAVBAR, BOTÕES E CARTÕES INTERATIVOS --------------------------------- */
+/* 4) FORMA, TIPO E MOVIMENTO --------------------------------------------------- */
 :root {
-  --nav-bg: var(--c-white);
-  --nav-fg: var(--c-ink-900);
-  --nav-glow: var(--c-primary-100);
-  --nav-active-fg: var(--c-primary-600);
-  --spot: var(--c-overlay-white-30);          /* brilho que segue o mouse nos botões */
-  --btn-light-bg: var(--c-white);
-  --btn-light-fg: var(--c-primary-600);
-  --btn-light-hover-bg: var(--c-primary-50);
-  --card-bg: var(--surface);
-  --card-edge: var(--surface-border);
-  --card-edge-hover: var(--c-primary-600);
-  --icon-chip-bg: var(--c-primary-100);
-  --icon-chip-fg: var(--c-primary-600);
-}
-[data-theme="dark"] {
-  --nav-bg: var(--c-night-800);
-  --nav-fg: #f3efff;
-  --nav-glow: var(--c-night-line);
-  --nav-active-fg: var(--c-primary-200);
-  --btn-light-hover-bg: var(--c-primary-100);
-  --card-edge-hover: var(--c-primary-300);
-  --icon-chip-bg: var(--c-night-800);
-  --icon-chip-fg: var(--c-primary-300);
+  --r-sm: 10px;    /* controles internos, chips */
+  --r-md: 16px;    /* cartões, campos, diálogos */
+  --r-lg: 24px;    /* seções grandes */
+  --r-pill: 999px; /* botões */
+
+  --font: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --fs-xs: 13px; --fs-sm: 14px; --fs-md: 16px; --fs-lg: 18px;
+  --fs-xl: 22px; --fs-2xl: 28px; --fs-3xl: 36px;
+  --fs-display: clamp(40px, 6vw, 72px);
+
+  --control-h: 44px;       /* alvo mínimo de toque (HIG: 44x44 pt) */
+  --control-h-sm: 36px;    /* compacto só com ponteiro fino; vira 44 no toque */
+
+  /* Mola curta e "assentada", sem quique: entra rápido e desacelera (estilo das transições do iOS) */
+  --ease: cubic-bezier(.32, .72, 0, 1);
+  --dur-1: 140ms;          /* feedback de toque/hover */
+  --dur-2: 240ms;          /* entrada de diálogo, toast */
 }

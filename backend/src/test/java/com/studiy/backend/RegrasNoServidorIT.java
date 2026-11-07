@@ -53,6 +53,19 @@ class RegrasNoServidorIT extends IntegracaoBase {
     }
 
     @Test
+    void corDaMateriaAceitaSoAsChavesDaPaleta() throws Exception {
+        Sessao s = novaSessao();
+        JsonNode m = ler(mvc.perform(s.em(post("/api/materias")).contentType(MediaType.APPLICATION_JSON)
+                .content(corpo(Map.of("nome", "Botânica", "cor", "verde")))).andExpect(status().isOk()).andReturn());
+        assertThat(m.path("cor").asText()).isEqualTo("verde");
+        JsonNode padrao = ler(mvc.perform(s.em(post("/api/materias")).contentType(MediaType.APPLICATION_JSON)
+                .content(corpo(Map.of("nome", "Sem cor")))).andExpect(status().isOk()).andReturn());
+        assertThat(padrao.path("cor").asText()).isEqualTo("verde");
+        mvc.perform(s.em(post("/api/materias")).contentType(MediaType.APPLICATION_JSON)
+                .content(corpo(Map.of("nome", "X", "cor", "#ff0000")))).andExpect(status().isBadRequest());
+    }
+
+    @Test
     void cadastroSemAceiteDosTermosEhRecusadoNoServidor() throws Exception {
         mvc.perform(post("/api/auth/registrar").with(comCsrf()).contentType(MediaType.APPLICATION_JSON)
                         .content(corpo(Map.of("nome", "X", "email", emailNovo(), "senha", SENHA, "aceitoTermos", false))))

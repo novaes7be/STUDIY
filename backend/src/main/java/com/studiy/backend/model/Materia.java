@@ -28,7 +28,7 @@ public class Materia {
     private String nome;
 
     @Builder.Default
-    private String cor = "azul";
+    private String cor = "verde";
 
     @Builder.Default
     private Integer progressoAtual = 0;

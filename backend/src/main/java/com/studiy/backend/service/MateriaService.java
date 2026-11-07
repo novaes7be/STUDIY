@@ -34,7 +34,7 @@ public class MateriaService {
     public MateriaResponse criar(Usuario usuario, MateriaRequest request) {
         Materia materia = Materia.builder()
                 .nome(request.nome())
-                .cor(request.cor() != null ? request.cor() : "azul")
+                .cor(request.cor() != null ? request.cor() : "verde")
                 .usuario(usuario)
                 .build();
 
