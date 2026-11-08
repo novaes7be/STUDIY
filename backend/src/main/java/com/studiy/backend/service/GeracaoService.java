@@ -11,6 +11,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
+import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -80,7 +82,9 @@ public class GeracaoService {
         usoMensalService.garantirDentroDoLimite(usuario);
         GeradorConteudo.Resultado resultado;
         try {
-            resultado = geradorConteudo.gerar(tipo, pdf.getTextoExtraido());
+            Map<Integer, AnthropicService.Figura> figuras = pdfService.figuras(pdf).stream().collect(Collectors.toMap(
+                    PdfImagem::getNumero, f -> new AnthropicService.Figura(f.getNumero(), f.getMime(), f.getDados())));
+            resultado = geradorConteudo.gerar(tipo, pdf.getTextoExtraido(), figuras);
         } catch (GeradorConteudo.FalhaNaGeracao e) {
             // as partes que responderam (e recusas) foram cobradas: o custo fica registrado
             e.cobradas().forEach(r -> iaCustoService.registrar(usuario, tipo, r));

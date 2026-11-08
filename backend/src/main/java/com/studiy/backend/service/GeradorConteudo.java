@@ -62,15 +62,20 @@ public class GeradorConteudo {
     }
 
     public Resultado gerar(TipoGeracao tipo, String markdown) {
+        return gerar(tipo, markdown, Map.of());
+    }
+
+    /** figuras: as do PDF, por número; cada parte leva só as que ela cita (imagem:N). */
+    public Resultado gerar(TipoGeracao tipo, String markdown, Map<Integer, AnthropicService.Figura> figuras) {
         List<Parte> partes = DivisorDeTexto.dividir(markdown, TAMANHO_PARTE);
         List<RespostaIa> chamadas = Collections.synchronizedList(new ArrayList<>());
         try {
             String texto = switch (tipo) {
                 case FLASHCARD -> juntarFlashcards(porParte(partes, chamadas,
-                        p -> ia.chamar(Tarefa.FLASHCARD, p.texto(), p.contexto(), cartoesPara(p.texto()))));
+                        p -> ia.chamar(Tarefa.FLASHCARD, p.texto(), p.contexto(), cartoesPara(p.texto()), citadas(p, figuras))));
                 case SIMULADO -> juntarSimulados(porParte(partes, chamadas,
-                        p -> ia.chamar(Tarefa.SIMULADO, p.texto(), p.contexto(), partes.size() == 1 ? 5 : 3)));
-                case RESUMO -> resumir(partes, chamadas);
+                        p -> ia.chamar(Tarefa.SIMULADO, p.texto(), p.contexto(), partes.size() == 1 ? 5 : 3, citadas(p, figuras))));
+                case RESUMO -> resumir(partes, chamadas, figuras);
             };
             return new Resultado(texto, List.copyOf(chamadas));
         } catch (FalhaNaGeracao e) {
@@ -83,14 +88,15 @@ public class GeradorConteudo {
         }
     }
 
-    private String resumir(List<Parte> partes, List<RespostaIa> chamadas) {
+    private String resumir(List<Parte> partes, List<RespostaIa> chamadas, Map<Integer, AnthropicService.Figura> figuras) {
         if (partes.size() == 1) {
-            RespostaIa r = ia.chamar(Tarefa.RESUMO, partes.get(0).texto(), "", 0);
+            RespostaIa r = ia.chamar(Tarefa.RESUMO, partes.get(0).texto(), "", 0, citadas(partes.get(0), figuras));
             chamadas.add(r);
             return r.texto();
         }
         List<String> anotacoes = porParte(partes, chamadas,
-                p -> ia.chamar(Tarefa.RESUMO_PARTE, p.texto(), p.contexto(), 0));
+                p -> ia.chamar(Tarefa.RESUMO_PARTE, p.texto(), p.contexto(), 0, citadas(p, figuras)));
+        // A junção final só lê as anotações: as figuras já foram "lidas" e descritas nas partes.
         StringBuilder juntas = new StringBuilder();
         for (int i = 0; i < anotacoes.size(); i++) {
             juntas.append("## Parte ").append(i + 1).append(" de ").append(anotacoes.size());
@@ -98,7 +104,7 @@ public class GeradorConteudo {
             if (!ctx.isBlank()) juntas.append(" (").append(ctx).append(')');
             juntas.append("\n\n").append(anotacoes.get(i).strip()).append("\n\n");
         }
-        RespostaIa fim = ia.chamar(Tarefa.RESUMO_FINAL, juntas.toString().strip(), "", 0);
+        RespostaIa fim = ia.chamar(Tarefa.RESUMO_FINAL, juntas.toString().strip(), "", 0, List.of());
         chamadas.add(fim);
         return fim.texto();
     }
@@ -135,6 +141,17 @@ public class GeradorConteudo {
                     ? new FalhaNaGeracao(rec, List.copyOf(chamadas)) : erro;
         }
         return textos;
+    }
+
+    private static final java.util.regex.Pattern REF_FIGURA = java.util.regex.Pattern.compile("\\(imagem:(\\d+)\\)");
+
+    /** Figuras citadas na parte, na ordem em que aparecem, sem repetir. */
+    static List<AnthropicService.Figura> citadas(Parte parte, Map<Integer, AnthropicService.Figura> figuras) {
+        if (figuras.isEmpty()) return List.of();
+        LinkedHashSet<Integer> numeros = new LinkedHashSet<>();
+        var m = REF_FIGURA.matcher(parte.texto());
+        while (m.find()) numeros.add(Integer.parseInt(m.group(1)));
+        return numeros.stream().map(figuras::get).filter(Objects::nonNull).toList();
     }
 
     /** Mais texto, mais cartões: de 8 (parte curta) a 20 (parte cheia). */

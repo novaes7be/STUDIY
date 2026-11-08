@@ -62,6 +62,12 @@ public class AnthropicService {
         }
     }
 
+    /** Figura do PDF enviada junto com a parte que a cita (imagem:numero no Markdown). */
+    public record Figura(int numero, String mime, String base64) {}
+
+    /** No máximo isso de figuras por chamada (a API aceita mais; o limite segura custo e tamanho). */
+    public static final int FIGURAS_POR_CHAMADA = 20;
+
     /** Modelo usado para cada tarefa. */
     public String modeloPara(Tarefa tarefa) {
         return tarefa == Tarefa.RESUMO || tarefa == Tarefa.RESUMO_FINAL ? modelResumo : model;
@@ -76,6 +82,11 @@ public class AnthropicService {
      * GeradorConteudo); contexto diz de onde vem a parte e quantidade é o nº de cartões/questões.
      */
     public RespostaIa chamar(Tarefa tarefa, String material, String contexto, int quantidade) {
+        return chamar(tarefa, material, contexto, quantidade, List.of());
+    }
+
+    /** Com figuras: vão como imagens antes do texto, cada uma identificada pelo número que o texto cita. */
+    public RespostaIa chamar(Tarefa tarefa, String material, String contexto, int quantidade, List<Figura> figuras) {
         if (apiKey == null || apiKey.isBlank()) {
             // Sem chave configurada: devolve uma resposta de teste, sem gastar nada,
             // pra dar pra testar o fluxo inteiro do app antes de pagar pela API.
@@ -88,7 +99,7 @@ public class AnthropicService {
         Map<String, Object> body = new java.util.HashMap<>();
         body.put("model", modelo);
         body.put("system", promptSistemaPara(tarefa, quantidade) + REGRA_SEGURANCA);
-        body.put("messages", List.of(Map.of("role", "user", "content", onde + "<material>\n" + material + "\n</material>")));
+        body.put("messages", List.of(Map.of("role", "user", "content", conteudo(onde, material, figuras))));
         body.put("max_tokens", maxTokens(tarefa, quantidade));
         if (!effort.isBlank()) {
             body.put("output_config", Map.of("effort", effort));
@@ -117,6 +128,20 @@ public class AnthropicService {
         }
 
         return interpretar(resposta, modelo);
+    }
+
+    /** Blocos da mensagem: figuras primeiro (recomendado pela API), depois o texto que as cita. */
+    static List<Map<String, Object>> conteudo(String onde, String material, List<Figura> figuras) {
+        List<Map<String, Object>> blocos = new java.util.ArrayList<>();
+        List<Figura> enviadas = figuras.size() > FIGURAS_POR_CHAMADA ? figuras.subList(0, FIGURAS_POR_CHAMADA) : figuras;
+        for (Figura f : enviadas) {
+            blocos.add(Map.of("type", "text", "text", "Figura " + f.numero() + " (citada no material como imagem:" + f.numero() + "):"));
+            blocos.add(Map.of("type", "image", "source", Map.of("type", "base64", "media_type", f.mime(), "data", f.base64())));
+        }
+        String aviso = enviadas.isEmpty() ? "" : "<figuras>As imagens acima são as figuras e gráficos do material, na ordem em que "
+                + "aparecem. Use o que elas mostram (valores, tendências, legendas, rótulos) como parte do conteúdo.</figuras>\n";
+        blocos.add(Map.of("type", "text", "text", aviso + onde + "<material>\n" + material + "\n</material>"));
+        return blocos;
     }
 
     /** Teto de saída (só se paga o que for gerado; o teto evita cortar no meio). */
