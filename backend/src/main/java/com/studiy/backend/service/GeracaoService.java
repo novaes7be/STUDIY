@@ -82,7 +82,7 @@ public class GeracaoService {
         // Simulado: a nota real só existe depois que o aluno responde as
         // questões geradas (fica pro endpoint de "responder simulado").
 
-        gamificacaoService.registrarAtividade(usuario);
+        gamificacaoService.registrarEstudo(usuario, GamificacaoService.XP_POR_GERACAO);
 
         return new GerarResponse(conteudoGerado);
     }

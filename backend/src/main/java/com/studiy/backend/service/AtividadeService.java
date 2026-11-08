@@ -56,7 +56,7 @@ public class AtividadeService {
         Atividade salva = atividadeRepository.save(atividade);
 
         if (novoEstado) {
-            gamificacaoService.registrarAtividade(usuario);
+            gamificacaoService.registrarEstudo(usuario, GamificacaoService.XP_POR_ATIVIDADE);
         }
 
         return paraResponse(salva);
