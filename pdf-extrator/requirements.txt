@@ -1,0 +1,6 @@
+# PyMuPDF é AGPL-3.0 (ou licença comercial da Artifex): por isso este serviço é AGPL, ver LICENSE.
+pymupdf==2.1
+pymupdf4llm==2.1
+fastapi==0.162.2
+uvicorn==0.54.0
+python-multipart==0.0.33
