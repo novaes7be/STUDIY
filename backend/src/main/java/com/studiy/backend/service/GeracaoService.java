@@ -24,6 +24,7 @@ public class GeracaoService {
 
     private final UsoMensalService usoMensalService;
     private final AnthropicService anthropicService;
+    private final GeradorConteudo geradorConteudo;
     private final PdfService pdfService;
     private final FlashcardRepository flashcardRepository;
     private final SimuladoRepository simuladoRepository;
@@ -38,6 +39,7 @@ public class GeracaoService {
     public GeracaoService(
             UsoMensalService usoMensalService,
             AnthropicService anthropicService,
+            GeradorConteudo geradorConteudo,
             PdfService pdfService,
             FlashcardRepository flashcardRepository,
             SimuladoRepository simuladoRepository,
@@ -49,6 +51,7 @@ public class GeracaoService {
         this.iaCustoService = iaCustoService;
         this.usoMensalService = usoMensalService;
         this.anthropicService = anthropicService;
+        this.geradorConteudo = geradorConteudo;
         this.pdfService = pdfService;
         this.flashcardRepository = flashcardRepository;
         this.simuladoRepository = simuladoRepository;
@@ -75,18 +78,20 @@ public class GeracaoService {
         }
 
         usoMensalService.garantirDentroDoLimite(usuario);
-        RespostaIa ia;
+        GeradorConteudo.Resultado resultado;
         try {
-            ia = anthropicService.gerar(tipo, pdf.getTextoExtraido());
-        } catch (AnthropicService.IaRecusouException e) {
-            iaCustoService.registrar(usuario, tipo, e.resposta()); // tokens foram cobrados
-            throw e;
-        } catch (RuntimeException e) {
-            iaCustoService.registrarFalha(usuario, tipo, anthropicService.modeloPara(tipo), "erro");
-            throw e;
+            resultado = geradorConteudo.gerar(tipo, pdf.getTextoExtraido());
+        } catch (GeradorConteudo.FalhaNaGeracao e) {
+            // as partes que responderam (e recusas) foram cobradas: o custo fica registrado
+            e.cobradas().forEach(r -> iaCustoService.registrar(usuario, tipo, r));
+            if (!(e.causa() instanceof AnthropicService.IaRecusouException)) {
+                iaCustoService.registrarFalha(usuario, tipo, anthropicService.modeloPara(tipo), "erro");
+            }
+            throw e.causa();
         }
-        iaCustoService.registrar(usuario, tipo, ia);
-        String conteudoGerado = ia.texto();
+        // PDF longo = várias chamadas, cada uma com seu custo; o limite do mês conta uma geração só.
+        resultado.chamadas().forEach(r -> iaCustoService.registrar(usuario, tipo, r));
+        String conteudoGerado = resultado.texto();
 
         usoMensalService.incrementar(usuario);
         persistirSeFaltar(materia, pdf, tipo, conteudoGerado, hash);

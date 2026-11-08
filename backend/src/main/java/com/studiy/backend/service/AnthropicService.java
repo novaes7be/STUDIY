@@ -46,29 +46,50 @@ public class AnthropicService {
         this.restClient = RestClient.builder().baseUrl(apiUrl).requestFactory(fabrica).build();
     }
 
-    /** Modelo usado para cada tipo de geração. */
-    public String modeloPara(TipoGeracao tipo) {
-        return tipo == TipoGeracao.RESUMO ? modelResumo : model;
+    /**
+     * O que cada chamada pede. As partes de um PDF longo usam o Haiku; só o resumo (inteiro ou a
+     * junção final das anotações) usa o modelo do resumo.
+     */
+    public enum Tarefa {
+        RESUMO, RESUMO_PARTE, RESUMO_FINAL, FLASHCARD, SIMULADO;
+
+        public static Tarefa de(TipoGeracao tipo) {
+            return switch (tipo) {
+                case RESUMO -> RESUMO;
+                case FLASHCARD -> FLASHCARD;
+                case SIMULADO -> SIMULADO;
+            };
+        }
     }
 
-    public RespostaIa gerar(TipoGeracao tipo, String textoExtraido) {
+    /** Modelo usado para cada tarefa. */
+    public String modeloPara(Tarefa tarefa) {
+        return tarefa == Tarefa.RESUMO || tarefa == Tarefa.RESUMO_FINAL ? modelResumo : model;
+    }
+
+    public String modeloPara(TipoGeracao tipo) {
+        return modeloPara(Tarefa.de(tipo));
+    }
+
+    /**
+     * Uma chamada à IA. O material vai INTEIRO (a divisão de PDFs longos acontece antes, no
+     * GeradorConteudo); contexto diz de onde vem a parte e quantidade é o nº de cartões/questões.
+     */
+    public RespostaIa chamar(Tarefa tarefa, String material, String contexto, int quantidade) {
         if (apiKey == null || apiKey.isBlank()) {
             // Sem chave configurada: devolve uma resposta de teste, sem gastar nada,
             // pra dar pra testar o fluxo inteiro do app antes de pagar pela API.
-            return RespostaIa.mock(respostaMock(tipo));
+            return RespostaIa.mock(respostaMock(tarefa));
         }
 
-        String promptSistema = promptSistemaPara(tipo);
-        // Trunca o texto pra evitar contas de tokens muito altas em PDFs enormes.
-        String textoLimitado = textoExtraido.length() > 12000 ? textoExtraido.substring(0, 12000) : textoExtraido;
-
-        String modelo = modeloPara(tipo);
+        String modelo = modeloPara(tarefa);
         boolean sonnet = modelo.startsWith("claude-sonnet-5-5");
+        String onde = contexto == null || contexto.isBlank() ? "" : "<secao>" + contexto + "</secao>\n";
         Map<String, Object> body = new java.util.HashMap<>();
         body.put("model", modelo);
-        body.put("system", promptSistema + REGRA_SEGURANCA);
-        body.put("messages", List.of(Map.of("role", "user", "content", "<material>\n" + textoLimitado + "\n</material>")));
-        body.put("max_tokens", maxTokens(tipo));
+        body.put("system", promptSistemaPara(tarefa, quantidade) + REGRA_SEGURANCA);
+        body.put("messages", List.of(Map.of("role", "user", "content", onde + "<material>\n" + material + "\n</material>")));
+        body.put("max_tokens", maxTokens(tarefa, quantidade));
         if (!effort.isBlank()) {
             body.put("output_config", Map.of("effort", effort));
             // Sem "pensamento": os tokens de raciocínio consomem o limite e custam mais.
@@ -95,36 +116,41 @@ public class AnthropicService {
             throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Serviço de IA indisponível. Tente novamente em instantes.");
         }
 
-        return interpretar(resposta);
+        return interpretar(resposta, modelo);
     }
 
-    /** Teto de saída por tipo (só se paga o que for gerado; o teto evita cortar no meio). */
-    private static int maxTokens(TipoGeracao tipo) {
-        return switch (tipo) {
-            case RESUMO -> 6000;
-            case FLASHCARD -> 3000;
-            case SIMULADO -> 4000;
+    /** Teto de saída (só se paga o que for gerado; o teto evita cortar no meio). */
+    private static int maxTokens(Tarefa tarefa, int quantidade) {
+        return switch (tarefa) {
+            case RESUMO, RESUMO_FINAL -> 8000;
+            case RESUMO_PARTE -> 4000;
+            case FLASHCARD -> Math.max(2000, quantidade * 150);
+            case SIMULADO -> Math.max(3000, quantidade * 350);
         };
     }
 
-    private String promptSistemaPara(TipoGeracao tipo) {
-        return switch (tipo) {
-            case RESUMO -> "Você é um assistente de estudos. Resuma o texto enviado em tópicos claros e didáticos, em português, focando nos conceitos essenciais.";
-            case FLASHCARD -> "Você é um assistente de estudos. A partir do texto enviado, gere de 5 a 8 flashcards no formato 'Pergunta: ... | Resposta: ...', um por linha, em português.";
-            case SIMULADO -> "Você é um assistente de estudos. A partir do texto enviado, gere 5 questões de múltipla escolha (com gabarito) em português, no estilo de simulado, cobrindo os pontos principais.";
+    private static String promptSistemaPara(Tarefa tarefa, int quantidade) {
+        int min = Math.max(1, quantidade - 3);
+        return switch (tarefa) {
+            case RESUMO -> "Você é um assistente de estudos. Resuma o material enviado em Markdown, com títulos e tópicos claros e didáticos, em português. Cubra todos os conceitos essenciais, definições e relações importantes, na ordem do material.";
+            case RESUMO_PARTE -> "Você é um assistente de estudos. O material é UMA PARTE de um documento maior (a seção de origem vem em <secao>). Extraia em tópicos Markdown, em português, todos os conceitos, definições, fórmulas, datas, nomes, exemplos e relações desta parte. Não omita nada que possa cair numa prova; seja conciso em cada item. Não escreva introdução nem conclusão.";
+            case RESUMO_FINAL -> "Você é um assistente de estudos. O material são anotações, em ordem, de todas as partes de um mesmo documento. Monte UM resumo didático em Markdown, em português, com títulos e tópicos, seguindo a ordem do documento. Junte o que se repete, mas não deixe de fora nenhum conceito presente nas anotações.";
+            case FLASHCARD -> "Você é um assistente de estudos. A partir do material enviado, gere de " + min + " a " + quantidade + " flashcards no formato 'Pergunta: ... | Resposta: ...', um por linha, em português, cobrindo os pontos importantes de todo o material (não só do começo). Não repita perguntas.";
+            case SIMULADO -> "Você é um assistente de estudos. A partir do material enviado, gere " + quantidade + " questões de múltipla escolha (com gabarito) em português, no estilo de simulado, cobrindo os pontos principais de todo o material.";
         };
     }
 
-    private String respostaMock(TipoGeracao tipo) {
-        return switch (tipo) {
-            case RESUMO -> "[MOCK] Resumo de teste:\n- Ponto principal 1 do conteúdo enviado\n- Ponto principal 2\n- Ponto principal 3\n\n(Configure ANTHROPIC_API_KEY para gerar resumos reais com IA.)";
+    private static String respostaMock(Tarefa tarefa) {
+        return switch (tarefa) {
+            case RESUMO, RESUMO_FINAL -> "[MOCK] Resumo de teste:\n- Ponto principal 1 do conteúdo enviado\n- Ponto principal 2\n- Ponto principal 3\n\n(Configure ANTHROPIC_API_KEY para gerar resumos reais com IA.)";
+            case RESUMO_PARTE -> "- [MOCK] Anotação de teste desta parte";
             case FLASHCARD -> "Pergunta: Qual o conceito central do material enviado? | Resposta: Resposta de teste (mock)\nPergunta: Cite um ponto importante abordado. | Resposta: Outro ponto de teste (mock)";
             case SIMULADO -> "[MOCK] Simulado de teste:\n1) Questão de exemplo sobre o conteúdo. a) Opção A b) Opção B c) Opção C — Gabarito: b\n\n(Configure ANTHROPIC_API_KEY para gerar simulados reais com IA.)";
         };
     }
 
     /** Texto + uso de tokens (usage). Recusa do modelo vira erro claro em vez de texto vazio. */
-    private RespostaIa interpretar(JsonNode resposta) {
+    private RespostaIa interpretar(JsonNode resposta, String modelo) {
         if (resposta == null || !resposta.path("content").isArray()) {
             throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Resposta inesperada da IA");
         }
@@ -136,7 +162,7 @@ public class AnthropicService {
                 sb.append(bloco.path("text").asText());
             }
         }
-        RespostaIa r = new RespostaIa(sb.toString(), resposta.path("model").asText(model),
+        RespostaIa r = new RespostaIa(sb.toString(), resposta.path("model").asText(modelo),
                 uso.path("input_tokens").asInt(0), uso.path("output_tokens").asInt(0),
                 uso.path("cache_creation_input_tokens").asInt(0), uso.path("cache_read_input_tokens").asInt(0),
                 motivo);
