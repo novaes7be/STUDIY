@@ -35,6 +35,10 @@ public class Pdf {
     @JsonIgnore
     private Materia materia;
 
+    /** Conversor que gerou o Markdown: pymupdf4llm (com figuras) ou pdfbox. */
+    @Column(length = 40)
+    private String motor;
+
     /** HMAC do Markdown: o mesmo conteúdo reaproveita gerações anteriores do usuário. */
     @Column(name = "hash_conteudo", length = 64)
     private String hashConteudo;

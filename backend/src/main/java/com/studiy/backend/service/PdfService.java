@@ -7,6 +7,8 @@ import com.studiy.backend.model.Usuario;
 import com.studiy.backend.repository.PdfRepository;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import com.studiy.backend.model.PdfImagem;
+import com.studiy.backend.repository.PdfImagemRepository;
 import com.studiy.backend.security.CryptoService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -33,11 +35,21 @@ public class PdfService {
     private final PdfRepository pdfRepository;
     private final MateriaService materiaService;
     private final CryptoService crypto;
+    private final ExtratorPdfClient extrator;
+    private final PdfImagemRepository imagemRepository;
 
-    public PdfService(PdfRepository pdfRepository, MateriaService materiaService, CryptoService crypto) {
+    public PdfService(PdfRepository pdfRepository, MateriaService materiaService, CryptoService crypto,
+                      ExtratorPdfClient extrator, PdfImagemRepository imagemRepository) {
         this.pdfRepository = pdfRepository;
         this.materiaService = materiaService;
         this.crypto = crypto;
+        this.extrator = extrator;
+        this.imagemRepository = imagemRepository;
+    }
+
+    /** Figuras do PDF (vazio nos convertidos pelo PDFBox). */
+    public List<PdfImagem> figuras(Pdf pdf) {
+        return imagemRepository.findByPdfIdOrderByNumero(pdf.getId());
     }
 
     /** Impressão digital do conteúdo; PDFs anteriores a ela ganham uma na primeira geração. */
@@ -49,12 +61,17 @@ public class PdfService {
         return pdf.getHashConteudo();
     }
 
+    @org.springframework.transaction.annotation.Transactional // PDF e figuras: tudo ou nada
     public Pdf upload(Usuario usuario, Long materiaId, MultipartFile arquivo) {
         Materia materia = materiaService.buscarDoUsuario(usuario, materiaId);
         byte[] bytes = lerEValidar(arquivo);
-        String texto = extrairTexto(bytes);
+        // PyMuPDF (com figuras e gráficos) quando o extrator está no ar; senão PDFBox (só texto).
+        var extraido = extrator.converter(bytes);
+        String texto = extraido.map(ExtratorPdfClient.Extraido::markdown).orElseGet(() -> extrairTexto(bytes));
+        String motor = extraido.map(ExtratorPdfClient.Extraido::motor).orElse("pdfbox");
 
-        if (texto.trim().length() < TEXTO_MINIMO_CARACTERES) {
+        String soTexto = texto.replaceAll("!\\[[^\\]]*\\]\\(imagem:\\d+\\)", "");
+        if (soTexto.trim().length() < TEXTO_MINIMO_CARACTERES) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
                     "Não foi possível extrair texto desse PDF. Ele pode estar vazio ou ser escaneado (sem texto selecionável).");
         }
@@ -63,12 +80,16 @@ public class PdfService {
                     "Esse PDF tem texto demais para processar de uma vez. Divida em partes menores (por capítulo, por exemplo).");
         }
 
-        return pdfRepository.save(Pdf.builder()
+        Pdf pdf = pdfRepository.save(Pdf.builder()
                 .nomeArquivo(nomeSeguro(arquivo.getOriginalFilename()))
                 .textoExtraido(texto)
                 .hashConteudo(crypto.impressaoDigital(texto))
+                .motor(motor)
                 .materia(materia)
                 .build());
+        extraido.ifPresent(e -> e.figuras().forEach(f -> imagemRepository.save(
+                new PdfImagem(pdf.getId(), f.numero(), f.mime(), f.largura(), f.altura(), f.base64()))));
+        return pdf;
     }
 
     public List<PdfResponse> listar(Usuario usuario, Long materiaId) {
@@ -89,7 +110,12 @@ public class PdfService {
         materiaService.buscarDoUsuario(usuario, materiaId);
         Pdf pdf = buscarDaMateria(materiaId, pdfId);
         String nome = pdf.getNomeArquivo().replaceFirst("(?i)\\.pdf$", "") + ".md";
-        return new Markdown(nome, pdf.getTextoExtraido());
+        // No .md baixado as figuras vão embutidas (data URI): o arquivo abre sozinho em qualquer visualizador.
+        String md = pdf.getTextoExtraido();
+        for (PdfImagem f : figuras(pdf)) {
+            md = md.replace("(imagem:" + f.getNumero() + ")", "(data:" + f.getMime() + ";base64," + f.getDados() + ")");
+        }
+        return new Markdown(nome, md);
     }
 
     public record Markdown(String nomeArquivo, String conteudo) {}
