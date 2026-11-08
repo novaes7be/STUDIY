@@ -7,11 +7,19 @@ updates:
     groups:
       spring:
         patterns: ["org.springframework*"]
+  - package-ecosystem: pip
+    directory: /pdf-extrator
+    schedule:
+      interval: weekly
+    groups:
+      pymupdf:
+        # pymupdf4llm exige a MESMA versão do pymupdf: atualizar juntos
+        patterns: ["pymupdf*"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
   - package-ecosystem: docker
-    directories: ["/backend", "/deploy"]
+    directories: ["/backend", "/deploy", "/pdf-extrator"]
     schedule:
       interval: weekly

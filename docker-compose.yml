@@ -21,11 +21,29 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
       DB_URL: jdbc:postgresql://db:5432/studiy
+      EXTRATOR_URL: http://extrator:8000
     depends_on:
       db:
         condition: service_healthy
+      extrator:
+        condition: service_started
     expose:
       - "8080"      # só o Caddy acessa; não fica aberta para a internet
+    restart: unless-stopped
+
+  # PDF -> Markdown com figuras (PyMuPDF). Só a API alcança (rede interna); sem porta publicada.
+  extrator:
+    build: ./pdf-extrator
+    environment:
+      EXTRATOR_TOKEN: ${EXTRATOR_TOKEN:?defina EXTRATOR_TOKEN}
+    expose:
+      - "8000"
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 1g
     restart: unless-stopped
 
   web:
