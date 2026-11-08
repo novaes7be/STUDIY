@@ -35,6 +35,10 @@ public class Pdf {
     @JsonIgnore
     private Materia materia;
 
+    /** HMAC do Markdown: o mesmo conteúdo reaproveita gerações anteriores do usuário. */
+    @Column(name = "hash_conteudo", length = 64)
+    private String hashConteudo;
+
     /** MARKDOWN (novo) ou TEXTO (extraído antes da conversão; o conversor da inicialização atualiza). */
     @Builder.Default
     @Column(nullable = false, length = 10)

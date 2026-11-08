@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.Cipher;
+import javax.crypto.Mac;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.ByteBuffer;
@@ -49,6 +50,24 @@ public class CryptoService {
             return PREFIXO + Base64.getEncoder().encodeToString(buf.array());
         } catch (Exception e) {
             throw new IllegalStateException("Falha ao cifrar dado", e);
+        }
+    }
+
+    /**
+     * Impressão digital de um texto: HMAC-SHA256 com chave derivada da chave do servidor.
+     * Igual para o mesmo texto (serve para reaproveitar gerações), mas sem a chave não dá para
+     * testar se um documento conhecido está no banco, como daria com um SHA-256 puro.
+     */
+    public String impressaoDigital(String texto) {
+        try {
+            Mac derivar = Mac.getInstance("HmacSHA256");
+            derivar.init(new SecretKeySpec(chave.getEncoded(), "HmacSHA256"));
+            byte[] chaveHmac = derivar.doFinal("studiy-impressao-digital-v1".getBytes(StandardCharsets.UTF_8));
+            Mac mac = Mac.getInstance("HmacSHA256");
+            mac.init(new SecretKeySpec(chaveHmac, "HmacSHA256"));
+            return java.util.HexFormat.of().formatHex(mac.doFinal(texto.getBytes(StandardCharsets.UTF_8)));
+        } catch (Exception e) {
+            throw new IllegalStateException("Falha ao calcular impressão digital", e);
         }
     }
 

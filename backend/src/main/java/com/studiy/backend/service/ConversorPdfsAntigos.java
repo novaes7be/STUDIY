@@ -35,6 +35,7 @@ public class ConversorPdfsAntigos implements ApplicationRunner {
                 String texto = pdf.getTextoExtraido() == null ? "" : pdf.getTextoExtraido();
                 pdf.setTextoExtraido(PdfMarkdown.deTexto(texto));
                 pdf.setFormato("MARKDOWN");
+                pdf.setHashConteudo(null); // conteúdo mudou: a impressão digital é refeita na próxima geração
             }
             pdfRepository.saveAll(lote);
             total += lote.size();

@@ -7,6 +7,7 @@ import com.studiy.backend.model.Usuario;
 import com.studiy.backend.repository.PdfRepository;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import com.studiy.backend.security.CryptoService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,10 +32,21 @@ public class PdfService {
 
     private final PdfRepository pdfRepository;
     private final MateriaService materiaService;
+    private final CryptoService crypto;
 
-    public PdfService(PdfRepository pdfRepository, MateriaService materiaService) {
+    public PdfService(PdfRepository pdfRepository, MateriaService materiaService, CryptoService crypto) {
         this.pdfRepository = pdfRepository;
         this.materiaService = materiaService;
+        this.crypto = crypto;
+    }
+
+    /** Impressão digital do conteúdo; PDFs anteriores a ela ganham uma na primeira geração. */
+    public String impressaoDigital(Pdf pdf) {
+        if (pdf.getHashConteudo() == null) {
+            pdf.setHashConteudo(crypto.impressaoDigital(pdf.getTextoExtraido()));
+            pdfRepository.save(pdf);
+        }
+        return pdf.getHashConteudo();
     }
 
     public Pdf upload(Usuario usuario, Long materiaId, MultipartFile arquivo) {
@@ -54,6 +66,7 @@ public class PdfService {
         return pdfRepository.save(Pdf.builder()
                 .nomeArquivo(nomeSeguro(arquivo.getOriginalFilename()))
                 .textoExtraido(texto)
+                .hashConteudo(crypto.impressaoDigital(texto))
                 .materia(materia)
                 .build());
     }

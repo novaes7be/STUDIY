@@ -353,10 +353,12 @@
     ativo.textContent = 'Gerando...';
     ativo.setAttribute('aria-busy', 'true');
     try {
-      await api.post('/api/materias/' + state.atual.id + '/gerar', { pdfId: pdfId, tipo: tipo });
+      var r = await api.post('/api/materias/' + state.atual.id + '/gerar', { pdfId: pdfId, tipo: tipo });
       await Promise.all([recarregarPerfil(), recarregarMaterias()]);
       var id = state.atual ? state.atual.id : null;
-      toast(tipo === 'RESUMO' ? 'Resumo gerado!' : 'Flashcards gerados!');
+      // reaproveitado: o mesmo conteúdo já tinha sido gerado; o servidor não gastou o limite do mês
+      if (r && r.reaproveitado) toast('Este material já tinha sido gerado. Reaproveitamos, sem gastar seu limite.');
+      else toast(tipo === 'RESUMO' ? 'Resumo gerado!' : 'Flashcards gerados!');
       await selecionar(id);
     } catch (e) {
       falha(e);
