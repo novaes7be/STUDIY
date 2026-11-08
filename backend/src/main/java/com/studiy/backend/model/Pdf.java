@@ -35,6 +35,11 @@ public class Pdf {
     @JsonIgnore
     private Materia materia;
 
+    /** MARKDOWN (novo) ou TEXTO (extraído antes da conversão; o conversor da inicialização atualiza). */
+    @Builder.Default
+    @Column(nullable = false, length = 10)
+    private String formato = "MARKDOWN";
+
     @Builder.Default
     private LocalDateTime criadoEm = LocalDateTime.now();
 }

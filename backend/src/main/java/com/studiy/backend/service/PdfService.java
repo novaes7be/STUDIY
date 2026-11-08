@@ -7,7 +7,6 @@ import com.studiy.backend.model.Usuario;
 import com.studiy.backend.repository.PdfRepository;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -18,15 +17,16 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
- * Valida o upload e extrai o texto do PDF no servidor (Apache PDFBox) ANTES de qualquer
- * chamada de IA. O arquivo original NÃO é guardado: só o texto extraído, cifrado em repouso.
+ * Valida o upload e converte o PDF em Markdown no servidor (Apache PDFBox, sem IA) ANTES de
+ * qualquer chamada de IA. O arquivo original NÃO é guardado: só o Markdown, cifrado em repouso.
  */
 @Service
 public class PdfService {
 
     private static final long TAMANHO_MAXIMO_BYTES = 10L * 1024 * 1024;
     private static final int PAGINAS_MAXIMAS = 300;
-    private static final int TEXTO_MAXIMO_CARACTERES = 300_000;
+    /** Acima disso o PDF é recusado (com aviso), nunca cortado em silêncio. */
+    private static final int TEXTO_MAXIMO_CARACTERES = 900_000;
     private static final int TEXTO_MINIMO_CARACTERES = 20;
 
     private final PdfRepository pdfRepository;
@@ -47,7 +47,8 @@ public class PdfService {
                     "Não foi possível extrair texto desse PDF. Ele pode estar vazio ou ser escaneado (sem texto selecionável).");
         }
         if (texto.length() > TEXTO_MAXIMO_CARACTERES) {
-            texto = texto.substring(0, TEXTO_MAXIMO_CARACTERES);
+            throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE,
+                    "Esse PDF tem texto demais para processar de uma vez. Divida em partes menores (por capítulo, por exemplo).");
         }
 
         return pdfRepository.save(Pdf.builder()
@@ -69,6 +70,16 @@ public class PdfService {
         return pdfRepository.findByIdAndMateriaId(pdfId, materiaId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "PDF não encontrado"));
     }
+
+    /** Markdown do PDF para download (.md). Só dentro de uma matéria do usuário. */
+    public Markdown markdown(Usuario usuario, Long materiaId, Long pdfId) {
+        materiaService.buscarDoUsuario(usuario, materiaId);
+        Pdf pdf = buscarDaMateria(materiaId, pdfId);
+        String nome = pdf.getNomeArquivo().replaceFirst("(?i)\\.pdf$", "") + ".md";
+        return new Markdown(nome, pdf.getTextoExtraido());
+    }
+
+    public record Markdown(String nomeArquivo, String conteudo) {}
 
     private byte[] lerEValidar(MultipartFile arquivo) {
         if (arquivo == null || arquivo.isEmpty()) {
@@ -99,7 +110,7 @@ public class PdfService {
             if (document.getNumberOfPages() > PAGINAS_MAXIMAS) {
                 throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, "PDF com páginas demais (máximo " + PAGINAS_MAXIMAS + ")");
             }
-            return new PDFTextStripper().getText(document);
+            return PdfMarkdown.deDocumento(document);
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
