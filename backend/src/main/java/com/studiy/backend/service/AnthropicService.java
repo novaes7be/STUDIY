@@ -12,7 +12,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Chamada à API da Anthropic usando Claude Haiku (modelo mais barato).
+ * Chamada à API da Anthropic. Modelo por tipo: Claude Sonnet 5.5 no resumo (onde a qualidade do
+ * texto pesa mais) e Claude Haiku 5.5, bem mais barato, em flashcards e simulados.
  * A chave da API SÓ existe aqui no backend — nunca é exposta ao front-end.
  * O prompt de sistema é fixo por tipo de geração, o que permite prompt
  * caching e reduz ainda mais o custo em chamadas repetidas.
@@ -25,25 +26,29 @@ public class AnthropicService {
     private final RestClient restClient;
     private final String apiKey;
     private final String model;
+    private final String modelResumo;
     private final String effort;
 
     public AnthropicService(
             @Value("${anthropic.api.url}") String apiUrl,
             @Value("${anthropic.api.key}") String apiKey,
             @Value("${anthropic.api.model}") String model,
+            @Value("${anthropic.api.model.resumo:${anthropic.api.model}}") String modelResumo,
             @Value("${anthropic.api.effort:}") String effort
     ) {
         this.effort = effort == null ? "" : effort.trim();
         this.apiKey = apiKey;
         this.model = model;
+        this.modelResumo = modelResumo;
         org.springframework.http.client.SimpleClientHttpRequestFactory fabrica = new org.springframework.http.client.SimpleClientHttpRequestFactory();
         fabrica.setConnectTimeout(5_000);
-        fabrica.setReadTimeout(60_000);
+        fabrica.setReadTimeout(120_000); // resumo no Sonnet pode passar de 1 minuto
         this.restClient = RestClient.builder().baseUrl(apiUrl).requestFactory(fabrica).build();
     }
 
-    public String modelo() {
-        return model;
+    /** Modelo usado para cada tipo de geração. */
+    public String modeloPara(TipoGeracao tipo) {
+        return tipo == TipoGeracao.RESUMO ? modelResumo : model;
     }
 
     public RespostaIa gerar(TipoGeracao tipo, String textoExtraido) {
@@ -57,25 +62,32 @@ public class AnthropicService {
         // Trunca o texto pra evitar contas de tokens muito altas em PDFs enormes.
         String textoLimitado = textoExtraido.length() > 12000 ? textoExtraido.substring(0, 12000) : textoExtraido;
 
+        String modelo = modeloPara(tipo);
+        boolean sonnet = modelo.startsWith("claude-sonnet-5-5");
         Map<String, Object> body = new java.util.HashMap<>();
-        body.put("model", model);
+        body.put("model", modelo);
         body.put("system", promptSistema + REGRA_SEGURANCA);
         body.put("messages", List.of(Map.of("role", "user", "content", "<material>\n" + textoLimitado + "\n</material>")));
-        if (effort.isBlank()) {
-            body.put("max_tokens", 1000);
-        } else {
-            // Haiku 5.5: esforço baixo e sem "pensamento" (senão os tokens de raciocínio consomem o limite e custam mais).
-            body.put("max_tokens", 1500);
+        body.put("max_tokens", maxTokens(tipo));
+        if (!effort.isBlank()) {
             body.put("output_config", Map.of("effort", effort));
-            body.put("thinking", Map.of("type", "disabled"));
+            // Sem "pensamento": os tokens de raciocínio consomem o limite e custam mais.
+            // O Sonnet 5.5 recusa "disabled" (400); nele o desligamento é "between_tools".
+            body.put("thinking", Map.of("type", sonnet ? "between_tools" : "disabled"));
+        }
+        if (sonnet) {
+            // Se o Sonnet recusar por classificador de segurança, o servidor tenta outro modelo sozinho.
+            body.put("fallbacks", "default");
         }
 
         JsonNode resposta;
         try {
-            resposta = restClient.post()
+            var req = restClient.post()
                 .header("x-api-key", apiKey)
                 .header("anthropic-version", "2023-06-01")
-                .header("content-type", "application/json")
+                .header("content-type", "application/json");
+            if (sonnet) req = req.header("anthropic-beta", "server-side-fallback-2026-07-01");
+            resposta = req
                 .body(body)
                 .retrieve()
                 .body(JsonNode.class);
@@ -84,6 +96,15 @@ public class AnthropicService {
         }
 
         return interpretar(resposta);
+    }
+
+    /** Teto de saída por tipo (só se paga o que for gerado; o teto evita cortar no meio). */
+    private static int maxTokens(TipoGeracao tipo) {
+        return switch (tipo) {
+            case RESUMO -> 6000;
+            case FLASHCARD -> 3000;
+            case SIMULADO -> 4000;
+        };
     }
 
     private String promptSistemaPara(TipoGeracao tipo) {

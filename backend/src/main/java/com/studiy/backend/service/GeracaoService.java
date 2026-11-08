@@ -82,7 +82,7 @@ public class GeracaoService {
             iaCustoService.registrar(usuario, tipo, e.resposta()); // tokens foram cobrados
             throw e;
         } catch (RuntimeException e) {
-            iaCustoService.registrarFalha(usuario, tipo, anthropicService.modelo(), "erro");
+            iaCustoService.registrarFalha(usuario, tipo, anthropicService.modeloPara(tipo), "erro");
             throw e;
         }
         iaCustoService.registrar(usuario, tipo, ia);
