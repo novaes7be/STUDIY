@@ -71,6 +71,10 @@ public class StartupGuard implements EnvironmentPostProcessor, Ordered {
                 erros.add("studiy.auth.cookie-secure=false só é permitido no perfil dev");
             }
         }
+        String extrator = env.getProperty("studiy.extrator.url", "");
+        if (!extrator.isBlank() && env.getProperty("studiy.extrator.token", "").length() < 16) {
+            erros.add("EXTRATOR_TOKEN precisa ter 16+ caracteres quando EXTRATOR_URL está definido (use: openssl rand -hex 32)");
+        }
         String origens = valor(env, "studiy.cors.origins", erros);
         if (origens != null && origens.contains("*")) {
             erros.add("studiy.cors.origins não aceita curinga (*): liste as origens exatas do front");
