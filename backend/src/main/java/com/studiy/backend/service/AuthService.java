@@ -128,7 +128,7 @@ public class AuthService {
                 throw credenciaisInvalidas();
             }
             bloqueio.limpar(usuario);
-            gamificacaoService.registrarAtividade(usuario); // salva a entidade (inclui o contador zerado)
+            gamificacaoService.registrarLogin(usuario); // salva a entidade (inclui o contador zerado)
             return usuario;
         } finally {
             aguardarTempoMinimo(inicio);

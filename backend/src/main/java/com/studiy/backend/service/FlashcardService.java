@@ -91,7 +91,7 @@ public class FlashcardService {
         f.setRevisado(true);
 
         Flashcard salvo = flashcardRepository.save(f);
-        gamificacaoService.registrarAtividade(usuario);
+        gamificacaoService.registrarEstudo(usuario, GamificacaoService.XP_POR_REVISAO);
         revisoesLog.save(new RevisaoLog(usuario.getId(), LocalDateTime.now()));
 
         return paraResponse(salvo);

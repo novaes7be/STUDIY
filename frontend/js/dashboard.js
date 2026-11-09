@@ -408,12 +408,20 @@
     } catch (e) { falha(e); return; }
     if (!fila.length) { toast('Nenhum cartão para revisar hoje.'); return; }
     var i = 0;
+    var revisados = 0; // quantos foram enviados desde a última atualização do painel
+    async function atualizarPainel() {
+      if (!revisados) return;
+      revisados = 0;
+      // espera perfil (XP) E matérias (pendentes) antes de redesenhar, senão pinta dado velho
+      try { await Promise.all([recarregarPerfil(), recarregarMaterias()]); renderPrincipal(); } catch (e) { falha(e); }
+    }
+    // fechar no meio (botão ou Esc) também atualiza XP e "Revisões de hoje"
+    dlg.addEventListener('close', atualizarPainel, { once: true });
     function mostrar() {
       limpar(box);
       if (i >= fila.length) {
         box.append(h('p', { class: 'card-q', text: 'Revisão concluída! 🎉' }));
-        recarregarPerfil();
-        recarregarMaterias().then(function () { renderPrincipal(); });
+        atualizarPainel();
         return;
       }
       var c = fila[i];
@@ -424,7 +432,7 @@
       var notas = h('div', { class: 'rate', hidden: true });
       opcoes.forEach(function (o) {
         notas.append(h('button', { class: 'btn btn-accent btn-sm', type: 'button', text: o.rotulo, onclick: async function () {
-          try { await api.post('/api/materias/' + state.atual.id + '/flashcards/' + c.id + '/revisar', { resposta: o.valor }); i++; mostrar(); }
+          try { await api.post('/api/materias/' + state.atual.id + '/flashcards/' + c.id + '/revisar', { resposta: o.valor }); i++; revisados++; mostrar(); }
           catch (e) { falha(e); }
         } }));
       });
