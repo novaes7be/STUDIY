@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface ResumoRepository extends JpaRepository<Resumo, Long> {
     List<Resumo> findByMateriaIdOrderByCriadoEmDesc(Long materiaId);
+    boolean existsByMateriaIdAndPdfHashConteudo(Long materiaId, String hashConteudo);
 }

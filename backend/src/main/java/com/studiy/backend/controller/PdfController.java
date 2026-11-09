@@ -32,5 +32,11 @@ public class PdfController {
         return pdfService.listar(usuarioAtual.resolver(auth), materiaId);
     }
 
+    /** O PDF já convertido em Markdown. O front transforma em arquivo .md para baixar. */
+    @GetMapping("/{pdfId}/markdown")
+    public PdfService.Markdown markdown(Authentication auth, @PathVariable Long materiaId, @PathVariable Long pdfId) {
+        return pdfService.markdown(usuarioAtual.resolver(auth), materiaId, pdfId);
+    }
+
     public record PdfResumo(Long id, String nomeArquivo) {}
 }

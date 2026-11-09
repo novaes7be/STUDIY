@@ -24,6 +24,8 @@ jobs:
             build-mode: none
           - language: javascript-typescript
             build-mode: none
+          - language: python
+            build-mode: none
     steps:
       - uses: actions/checkout@v7
       - uses: github/codeql-action/init@v3

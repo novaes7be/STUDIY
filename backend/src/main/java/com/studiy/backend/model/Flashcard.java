@@ -53,6 +53,12 @@ public class Flashcard {
     @JsonIgnore
     private Materia materia;
 
+    /** PDF de origem (null nos cartões antigos): evita duplicar ao reaproveitar uma geração. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "pdf_id")
+    @JsonIgnore
+    private Pdf pdf;
+
     @Builder.Default
     private LocalDateTime criadoEm = LocalDateTime.now();
 }

@@ -29,6 +29,20 @@ services:
     ports:
       - "127.0.0.1:8025:8025"
 
+  # PDF -> Markdown com figuras (PyMuPDF). Fora do ar, a API usa o conversor PDFBox.
+  extrator:
+    build: ./pdf-extrator
+    environment:
+      EXTRATOR_TOKEN: token-local-de-desenvolvimento
+    expose:
+      - "8000"
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 1g
+
   api:
     build: ./backend
     environment:
@@ -37,6 +51,8 @@ services:
       FRONT_URL: http://localhost:8090
       CORS_ORIGINS: http://localhost:8090
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      EXTRATOR_URL: http://extrator:8000
+      EXTRATOR_TOKEN: token-local-de-desenvolvimento
       SPRING_MAIL_HOST: mail
       SPRING_MAIL_PORT: "1025"
       MAIL_FROM: nao-responda@studiy.local

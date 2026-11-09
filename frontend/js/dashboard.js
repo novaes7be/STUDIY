@@ -277,7 +277,9 @@
       var bCards = h('button', { class: 'btn btn-secondary btn-sm i-sparkle', type: 'button', text: 'Flashcards' });
       bResumo.addEventListener('click', function () { gerar(p.id, 'RESUMO', [bResumo, bCards], bResumo); });
       bCards.addEventListener('click', function () { gerar(p.id, 'FLASHCARD', [bResumo, bCards], bCards); });
-      mat.append(h('div', { class: 'row' }, h('span', { class: 'name', text: p.nomeArquivo }), h('span', { class: 'actions' }, bResumo, bCards)));
+      var bMd = h('button', { class: 'btn btn-secondary btn-sm i-download', type: 'button', text: '.md', 'aria-label': 'Baixar ' + p.nomeArquivo + ' em Markdown' });
+      bMd.addEventListener('click', function () { baixarMarkdown(p.id, bMd); });
+      mat.append(h('div', { class: 'row' }, h('span', { class: 'name', text: p.nomeArquivo }), h('span', { class: 'actions' }, bResumo, bCards, bMd)));
     });
 
     /* Revisão */
@@ -332,16 +334,31 @@
     } catch (e) { falha(e); }
   }
 
+  /* PDF já convertido em Markdown no servidor (sem IA): baixa como .md */
+  async function baixarMarkdown(pdfId, btn) {
+    btn.disabled = true;
+    try {
+      var md = await api.get('/api/materias/' + state.atual.id + '/pdfs/' + pdfId + '/markdown');
+      var blob = new Blob([md.conteudo], { type: 'text/markdown;charset=utf-8' });
+      var a = h('a', { href: URL.createObjectURL(blob), download: md.nomeArquivo });
+      document.body.append(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+    } catch (e) { falha(e); }
+    finally { btn.disabled = false; }
+  }
+
   async function gerar(pdfId, tipo, botoes, ativo) {
     var rotulo = ativo.textContent;
     botoes.forEach(function (b) { b.disabled = true; });
     ativo.textContent = 'Gerando...';
     ativo.setAttribute('aria-busy', 'true');
     try {
-      await api.post('/api/materias/' + state.atual.id + '/gerar', { pdfId: pdfId, tipo: tipo });
+      var r = await api.post('/api/materias/' + state.atual.id + '/gerar', { pdfId: pdfId, tipo: tipo });
       await Promise.all([recarregarPerfil(), recarregarMaterias()]);
       var id = state.atual ? state.atual.id : null;
-      toast(tipo === 'RESUMO' ? 'Resumo gerado!' : 'Flashcards gerados!');
+      // reaproveitado: o mesmo conteúdo já tinha sido gerado; o servidor não gastou o limite do mês
+      if (r && r.reaproveitado) toast('Este material já tinha sido gerado. Reaproveitamos, sem gastar seu limite.');
+      else toast(tipo === 'RESUMO' ? 'Resumo gerado!' : 'Flashcards gerados!');
       await selecionar(id);
     } catch (e) {
       falha(e);

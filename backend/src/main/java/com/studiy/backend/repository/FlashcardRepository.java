@@ -10,6 +10,7 @@ import java.util.Optional;
 public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
     List<Flashcard> findByMateriaId(Long materiaId);
     Optional<Flashcard> findByIdAndMateriaId(Long id, Long materiaId);
+    boolean existsByMateriaIdAndPdfHashConteudo(Long materiaId, String hashConteudo);
 
     long countByMateriaIdAndProximaRevisaoLessThanEqual(Long materiaId, LocalDate data);
     List<Flashcard> findByMateriaIdAndProximaRevisaoLessThanEqualOrderByProximaRevisaoAsc(Long materiaId, LocalDate data);

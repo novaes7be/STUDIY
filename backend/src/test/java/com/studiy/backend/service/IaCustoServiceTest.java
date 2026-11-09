@@ -19,4 +19,18 @@ class IaCustoServiceTest {
         assertThat(s.custoMicroUsd(new RespostaIa("x", "m", 0, 0, 2000, 10000, "end_turn"))).isEqualTo(350);
         assertThat(s.custoMicroUsd(RespostaIa.mock("x"))).isZero();
     }
+
+    @Test
+    void cadaModeloUsaOProprioPrecoESemPrecoCaiNoPadrao() {
+        var env = new org.springframework.mock.env.MockEnvironment()
+                .withProperty("studiy.ia.preco.claude-sonnet-5-5.entrada-usd-mtok", "2.00")
+                .withProperty("studiy.ia.preco.claude-sonnet-5-5.saida-usd-mtok", "10.00");
+        IaCustoService c = new IaCustoService(null, env,
+                new BigDecimal("0.10"), new BigDecimal("0.50"), new BigDecimal("0.125"), new BigDecimal("0.01"));
+
+        // Sonnet: 1000 × 2,00 + 100 × 10,00 = 2000 + 1000
+        assertThat(c.custoMicroUsd(new RespostaIa("x", "claude-sonnet-5-5", 1000, 100, 0, 0, "end_turn"))).isEqualTo(3000);
+        // Haiku (sem chave própria): preço padrão, 1000 × 0,10 + 100 × 0,50 = 100 + 50
+        assertThat(c.custoMicroUsd(new RespostaIa("x", "claude-haiku-5-5", 1000, 100, 0, 0, "end_turn"))).isEqualTo(150);
+    }
 }

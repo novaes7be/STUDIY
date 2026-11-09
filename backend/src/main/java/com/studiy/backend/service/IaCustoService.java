@@ -21,19 +21,29 @@ import java.time.LocalDateTime;
 public class IaCustoService {
 
     private final IaChamadaRepository repo;
+    private final org.springframework.core.env.Environment env;
     private final BigDecimal precoEntrada;
     private final BigDecimal precoSaida;
     private final BigDecimal precoCacheEscrita;
     private final BigDecimal precoCacheLeitura;
 
+    /** Usado nos testes: um preço só para qualquer modelo. */
+    IaCustoService(IaChamadaRepository repo, BigDecimal precoEntrada, BigDecimal precoSaida,
+                   BigDecimal precoCacheEscrita, BigDecimal precoCacheLeitura) {
+        this(repo, null, precoEntrada, precoSaida, precoCacheEscrita, precoCacheLeitura);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
     public IaCustoService(
             IaChamadaRepository repo,
+            org.springframework.core.env.Environment env,
             @Value("${studiy.ia.preco.entrada-usd-mtok}") BigDecimal precoEntrada,
             @Value("${studiy.ia.preco.saida-usd-mtok}") BigDecimal precoSaida,
             @Value("${studiy.ia.preco.cache-escrita-usd-mtok}") BigDecimal precoCacheEscrita,
             @Value("${studiy.ia.preco.cache-leitura-usd-mtok}") BigDecimal precoCacheLeitura
     ) {
         this.repo = repo;
+        this.env = env;
         this.precoEntrada = precoEntrada;
         this.precoSaida = precoSaida;
         this.precoCacheEscrita = precoCacheEscrita;
@@ -42,11 +52,21 @@ public class IaCustoService {
 
     /** US$/MTok × tokens = micro-US$ (1 MTok × 1 US$ = 10^6 micro-US$, então os fatores se anulam). */
     long custoMicroUsd(RespostaIa r) {
-        BigDecimal total = precoEntrada.multiply(BigDecimal.valueOf(r.tokensEntrada()))
-                .add(precoSaida.multiply(BigDecimal.valueOf(r.tokensSaida())))
-                .add(precoCacheEscrita.multiply(BigDecimal.valueOf(r.tokensCacheEscrita())))
-                .add(precoCacheLeitura.multiply(BigDecimal.valueOf(r.tokensCacheLeitura())));
+        BigDecimal total = preco(r.modelo(), "entrada", precoEntrada).multiply(BigDecimal.valueOf(r.tokensEntrada()))
+                .add(preco(r.modelo(), "saida", precoSaida).multiply(BigDecimal.valueOf(r.tokensSaida())))
+                .add(preco(r.modelo(), "cache-escrita", precoCacheEscrita).multiply(BigDecimal.valueOf(r.tokensCacheEscrita())))
+                .add(preco(r.modelo(), "cache-leitura", precoCacheLeitura).multiply(BigDecimal.valueOf(r.tokensCacheLeitura())));
         return total.setScale(0, java.math.RoundingMode.HALF_UP).longValueExact();
+    }
+
+    /**
+     * Preço do modelo QUE RESPONDEU (studiy.ia.preco.&lt;modelo&gt;.*); sem preço próprio, usa o padrão.
+     * Conta também quando o servidor troca de modelo sozinho (fallback do Sonnet).
+     */
+    private BigDecimal preco(String modelo, String campo, BigDecimal padrao) {
+        if (env == null || modelo == null) return padrao;
+        String v = env.getProperty("studiy.ia.preco." + modelo + "." + campo + "-usd-mtok");
+        return v == null ? padrao : new BigDecimal(v);
     }
 
     /** Transação própria: o registro fica mesmo que a geração falhe depois. */
