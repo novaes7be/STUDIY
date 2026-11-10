@@ -23,3 +23,8 @@ updates:
     directories: ["/backend", "/deploy", "/pdf-extrator"]
     schedule:
       interval: weekly
+    ignore:
+      # O backend é Java 17 (LTS) e o Lombok quebra o build no JDK 25/26.
+      # Trocar de versão de Java é uma migração própria, não uma atualização automática.
+      - dependency-name: "maven"
+      - dependency-name: "eclipse-temurin"
