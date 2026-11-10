@@ -8,7 +8,9 @@
   var reduz = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   var temIO = 'IntersectionObserver' in window;
   var CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ#%&$@01';
-  var PASSO = 45;
+  var PASSO = 60;            // ms entre quadros do scramble
+  var TICKS_POR_LETRA = 2;   // ~120 ms por letra revelada
+  var TROCA = 0.3;           // chance de uma letra cifrada mudar de símbolo a cada quadro
   var fmt = new Intl.NumberFormat('pt-BR');
 
   if (!reduz && temIO) document.documentElement.classList.add('motion');
@@ -28,32 +30,72 @@
     if (ioReveal) ioReveal.observe(el); else el.classList.add('is-in');
   }
 
-  /* ---------- data-scramble ---------- */
+  /* ---------- data-scramble ----------
+     A fonte é proporcional: trocar "I" por "@" alarga a palavra, muda a quebra de linha e o
+     tamanho do bloco. Por isso, antes de animar, cada letra vira uma caixa com a largura REAL
+     que ela ocupa (medida com Range, já com kerning e letter-spacing) e cada palavra fica sem
+     quebra interna. Os símbolos trocam dentro das caixas; o layout não se mexe. No fim, os
+     nós de texto originais voltam no lugar das caixas. */
   function textos(el) {
     var lista = [], w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
-    while (w.nextNode()) lista.push({ no: w.currentNode, original: w.currentNode.nodeValue });
+    while (w.nextNode()) if (w.currentNode.nodeValue.trim()) lista.push(w.currentNode);
     return lista;
   }
 
+  function larguras(no) {
+    var r = document.createRange(), s = no.nodeValue, ws = [];
+    for (var k = 0; k < s.length; k++) {
+      r.setStart(no, k); r.setEnd(no, k + 1);
+      var a = r.getBoundingClientRect(), w = a.width;
+      if (k + 1 < s.length) {  // avanço até a próxima letra, se ela estiver na mesma linha
+        r.setStart(no, k + 1); r.setEnd(no, k + 2);
+        var b = r.getBoundingClientRect();
+        if (Math.abs(b.top - a.top) < 1 && b.left > a.left) w = b.left - a.left;
+      }
+      ws.push(w);
+    }
+    return ws;
+  }
+
+  function travar(no) {
+    var s = no.nodeValue, ws = larguras(no), caixas = [];
+    var envelope = document.createElement('span'), palavra = null;
+    envelope.className = 'sc';
+    for (var k = 0; k < s.length; k++) {
+      var c = s[k];
+      if (/\s/.test(c)) { envelope.append(c); palavra = null; continue; }
+      if (!palavra) { palavra = document.createElement('span'); palavra.className = 'sc-w'; envelope.append(palavra); }
+      var caixa = document.createElement('span');
+      caixa.className = 'sc-c';
+      caixa.style.width = ws[k].toFixed(2) + 'px';
+      caixa.textContent = c;
+      palavra.append(caixa);
+      caixas.push({ el: caixa, original: c, cifra: sorteia() });
+    }
+    no.replaceWith(envelope);
+    return { no: no, envelope: envelope, caixas: caixas };
+  }
+
+  function sorteia() { return CHARS[(Math.random() * CHARS.length) | 0]; }
+
+  /* Suave: uma letra se revela a cada TICKS_POR_LETRA passos, e cada letra ainda
+     cifrada só troca de símbolo com chance TROCA por passo (em vez de piscar sempre). */
   function embaralhar(el) {
     if (reduz || el._scrambling) return;
     el._scrambling = true;
-    var partes = el._partes || (el._partes = textos(el));
-    var total = partes.reduce(function (s, p) { return s + p.original.length; }, 0);
-    var revelados = 0;
+    var partes = textos(el).map(travar);
+    var caixas = [].concat.apply([], partes.map(function (p) { return p.caixas; }));
+    var passo = 0;
     var timer = setInterval(function () {
-      var resta = revelados;
-      partes.forEach(function (p) {
-        var s = '';
-        for (var k = 0; k < p.original.length; k++) {
-          var c = p.original[k];
-          s += (resta-- > 0 || c === ' ' || c === '\n') ? c : CHARS[(Math.random() * CHARS.length) | 0];
-        }
-        p.no.nodeValue = s;
+      var revelados = Math.floor(passo / TICKS_POR_LETRA);
+      caixas.forEach(function (c, i) {
+        if (i < revelados) { c.el.textContent = c.original; return; }
+        if (Math.random() < TROCA) c.cifra = sorteia();
+        c.el.textContent = c.cifra;
       });
-      if (++revelados > total) {
+      if (++passo > caixas.length * TICKS_POR_LETRA) {
         clearInterval(timer);
-        partes.forEach(function (p) { p.no.nodeValue = p.original; });
+        partes.forEach(function (p) { p.envelope.replaceWith(p.no); });
         el._scrambling = false;
       }
     }, PASSO);
@@ -97,6 +139,75 @@
     if (ioCount) ioCount.observe(el); else contar(el);
   }
 
+  /* ---------- Brilho do cursor (só no fundo; css/motion.css .cursor-glow) ----------
+     Só com mouse/trackpad e sem "reduzir movimento". O brilho persegue o ponteiro com
+     atraso (interpolação de 12% por quadro) e o loop para quando alcança o alvo. */
+  function brilhoDoCursor() {
+    if (reduz || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+    var raiz = document.documentElement;
+    var camada = document.createElement('div');
+    camada.className = 'cursor-glow';
+    camada.setAttribute('aria-hidden', 'true');
+    document.body.prepend(camada);
+    var alvo = { x: innerWidth / 2, y: innerHeight / 3 }, atual = { x: alvo.x, y: alvo.y }, rodando = false;
+    function quadro() {
+      atual.x += (alvo.x - atual.x) * .12;
+      atual.y += (alvo.y - atual.y) * .12;
+      raiz.style.setProperty('--mx', atual.x.toFixed(1) + 'px');
+      raiz.style.setProperty('--my', atual.y.toFixed(1) + 'px');
+      if (Math.abs(alvo.x - atual.x) + Math.abs(alvo.y - atual.y) > .5) requestAnimationFrame(quadro);
+      else rodando = false;
+    }
+    /* Destaque que vira o controle (efeito "highlight" do iPadOS): sobre um item clicável de
+       fundo transparente, o brilho recua e um retângulo translúcido assume a forma do item,
+       com paralaxe de até 2 px na direção do ponteiro. Fica acima do conteúdo, mas com
+       mix-blend (css/motion.css) só tinge o fundo: texto preto/branco não muda de cor. */
+    var ALVOS = '.nav-links .btn, .subj:not(.is-soon), .faq summary, .btn-tertiary, .footer nav a, ' +
+      '.auth-links a, details.resumo summary, .back-home, .home-link';
+    var hl = document.createElement('div'), sobre = null;
+    hl.className = 'cursor-hl';
+    hl.setAttribute('aria-hidden', 'true');
+    document.body.append(hl);
+    raiz.classList.add('hl-on');
+
+    function posicionar() {
+      if (!sobre) return;
+      if (!sobre.isConnected) { soltar(); return; }  // o painel re-renderizou o item
+      var r = sobre.getBoundingClientRect(), cs = getComputedStyle(sobre);
+      var dx = Math.max(-2, Math.min(2, (alvo.x - (r.left + r.width / 2)) * .04));
+      var dy = Math.max(-2, Math.min(2, (alvo.y - (r.top + r.height / 2)) * .08));
+      hl.style.transform = 'translate(' + (r.left + dx).toFixed(1) + 'px,' + (r.top + dy).toFixed(1) + 'px)';
+      hl.style.width = r.width + 'px';
+      hl.style.height = r.height + 'px';
+      hl.style.borderRadius = parseFloat(cs.borderTopLeftRadius) > 0 ? cs.borderTopLeftRadius : '8px';
+      hl.style.background = cs.getPropertyValue('--accent-soft');  // herda a cor da matéria no painel
+    }
+    function soltar() { sobre = null; hl.classList.remove('on'); camada.classList.remove('recolhido'); }
+
+    document.addEventListener('pointerover', function (e) {
+      var t = e.target.closest ? e.target.closest(ALVOS) : null;
+      if (t === sobre) return;
+      if (!t) { soltar(); return; }
+      var primeira = !sobre;
+      sobre = t;
+      if (primeira) {  // nasce já no lugar do item, sem voar do canto da tela
+        hl.style.transition = 'none'; posicionar(); void hl.offsetWidth; hl.style.transition = '';
+      }
+      posicionar();
+      hl.classList.add('on');
+      camada.classList.add('recolhido');
+    });
+    addEventListener('scroll', posicionar, { passive: true });
+
+    addEventListener('pointermove', function (e) {
+      alvo.x = e.clientX; alvo.y = e.clientY;
+      camada.classList.add('on');
+      if (sobre) posicionar();
+      if (!rodando) { rodando = true; requestAnimationFrame(quadro); }
+    }, { passive: true });
+    document.addEventListener('pointerleave', function () { camada.classList.remove('on'); soltar(); });
+  }
+
   /* ---------- API ---------- */
   function observar(raiz) {
     raiz = raiz || document;
@@ -109,6 +220,7 @@
   }
 
   window.Motion = { observar: observar, contar: contar, embaralhar: embaralhar };
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { observar(); });
-  else observar();
+  function iniciar() { observar(); brilhoDoCursor(); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar);
+  else iniciar();
 })();

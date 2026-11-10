@@ -11,7 +11,51 @@ html.motion [data-reveal].is-in { opacity: 1; transform: none; }
 
 /* Texto embaralhado: largura de dígitos fixa reduz o "tremor" enquanto troca letras */
 [data-scramble] { font-variant-numeric: tabular-nums; }
+/* Caixas do scramble (js/motion.js): largura travada por letra, palavra sem quebra interna */
+.sc-w { white-space: nowrap; }
+.sc-c { display: inline-block; text-align: center; letter-spacing: 0; }
 [data-count] { font-variant-numeric: tabular-nums; }
+
+/* Brilho que segue o cursor: camada fixa atrás de todo o conteúdo (z-index -1),
+   então só aparece onde o fundo da página aparece. Posição em --mx/--my (js/motion.js). */
+.cursor-glow {
+  position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: 0;
+  background: radial-gradient(360px circle at var(--mx, 50%) var(--my, 30%),
+    color-mix(in srgb, var(--c-blue-600) 14%, transparent), transparent 70%);
+  transition: opacity 600ms var(--ease);
+}
+.cursor-glow.on { opacity: 1; }
+[data-theme="dark"] .cursor-glow {
+  background: radial-gradient(360px circle at var(--mx, 50%) var(--my, 30%),
+    color-mix(in srgb, var(--c-blue-600) 16%, transparent), transparent 70%);
+}
+.cursor-glow.on.recolhido { opacity: .35; }
+
+/* Destaque que vira o controle (js/motion.js): retângulo que desliza entre os itens.
+   multiply/screen fazem a cor só tingir o fundo, sem alterar texto preto (claro) ou branco (escuro). */
+.cursor-hl {
+  position: fixed; left: 0; top: 0; z-index: 55; pointer-events: none; opacity: 0;
+  mix-blend-mode: multiply;
+  transition: transform 260ms var(--ease-spring), width 260ms var(--ease), height 260ms var(--ease),
+              border-radius 260ms var(--ease), opacity 180ms var(--ease);
+}
+.cursor-hl.on { opacity: 1; }
+[data-theme="dark"] .cursor-hl { mix-blend-mode: screen; }
+/* Com o destaque ligado, os itens não pintam o próprio hover (senão o tom dobra) */
+html.hl-on .subj:hover { background: none; }
+html.hl-on .nav-links .btn, html.hl-on .btn-tertiary { --b-h: var(--b-bg); }
+
+/* Grade revelada (só em páginas com body[data-grade], ex.: landing): 12 colunas da
+   largura da tela e linhas a cada 96 px, visíveis só dentro do raio do cursor. */
+body[data-grade] .cursor-glow::after {
+  content: ""; position: absolute; inset: 0;
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--text) 14%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--text) 14%, transparent) 1px, transparent 1px);
+  background-size: calc(100vw / 12) 100%, 100% 96px;
+  -webkit-mask-image: radial-gradient(360px circle at var(--mx, 50%) var(--my, 30%), #000, transparent 75%);
+  mask-image: radial-gradient(360px circle at var(--mx, 50%) var(--my, 30%), #000, transparent 75%);
+}
 
 /* Flip 3D (flashcard) */
 .flip { perspective: 1400px; }

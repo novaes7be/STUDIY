@@ -3,7 +3,7 @@
    Barra lateral = lista tipográfica com marcador de cor; cartões com borda fina;
    números grandes com data-count (js/motion.js). A cor da matéria vira --accent dentro de .app.
    ========================================================================== */
-.app { min-height: 100vh; min-height: 100dvh; display: grid; grid-template-columns: 288px minmax(0, 1fr); background: var(--bg); color: var(--text); }
+.app { min-height: 100vh; min-height: 100dvh; display: grid; grid-template-columns: 288px minmax(0, 1fr); color: var(--text); }
 
 /* ---------- Barra lateral ---------- */
 .side {
