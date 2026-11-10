@@ -15,9 +15,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 /**
  * Valida o upload e converte o PDF em Markdown no servidor (Apache PDFBox, sem IA) ANTES de
@@ -105,20 +112,69 @@ public class PdfService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "PDF não encontrado"));
     }
 
-    /** Markdown do PDF para download (.md). Só dentro de uma matéria do usuário. */
-    public Markdown markdown(Usuario usuario, Long materiaId, Long pdfId) {
+    /**
+     * Arquivo do PDF para baixar. Sem figuras: o .md. Com figuras: um .zip com o .md e a pasta
+     * {@code figuras/}, e o texto aponta para elas por caminho relativo (curto e legível; embutir as
+     * imagens em Base64 gerava linhas de ~100 KB que travavam editores). Só dentro de uma matéria do usuário.
+     */
+    public Download download(Usuario usuario, Long materiaId, Long pdfId) {
         materiaService.buscarDoUsuario(usuario, materiaId);
         Pdf pdf = buscarDaMateria(materiaId, pdfId);
-        String nome = pdf.getNomeArquivo().replaceFirst("(?i)\\.pdf$", "") + ".md";
-        // No .md baixado as figuras vão embutidas (data URI): o arquivo abre sozinho em qualquer visualizador.
+        String base = nomeDoDownload(pdf.getNomeArquivo());
         String md = pdf.getTextoExtraido();
-        for (PdfImagem f : figuras(pdf)) {
-            md = md.replace("(imagem:" + f.getNumero() + ")", "(data:" + f.getMime() + ";base64," + f.getDados() + ")");
+        List<PdfImagem> figuras = figuras(pdf);
+        if (figuras.isEmpty()) {
+            return new Download(base + ".md", "text/markdown;charset=UTF-8", md.getBytes(StandardCharsets.UTF_8));
         }
-        return new Markdown(nome, md);
+
+        Map<String, byte[]> arquivos = new LinkedHashMap<>();
+        for (PdfImagem f : figuras) {
+            String alvo = "(imagem:" + f.getNumero() + ")";
+            try {
+                String caminho = "figuras/figura-" + f.getNumero() + "." + extensao(f.getMime());
+                arquivos.put(caminho, Base64.getDecoder().decode(f.getDados()));
+                md = md.replace(alvo, "(" + caminho + ")");
+            } catch (IllegalArgumentException e) { // Base64 inválido: não derruba o download inteiro
+                md = md.replace("![Figura " + f.getNumero() + "]" + alvo, "*[figura " + f.getNumero() + " indisponível]*");
+            }
+        }
+
+        ByteArrayOutputStream saida = new ByteArrayOutputStream();
+        try (ZipOutputStream zip = new ZipOutputStream(saida, StandardCharsets.UTF_8)) {
+            escrever(zip, base + ".md", md.getBytes(StandardCharsets.UTF_8));
+            for (Map.Entry<String, byte[]> a : arquivos.entrySet()) {
+                escrever(zip, a.getKey(), a.getValue());
+            }
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Não foi possível montar o arquivo");
+        }
+        return new Download(base + ".zip", "application/zip", saida.toByteArray());
     }
 
-    public record Markdown(String nomeArquivo, String conteudo) {}
+    private static void escrever(ZipOutputStream zip, String nome, byte[] dados) throws IOException {
+        zip.putNextEntry(new ZipEntry(nome));
+        zip.write(dados);
+        zip.closeEntry();
+    }
+
+    private static String extensao(String mime) {
+        return switch (mime == null ? "" : mime.toLowerCase(Locale.ROOT)) {
+            case "image/jpeg", "image/jpg" -> "jpg";
+            case "image/gif" -> "gif";
+            case "image/webp" -> "webp";
+            default -> "png";
+        };
+    }
+
+    /** Nome do arquivo baixado: sem .pdf e com tamanho limitado (o nome já foi higienizado no upload; aqui é defesa em profundidade). */
+    static String nomeDoDownload(String nomeArquivo) {
+        String base = nomeArquivo == null ? "" : nomeArquivo.replaceFirst("(?i)\\.pdf$", "");
+        base = base.replaceAll("[^\\p{L}\\p{N} ._-]", "_").replaceAll("\\.{2,}", ".").strip();
+        if (base.length() > 80) base = base.substring(0, 80).strip();
+        return base.isEmpty() || base.equals(".") ? "documento" : base;
+    }
+
+    public record Download(String nomeArquivo, String tipo, byte[] bytes) {}
 
     private byte[] lerEValidar(MultipartFile arquivo) {
         if (arquivo == null || arquivo.isEmpty()) {
