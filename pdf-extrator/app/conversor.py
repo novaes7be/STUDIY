@@ -9,13 +9,23 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import os
 import re
+from collections import Counter
 from dataclasses import dataclass, field
 
 import pymupdf
 import pymupdf4llm
 
 pymupdf4llm.use_layout(True)
+
+# "hibrido" (padrão): o modelo de layout, lento (~0,7 s/página), só nas páginas com figura;
+# as de texto puro vão pelo modo rápido (~0,04 s/página). "layout": o modelo em todas.
+MODO = os.environ.get("EXTRATOR_MODO", "hibrido")
+LIMITE_PAGINAS_LAYOUT = int(os.environ.get("EXTRATOR_LIMITE_PAGINAS_LAYOUT", "120"))
+LADO_MINIMO_FIGURA_PT = 40     # imagem menor que isso (em pontos) é ícone, não figura
+DESENHOS_MINIMOS = 4           # traços vetoriais para a página contar como gráfico
+FRACAO_REPETIDA = 0.3          # imagem em mais de 30% das páginas é logo/fundo, não figura
 
 PAGINAS_MAXIMAS = 300
 LADO_MAXIMO_PX = 1024          # ~1000 tokens por figura na API; legível para gráficos
@@ -52,12 +62,20 @@ class Resultado:
     paginas: int
     imagens: list[Imagem] = field(default_factory=list)
     imagens_omitidas: int = 0
+    paginas_layout: int | None = None   # None = layout em todas as páginas
+
+    def motor(self) -> str:
+        base = f"pymupdf4llm {pymupdf4llm.__version__}"
+        if self.paginas_layout is None:
+            return base
+        return f"{base} híbrido {self.paginas_layout}/{self.paginas}"  # cabe nos 40 caracteres da coluna
 
     def para_json(self) -> dict:
         return {"markdown": self.markdown, "paginas": self.paginas,
                 "imagens": [i.para_json() for i in self.imagens],
                 "imagensOmitidas": self.imagens_omitidas,
-                "motor": f"pymupdf4llm {pymupdf4llm.__version__}"}
+                "paginasLayout": self.paginas_layout,
+                "motor": self.motor()}
 
 
 def converter(pdf: bytes) -> Resultado:
@@ -70,11 +88,104 @@ def converter(pdf: bytes) -> Resultado:
             raise PdfInvalido("PDF protegido por senha")
         if doc.page_count > PAGINAS_MAXIMAS:
             raise PdfInvalido(f"PDF com páginas demais (máximo {PAGINAS_MAXIMAS})")
-        bruto = pymupdf4llm.to_markdown(
-            doc, embed_images=True, dpi=110, header=False, footer=False,
-            use_ocr=False, show_progress=False)
         paginas = doc.page_count
-    return _pos_processar(bruto, paginas)
+        if MODO == "layout":
+            bruto, com_layout = _markdown_com_layout(doc, None), None
+        else:
+            bruto, com_layout = _markdown_hibrido(doc)
+    resultado = _pos_processar(bruto, paginas)
+    resultado.paginas_layout = com_layout
+    return resultado
+
+
+def _markdown_com_layout(doc: pymupdf.Document, paginas: list[int] | None, *, em_pedacos: bool = False):
+    pymupdf4llm.use_layout(True)
+    r = pymupdf4llm.to_markdown(
+        doc, pages=paginas, page_chunks=em_pedacos, embed_images=True, dpi=110, header=False,
+        footer=False, use_ocr=False, show_progress=False)
+    return [c["text"] for c in r] if em_pedacos else r
+
+
+def _markdown_rapido(doc: pymupdf.Document, paginas: list[int]) -> list[str]:
+    """Modo sem o modelo de layout. Sem imagens: Base64 aqui só poluiria o texto."""
+    pymupdf4llm.use_layout(False)
+    r = pymupdf4llm.to_markdown(doc, pages=paginas, page_chunks=True, embed_images=False, show_progress=False)
+    return _limpar_cabecalho_rodape([_juntar_linhas(c["text"]) for c in r])
+
+
+def _markdown_hibrido(doc: pymupdf.Document) -> tuple[str, int]:
+    """Layout só onde há figura; o resto no modo rápido. Devolve (markdown bruto, páginas com layout)."""
+    n = doc.page_count
+    com_figura = paginas_com_grafico(doc)[:LIMITE_PAGINAS_LAYOUT]  # teto: tempo máximo do extrator
+    marcadas = set(com_figura)
+    so_texto = [i for i in range(n) if i not in marcadas]
+    pedacos: dict[int, str] = {}
+    if com_figura:
+        pedacos.update(zip(com_figura, _markdown_com_layout(doc, com_figura, em_pedacos=True)))
+    if so_texto:
+        pedacos.update(zip(so_texto, _markdown_rapido(doc, so_texto)))
+    return "\n\n".join(pedacos[i] for i in range(n)), len(com_figura)
+
+
+def paginas_com_grafico(doc: pymupdf.Document) -> list[int]:
+    """Índices (0-based) das páginas com figura: foto ou gráfico vetorial. Logo, ícone e fundo não contam."""
+    n = doc.page_count
+    imagens_por_pagina = [pg.get_image_info(xrefs=True) for pg in doc]
+    contagem: Counter[int] = Counter()
+    for infos in imagens_por_pagina:
+        contagem.update({i["xref"] for i in infos if i["xref"]})
+    repetidas = {x for x, c in contagem.items() if c > max(2, n * FRACAO_REPETIDA)}
+
+    achadas = []
+    for idx, pg in enumerate(doc):
+        if any(min(i["bbox"][2] - i["bbox"][0], i["bbox"][3] - i["bbox"][1]) >= LADO_MINIMO_FIGURA_PT
+               and i["xref"] not in repetidas for i in imagens_por_pagina[idx]):
+            achadas.append(idx)
+            continue
+        area = pg.rect.width * pg.rect.height
+        tracos = sum(1 for d in pg.get_drawings() if d["rect"].width * d["rect"].height < 0.9 * area)  # sem fundo
+        if tracos >= DESENHOS_MINIMOS:
+            achadas.append(idx)
+    return achadas
+
+
+# Linha que NÃO é texto corrido: título, tabela, citação, número, bloco de código ou qualquer símbolo
+# seguido de espaço (marcadores de slide como ❑ ➢ ▪ ● – •, que variam de PDF para PDF).
+_ESTRUTURA = re.compile(r"^(#{1,6}\s|\||>|\d+[.)]\s|```|\s{4}|[^\w\s]\s)")
+
+
+def _juntar_linhas(md: str) -> str:
+    """O modo rápido quebra o parágrafo onde o PDF quebrou a linha: junta de volta, só em texto corrido."""
+    paragrafos = []
+    for p in re.split(r"\n{2,}", md):
+        linhas = p.split("\n")
+        corrido = not any(_ESTRUTURA.match(l) for l in linhas)
+        paragrafos.append(" ".join(l.strip() for l in linhas) if corrido else p)
+    return "\n\n".join(paragrafos)
+
+
+def _limpar_cabecalho_rodape(pedacos: list[str]) -> list[str]:
+    """O modo rápido ignora header/footer: tira a primeira/última linha que se repete (dígitos contam
+    como iguais: 'Página 3 de 10') e o número de página solto."""
+    def chave(linha: str) -> str:
+        return re.sub(r"\d+", "#", linha.strip())
+
+    linhas = [[l for l in p.split("\n") if l.strip()] for p in pedacos]
+    borda: Counter[str] = Counter()
+    for ls in linhas:
+        borda.update({chave(l) for l in (ls[:1] + ls[-1:])})
+    limite = max(2, len(pedacos) // 2)
+    repetidas = {k for k, c in borda.items() if c > limite and len(pedacos) >= 4}
+
+    limpos = []
+    for p, ls in zip(pedacos, linhas):
+        out = p.split("\n")
+        for pos in (0, -1):  # a primeira e a última linha com texto
+            idx = next((i for i in (range(len(out)) if pos == 0 else range(len(out) - 1, -1, -1)) if out[i].strip()), None)
+            if idx is not None and (chave(out[idx]) in repetidas or re.fullmatch(r"\s*\d{1,4}\s*", out[idx])):
+                out[idx] = ""
+        limpos.append("\n".join(out).strip())
+    return limpos
 
 
 def _pos_processar(bruto: str, paginas: int) -> Resultado:
