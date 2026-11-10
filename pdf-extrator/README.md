@@ -17,7 +17,7 @@ O modelo de layout é o que enxerga as figuras, mas é lento: ~0,7 s por página
 4 vCPU (um PDF de 120 páginas levou 81 s). O modo rápido leva ~0,04 s por página, mas **não devolve
 figuras**. Por isso o extrator olha cada página: foto ou gráfico vetorial vai para o modelo de layout,
 as de texto puro vão pelo modo rápido, e o resultado é montado na ordem original. No mesmo PDF de
-120 páginas (18 com figura): 14 s, com as mesmas 14 figuras e 99,8% das palavras.
+120 páginas (18 com figura): 14 a 21 s (duas rodadas) contra 81 s, com as mesmas 14 figuras e ~99,8% das palavras.
 
 Não contam como figura: imagem menor que 40 pt, imagem que se repete em mais de 30% das páginas
 (logo, fundo) e traço que cobre a página inteira. Nas páginas do modo rápido, cabeçalho/rodapé
