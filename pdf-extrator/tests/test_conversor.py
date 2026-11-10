@@ -109,3 +109,17 @@ def test_hibrido_com_o_modelo_real_devolve_as_figuras(pdf_misto):
 
     assert len(r.imagens) >= 1
     assert {int(n) for n in re.findall(r"imagem:(\d+)", r.markdown)} == {i.id for i in r.imagens}
+
+
+def test_juntar_linhas_une_texto_corrido_mas_preserva_marcadores_de_slide():
+    texto = "O diagrama mostra\nas classes do sistema\ne seus atributos.\n\n❑ Nome da classe\n❑ atributos\n❑ métodos"
+
+    juntado = conversor._juntar_linhas(texto)
+
+    assert "O diagrama mostra as classes do sistema e seus atributos." in juntado
+    assert "❑ Nome da classe\n❑ atributos\n❑ métodos" in juntado      # lista não vira uma linha só
+
+
+def test_juntar_linhas_preserva_titulo_tabela_e_numeracao():
+    for bloco in ["# Titulo\nTexto", "| a | b |\n| - | - |", "1. primeiro\n2. segundo", "> citação\nlinha"]:
+        assert conversor._juntar_linhas(bloco) == bloco

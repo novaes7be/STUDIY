@@ -149,7 +149,9 @@ def paginas_com_grafico(doc: pymupdf.Document) -> list[int]:
     return achadas
 
 
-_ESTRUTURA = re.compile(r"^(#{1,6}\s|\||>|[-*•]\s|\d+[.)]\s|```|\s{4})")
+# Linha que NÃO é texto corrido: título, tabela, citação, número, bloco de código ou qualquer símbolo
+# seguido de espaço (marcadores de slide como ❑ ➢ ▪ ● – •, que variam de PDF para PDF).
+_ESTRUTURA = re.compile(r"^(#{1,6}\s|\||>|\d+[.)]\s|```|\s{4}|[^\w\s]\s)")
 
 
 def _juntar_linhas(md: str) -> str:
