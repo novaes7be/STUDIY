@@ -277,8 +277,8 @@
       var bCards = h('button', { class: 'btn btn-secondary btn-sm i-sparkle', type: 'button', text: 'Flashcards' });
       bResumo.addEventListener('click', function () { gerar(p.id, 'RESUMO', [bResumo, bCards], bResumo); });
       bCards.addEventListener('click', function () { gerar(p.id, 'FLASHCARD', [bResumo, bCards], bCards); });
-      var bMd = h('button', { class: 'btn btn-secondary btn-sm i-download', type: 'button', text: '.md', 'aria-label': 'Baixar ' + p.nomeArquivo + ' em Markdown' });
-      bMd.addEventListener('click', function () { baixarMarkdown(p.id, bMd); });
+      var bMd = h('button', { class: 'btn btn-secondary btn-sm i-download', type: 'button', text: '.md', 'aria-label': 'Baixar ' + p.nomeArquivo + ' em Markdown (em .zip com as figuras, quando houver)' });
+      bMd.addEventListener('click', function () { baixarMarkdown(p, bMd); });
       mat.append(h('div', { class: 'row' }, h('span', { class: 'name', text: p.nomeArquivo }), h('span', { class: 'actions' }, bResumo, bCards, bMd)));
     });
 
@@ -334,15 +334,17 @@
     } catch (e) { falha(e); }
   }
 
-  /* PDF já convertido em Markdown no servidor (sem IA): baixa como .md */
-  async function baixarMarkdown(pdfId, btn) {
+  /* PDF já convertido em Markdown no servidor (sem IA): .md, ou .zip com o .md e a pasta figuras/ */
+  async function baixarMarkdown(pdf, btn) {
     btn.disabled = true;
     try {
-      var md = await api.get('/api/materias/' + state.atual.id + '/pdfs/' + pdfId + '/markdown');
-      var blob = new Blob([md.conteudo], { type: 'text/markdown;charset=utf-8' });
-      var a = h('a', { href: URL.createObjectURL(blob), download: md.nomeArquivo });
+      var r = await api.baixar('/api/materias/' + state.atual.id + '/pdfs/' + pdf.id + '/download');
+      var zip = r.tipo.indexOf('application/zip') !== -1;
+      var base = pdf.nomeArquivo.replace(/\.pdf$/i, '').replace(/[\\/]/g, '_');
+      var a = h('a', { href: URL.createObjectURL(r.blob), download: base + (zip ? '.zip' : '.md') });
       document.body.append(a); a.click(); a.remove();
       setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+      if (zip) toast('Baixado em .zip: o texto em Markdown e as figuras na pasta figuras/. Extraia antes de abrir.');
     } catch (e) { falha(e); }
     finally { btn.disabled = false; }
   }
