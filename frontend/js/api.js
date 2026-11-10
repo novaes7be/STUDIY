@@ -92,6 +92,23 @@
     return data;
   }
 
+  /** GET de um arquivo (resposta binária): devolve { blob, tipo }. Mesma renovação de sessão do request(). */
+  async function baixar(path) {
+    var res = await bruto(path, {});
+    if (res.status === 401) {
+      if (await renovar()) res = await bruto(path, {});
+      if (res.status === 401) {
+        hint.clear();
+        window.location.replace('login.html');
+        throw new ApiError(401, 'Sessão expirada. Entre novamente.');
+      }
+    }
+    if (!res.ok) {
+      throw new ApiError(res.status, res.status === 404 ? 'Arquivo não encontrado.' : 'Não foi possível baixar. Tente novamente.');
+    }
+    return { blob: await res.blob(), tipo: res.headers.get('content-type') || '' };
+  }
+
   window.api = {
     /** true se a API responde (endpoint público /api/saude). */
     ping: async function () {
@@ -113,6 +130,7 @@
     put: function (p, body) { return request(p, { method: 'PUT', body: body }); },
     del: function (p, body) { return request(p, { method: 'DELETE', body: body }); },
     upload: function (p, form) { return request(p, { method: 'POST', form: form }); },
+    baixar: baixar,
     ApiError: ApiError
   };
 })();

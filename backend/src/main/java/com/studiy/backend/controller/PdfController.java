@@ -32,10 +32,17 @@ public class PdfController {
         return pdfService.listar(usuarioAtual.resolver(auth), materiaId);
     }
 
-    /** O PDF já convertido em Markdown. O front transforma em arquivo .md para baixar. */
-    @GetMapping("/{pdfId}/markdown")
-    public PdfService.Markdown markdown(Authentication auth, @PathVariable Long materiaId, @PathVariable Long pdfId) {
-        return pdfService.markdown(usuarioAtual.resolver(auth), materiaId, pdfId);
+    /** O PDF já convertido em Markdown: .md, ou .zip com o .md e as figuras quando o PDF tem figuras. */
+    @GetMapping("/{pdfId}/download")
+    public org.springframework.http.ResponseEntity<byte[]> download(Authentication auth, @PathVariable Long materiaId,
+                                                                    @PathVariable Long pdfId) {
+        PdfService.Download d = pdfService.download(usuarioAtual.resolver(auth), materiaId, pdfId);
+        return org.springframework.http.ResponseEntity.ok()
+                .contentType(org.springframework.http.MediaType.parseMediaType(d.tipo()))
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
+                        org.springframework.http.ContentDisposition.attachment()
+                                .filename(d.nomeArquivo(), java.nio.charset.StandardCharsets.UTF_8).build().toString())
+                .body(d.bytes());
     }
 
     public record PdfResumo(Long id, String nomeArquivo) {}
