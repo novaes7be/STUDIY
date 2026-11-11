@@ -20,6 +20,13 @@ class CryptoServiceTest {
     }
 
     @Test
+    void cifraEDecifraTextoGrandeEVazio() {
+        String grande = "Fotossíntese converte luz em energia. ".repeat(100_000);   // ~3,7 MB, como um PDF longo
+        assertEquals(grande, crypto.decifrar(crypto.cifrar(grande)));
+        assertEquals("", crypto.decifrar(crypto.cifrar("")));
+    }
+
+    @Test
     void cadaCifragemUsaIvDiferente() {
         assertNotEquals(crypto.cifrar("igual"), crypto.cifrar("igual"));
     }
