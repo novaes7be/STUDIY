@@ -7,6 +7,7 @@ import javax.crypto.Cipher;
 import javax.crypto.Mac;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
@@ -45,9 +46,11 @@ public class CryptoService {
             Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
             cipher.init(Cipher.ENCRYPT_MODE, chave, new GCMParameterSpec(TAG_BITS, iv));
             byte[] cifrado = cipher.doFinal(texto.getBytes(StandardCharsets.UTF_8));
-            ByteBuffer buf = ByteBuffer.allocate(iv.length + cifrado.length);
-            buf.put(iv).put(cifrado);
-            return PREFIXO + Base64.getEncoder().encodeToString(buf.array());
+            // Concatena sem somar tamanhos: o tamanho do texto vem do usuário e a soma poderia estourar o int.
+            ByteArrayOutputStream saida = new ByteArrayOutputStream();
+            saida.writeBytes(iv);
+            saida.writeBytes(cifrado);
+            return PREFIXO + Base64.getEncoder().encodeToString(saida.toByteArray());
         } catch (Exception e) {
             throw new IllegalStateException("Falha ao cifrar dado", e);
         }
