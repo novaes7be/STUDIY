@@ -118,15 +118,18 @@ async def vu(args, n: int, fim: float, atraso: float):
         # Quem já tem matéria (rodada anterior) só volta a estudar; quem não tem faz a configuração inicial.
         r = await u.req("materias_listar", "GET", "/api/materias")
         existentes = r.json() if r is not None and r.status_code == 200 else []
-        if existentes:
+        if existentes and not args.forcar_upload:
             materia = existentes[0]["id"]
         else:
-            r = await u.req("materia_criar", "POST", "/api/materias", json={"nome": f"Revisao {n}", "cor": "verde"})
-            if r is None or r.status_code >= 300:
-                return
-            materia = r.json()["id"]
+            if existentes:
+                materia = existentes[0]["id"]
+            else:
+                r = await u.req("materia_criar", "POST", "/api/materias", json={"nome": f"Revisao {n}", "cor": "verde"})
+                if r is None or r.status_code >= 300:
+                    return
+                materia = r.json()["id"]
             r = await u.req("upload_pdf", "POST", f"/api/materias/{materia}/pdfs",
-                            files={"arquivo": (f"apostila-{n}.pdf", pdf_minimo(n), "application/pdf")})
+                            files={"arquivo": (f"apostila-{n}.pdf", pdf_minimo(n + (random.randint(1, 10**6) if args.forcar_upload else 0)), "application/pdf")})
             pdf = r.json()["id"] if r is not None and r.status_code == 200 else None
             if pdf:
                 await u.req("gerar_flashcards", "POST", f"/api/materias/{materia}/gerar", json={"pdfId": pdf, "tipo": "FLASHCARD"})
@@ -189,6 +192,7 @@ def main():
     ap.add_argument("--vus", type=int, default=10, help="rodar: usuários virtuais simultâneos")
     ap.add_argument("--duracao", type=int, default=60, help="rodar: segundos após a rampa")
     ap.add_argument("--rampa", type=int, default=10, help="rodar: segundos para subir todos os usuários")
+    ap.add_argument("--forcar-upload", action="store_true", help="rodar: sobe um PDF novo mesmo quem já tem matéria")
     ap.add_argument("--pensar-min", type=float, default=0.5)
     ap.add_argument("--pensar-max", type=float, default=3.0)
     ap.add_argument("--timeout", type=float, default=60)
