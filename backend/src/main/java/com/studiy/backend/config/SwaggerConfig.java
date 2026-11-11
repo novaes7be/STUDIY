@@ -27,8 +27,9 @@ public class SwaggerConfig {
     @Bean
     @Order(1)
     public SecurityFilterChain swaggerFilterChain(HttpSecurity http) throws Exception {
+        // CSRF continua LIGADO nesta cadeia: ela só atende GET da documentação, que não exige token, mas
+        // qualquer escrita nesses caminhos é barrada. As chamadas "Try it out" vão pela cadeia principal.
         http.securityMatcher("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**")
-                .csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .headers(h -> h.contentSecurityPolicy(c -> c.policyDirectives(
                         "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; frame-ancestors 'none'")))
