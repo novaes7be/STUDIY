@@ -12,3 +12,42 @@
 .admin-pager { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 16px; color: var(--text-muted); font-size: var(--fs-sm); }
 .admin-code { display: inline-block; max-width: 100%; overflow-wrap: anywhere; padding: 6px 10px; border-radius: var(--r-sm); background: var(--surface-2); font-size: var(--fs-sm); }
 .admin-card h1 { margin: 0 0 8px; font-size: clamp(36px, 5vw, 64px); font-weight: 900; letter-spacing: -.05em; line-height: .9; text-transform: uppercase; }
+
+/* ---- Visão geral (métricas) ---- */
+.admin-periodo { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 8px; }
+.admin-periodo .hint { margin: 0 6px 0 0; }
+.admin-periodo [aria-pressed="true"] { background: var(--text); color: var(--bg); box-shadow: none; }
+.admin-secao { margin-top: 32px; }
+.admin-secao h2 { margin: 0 0 12px; font-size: var(--fs-lg); font-weight: 700; letter-spacing: -.01em; }
+.admin-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; }
+.admin-tile { display: grid; gap: 4px; align-content: start; padding: 14px 16px; border-radius: var(--r-md); background: var(--surface-2); }
+.admin-tile-destaque { background: var(--accent-soft); }
+.admin-tile-rotulo { color: var(--text-muted); font-size: var(--fs-xs); }
+.admin-tile-valor { font-size: var(--fs-2xl); font-weight: 800; letter-spacing: -.03em; line-height: 1.1; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.admin-tile-detalhe { color: var(--text-muted); font-size: var(--fs-xs); font-variant-numeric: tabular-nums; }
+.admin-graficos { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 8px; margin-top: 8px; }
+.admin-grafico { margin: 0; padding: 14px 16px; border-radius: var(--r-md); box-shadow: inset 0 0 0 1px var(--line); min-width: 0; }
+.admin-grafico-cab { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 10px; color: var(--text-muted); font-size: var(--fs-sm); }
+.admin-grafico-cab strong { color: var(--text); font-variant-numeric: tabular-nums; }
+.admin-grafico-svg { display: block; width: 100%; height: auto; overflow: visible; }
+.admin-barra { fill: var(--accent); }
+.admin-alvo { fill: transparent; }
+.admin-alvo:hover { fill: var(--hover-tint); }
+.admin-eixo { stroke: var(--control-line); stroke-width: 1; }
+.admin-grade { stroke: var(--line); stroke-width: 1; stroke-dasharray: 3 4; }
+.admin-eixo-texto { fill: var(--text-muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.admin-dist { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.admin-dist li { display: grid; grid-template-columns: 96px 1fr auto; align-items: center; gap: 10px; font-size: var(--fs-sm); }
+.admin-dist-rotulo { color: var(--text); }
+.admin-dist-trilho { height: 8px; border-radius: 4px; background: var(--surface-2); overflow: hidden; }
+.admin-dist-barra { display: block; height: 100%; border-radius: 4px; background: var(--accent); }
+.admin-dist-valor { color: var(--text-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.admin-tooltip { position: fixed; z-index: 10; pointer-events: none; display: grid; gap: 2px; padding: 8px 10px; border-radius: var(--r-sm); background: var(--surface); box-shadow: var(--shadow-2), inset 0 0 0 1px var(--line); font-size: var(--fs-sm); font-variant-numeric: tabular-nums; }
+.admin-tooltip-titulo { color: var(--text-muted); font-size: var(--fs-xs); }
+.admin-tooltip[hidden] { display: none; }
+@media (max-width: 520px) {
+  .admin-tiles { grid-template-columns: 1fr 1fr; }
+  .admin-tile-valor { font-size: var(--fs-lg); white-space: nowrap; }
+  .admin-dist li { grid-template-columns: 80px 1fr; }
+  .admin-dist-valor { grid-column: 2; }
+}
