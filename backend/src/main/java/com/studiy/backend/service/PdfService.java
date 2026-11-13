@@ -12,6 +12,8 @@ import com.studiy.backend.repository.PdfImagemRepository;
 import com.studiy.backend.security.CryptoService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -44,14 +46,17 @@ public class PdfService {
     private final CryptoService crypto;
     private final ExtratorPdfClient extrator;
     private final PdfImagemRepository imagemRepository;
+    private final TransactionTemplate tx;
 
     public PdfService(PdfRepository pdfRepository, MateriaService materiaService, CryptoService crypto,
-                      ExtratorPdfClient extrator, PdfImagemRepository imagemRepository) {
+                      ExtratorPdfClient extrator, PdfImagemRepository imagemRepository,
+                      PlatformTransactionManager transactionManager) {
         this.pdfRepository = pdfRepository;
         this.materiaService = materiaService;
         this.crypto = crypto;
         this.extrator = extrator;
         this.imagemRepository = imagemRepository;
+        this.tx = new TransactionTemplate(transactionManager);
     }
 
     /** Figuras do PDF (vazio nos convertidos pelo PDFBox). */
@@ -68,7 +73,11 @@ public class PdfService {
         return pdf.getHashConteudo();
     }
 
-    @org.springframework.transaction.annotation.Transactional // PDF e figuras: tudo ou nada
+    /**
+     * SEM {@code @Transactional} no método: a conversão no extrator leva de segundos a ~2 minutos e, dentro de
+     * uma transação, segura uma conexão do banco o tempo todo (com o pool de 10, dez uploads paralisavam o
+     * sistema inteiro: medido, {@code active=10, waiting=189}). A transação abre só para gravar.
+     */
     public Pdf upload(Usuario usuario, Long materiaId, MultipartFile arquivo) {
         Materia materia = materiaService.buscarDoUsuario(usuario, materiaId);
         byte[] bytes = lerEValidar(arquivo);
@@ -87,16 +96,20 @@ public class PdfService {
                     "Esse PDF tem texto demais para processar de uma vez. Divida em partes menores (por capítulo, por exemplo).");
         }
 
-        Pdf pdf = pdfRepository.save(Pdf.builder()
-                .nomeArquivo(nomeSeguro(arquivo.getOriginalFilename()))
-                .textoExtraido(texto)
-                .hashConteudo(crypto.impressaoDigital(texto))
-                .motor(motor)
-                .materia(materia)
-                .build());
-        extraido.ifPresent(e -> e.figuras().forEach(f -> imagemRepository.save(
-                new PdfImagem(pdf.getId(), f.numero(), f.mime(), f.largura(), f.altura(), f.base64()))));
-        return pdf;
+        String hash = crypto.impressaoDigital(texto);
+        // PDF e figuras: tudo ou nada, numa transação curta
+        return tx.execute(status -> {
+            Pdf pdf = pdfRepository.save(Pdf.builder()
+                    .nomeArquivo(nomeSeguro(arquivo.getOriginalFilename()))
+                    .textoExtraido(texto)
+                    .hashConteudo(hash)
+                    .motor(motor)
+                    .materia(materia)
+                    .build());
+            extraido.ifPresent(e -> e.figuras().forEach(f -> imagemRepository.save(
+                    new PdfImagem(pdf.getId(), f.numero(), f.mime(), f.largura(), f.altura(), f.base64()))));
+            return pdf;
+        });
     }
 
     public List<PdfResponse> listar(Usuario usuario, Long materiaId) {
