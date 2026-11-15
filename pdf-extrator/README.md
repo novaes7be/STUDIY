@@ -28,6 +28,8 @@ repetidos e o número de página são removidos e as linhas do parágrafo são j
 | `EXTRATOR_MODO` | `hibrido` | `layout` roda o modelo em todas as páginas (mais lento) |
 | `EXTRATOR_LIMITE_PAGINAS_LAYOUT` | `120` | teto de páginas com layout; as demais com figura perdem a figura (o `motor` mostra `híbrido K/N`) |
 | `EXTRATOR_TEMPO_MAXIMO_S` | `120` | tempo máximo por PDF |
+| `EXTRATOR_PROCESSOS` | `2` | conversões em paralelo (cada uma pode usar vários núcleos no modo layout) |
+| `EXTRATOR_PDFS_POR_PROCESSO` | `25` | PDFs atendidos antes de trocar o processo. Com `1`, cada PDF reimportava PyMuPDF e onnxruntime: **2,18 s de CPU por PDF de 1 página** (0,93 PDF/s), medido numa VPS de 4 vCPU |
 
 Pior caso: se toda página tiver figura, o tempo é o do layout completo. O `pymupdf_layout` precisa
 estar instalado: sem ele, o modo "layout" cai em silêncio no rápido (a sua máquina pode não ter).

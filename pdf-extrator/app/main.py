@@ -17,13 +17,16 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, File, Header, HTTPException, UploadFile
 
-from app import conversor
+from app import trabalho
 
 log = logging.getLogger("extrator")
 
 TAMANHO_MAXIMO = 10 * 1024 * 1024
 TEMPO_MAXIMO_S = float(os.environ.get("EXTRATOR_TEMPO_MAXIMO_S", "120"))
 PROCESSOS = int(os.environ.get("EXTRATOR_PROCESSOS", "2"))
+# Cada processo atende vários PDFs antes de ser trocado. Com 1 PDF por processo, cada arquivo pagava ~2 s de CPU
+# só para reimportar PyMuPDF e o onnxruntime (medido: 2,18 s de CPU por PDF de 1 página, 0,93 PDF/s).
+PDFS_POR_PROCESSO = int(os.environ.get("EXTRATOR_PDFS_POR_PROCESSO", "25"))
 
 
 def _token() -> str:
@@ -34,8 +37,11 @@ def _token() -> str:
 
 
 def _novo_pool() -> ProcessPoolExecutor:
-    # Cada processo atende um PDF e é trocado: memória de um PDF grande não se acumula.
-    return ProcessPoolExecutor(max_workers=PROCESSOS, max_tasks_per_child=1)
+    # Trocar o processo de tempos em tempos limita o crescimento de memória; trocar a cada PDF custa caro demais.
+    pool = ProcessPoolExecutor(max_workers=PROCESSOS, max_tasks_per_child=PDFS_POR_PROCESSO)
+    for _ in range(PROCESSOS):   # aquece: o primeiro PDF real não paga a importação
+        pool.submit(trabalho.aquecer)
+    return pool
 
 
 @asynccontextmanager
@@ -47,14 +53,6 @@ async def ciclo_de_vida(app: FastAPI):
 
 
 app = FastAPI(title="Studiy extrator de PDF", lifespan=ciclo_de_vida, docs_url=None, redoc_url=None, openapi_url=None)
-
-
-def _converter_em_processo(dados: bytes) -> dict | tuple[str, str]:
-    """Roda no processo filho. Erros viram tupla (tipo, mensagem): exceções nem sempre atravessam o pickle."""
-    try:
-        return conversor.converter(dados).para_json()
-    except conversor.PdfInvalido as e:
-        return ("invalido", str(e))
 
 
 @app.get("/saude")
@@ -76,7 +74,7 @@ async def converter(arquivo: UploadFile = File(...), x_extrator_token: str = Hea
     loop = asyncio.get_running_loop()
     try:
         resultado = await asyncio.wait_for(
-            loop.run_in_executor(app.state.pool, _converter_em_processo, dados), TEMPO_MAXIMO_S)
+            loop.run_in_executor(app.state.pool, trabalho.converter_em_processo, dados), TEMPO_MAXIMO_S)
     except asyncio.TimeoutError:
         _reiniciar_pool()
         raise HTTPException(status_code=504, detail="Conversão demorou demais")
