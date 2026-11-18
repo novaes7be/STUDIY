@@ -21,7 +21,7 @@
         <java.version>17</java.version>
         <!-- 1.19 (padrão do Boot 3.3) não fala com Docker 29+ -->
         <testcontainers.version>1.21.4</testcontainers.version>
-        <bucket4j.version>8.14.0</bucket4j.version>
+        <bucket4j.version>8.21.0</bucket4j.version>
         <!-- Lombok novo: o padrão do Spring Boot 3.3 quebra no JDK 24/25 -->
         <lombok.version>1.18.40</lombok.version>
     </properties>
