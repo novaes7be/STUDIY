@@ -42,10 +42,23 @@
     <!-- Dados (somente leitura, já formatados pela API) -->
     <section id="dados" hidden>
       <nav class="admin-tabs" aria-label="Seções">
-        <button class="btn btn-secondary btn-sm" type="button" data-aba="usuarios" aria-pressed="true">Usuários</button>
+        <button class="btn btn-secondary btn-sm" type="button" data-aba="visao" aria-pressed="true">Visão geral</button>
+        <button class="btn btn-secondary btn-sm" type="button" data-aba="usuarios" aria-pressed="false">Usuários</button>
         <button class="btn btn-secondary btn-sm" type="button" data-aba="pedidos" aria-pressed="false">Pedidos</button>
         <button class="btn btn-secondary btn-sm" type="button" data-aba="uso-ia" aria-pressed="false">Uso de IA</button>
       </nav>
+      <div id="visao" hidden>
+        <div class="admin-periodo" role="group" aria-label="Período">
+          <span class="hint">Período</span>
+          <button class="btn btn-secondary btn-sm" type="button" data-dias="7" aria-pressed="false">7 dias</button>
+          <button class="btn btn-secondary btn-sm" type="button" data-dias="30" aria-pressed="true">30 dias</button>
+          <button class="btn btn-secondary btn-sm" type="button" data-dias="90" aria-pressed="false">90 dias</button>
+          <button class="btn btn-secondary btn-sm" type="button" data-dias="365" aria-pressed="false">12 meses</button>
+        </div>
+        <div id="metricas"></div>
+        <div class="admin-tooltip" id="tooltip" role="status" hidden></div>
+      </div>
+      <div id="tabelas" hidden>
       <p class="hint" id="resumo"></p>
       <div class="admin-table-wrap"><table class="admin-table" id="tabela"></table></div>
       <div class="admin-pager">
@@ -53,11 +66,13 @@
         <span id="paginaInfo"></span>
         <button class="btn btn-secondary btn-sm" type="button" id="proxima">Próxima</button>
       </div>
+      </div>
     </section>
   </div>
 </main>
 <script src="js/config.js"></script>
 <script src="js/api.js"></script>
+<script src="js/admin-metricas.js"></script>
 <script src="js/admin.js"></script>
 </body>
 </html>

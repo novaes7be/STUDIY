@@ -4,7 +4,7 @@
 (function () {
   'use strict';
   var $ = function (s) { return document.querySelector(s); };
-  var estado = { aba: 'usuarios', pagina: 0, mfaAtivo: false };
+  var estado = { aba: 'visao', pagina: 0, dias: 30, mfaAtivo: false };
 
   function msg(texto, ok) {
     var m = $('#msg');
@@ -52,11 +52,14 @@
 
   async function carregar() {
     msg('');
+    if (estado.aba === 'visao') return carregarVisao();
     var paginado = estado.aba !== 'uso-ia';
     var r = await api.get('/api/admin/' + estado.aba + (paginado ? '?pagina=' + estado.pagina : ''));
     $('#dados').hidden = false;
     $('#mfa').hidden = true;
-    document.querySelectorAll('[data-aba]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.aba === estado.aba)); });
+    marcarAba();
+    $('#visao').hidden = true;
+    $('#tabelas').hidden = false;
     if (paginado) {
       tabela(COLUNAS[estado.aba], r.itens);
       $('#resumo').textContent = r.total + ' registro(s)';
@@ -70,6 +73,21 @@
       $('#paginaInfo').textContent = '';
       $('#anterior').disabled = true; $('#proxima').disabled = true;
     }
+  }
+
+  function marcarAba() {
+    document.querySelectorAll('[data-aba]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.aba === estado.aba)); });
+  }
+
+  async function carregarVisao() {
+    var m = await api.get('/api/admin/metricas?dias=' + estado.dias);
+    $('#dados').hidden = false;
+    $('#mfa').hidden = true;
+    marcarAba();
+    $('#tabelas').hidden = true;
+    $('#visao').hidden = false;
+    document.querySelectorAll('[data-dias]').forEach(function (b) { b.setAttribute('aria-pressed', String(Number(b.dataset.dias) === estado.dias)); });
+    window.adminMetricas.render($('#metricas'), m);
   }
 
   async function pedirMfa() {
@@ -101,6 +119,9 @@
   });
   document.querySelectorAll('[data-aba]').forEach(function (b) {
     b.addEventListener('click', function () { estado.aba = b.dataset.aba; estado.pagina = 0; carregar().catch(function (e) { msg(e.message); }); });
+  });
+  document.querySelectorAll('[data-dias]').forEach(function (b) {
+    b.addEventListener('click', function () { estado.dias = Number(b.dataset.dias); carregar().catch(function (e) { msg(e.message); }); });
   });
   $('#anterior').addEventListener('click', function () { estado.pagina--; carregar().catch(function (e) { msg(e.message); }); });
   $('#proxima').addEventListener('click', function () { estado.pagina++; carregar().catch(function (e) { msg(e.message); }); });

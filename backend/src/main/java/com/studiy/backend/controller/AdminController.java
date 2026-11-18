@@ -1,6 +1,7 @@
 package com.studiy.backend.controller;
 
 import com.studiy.backend.dto.AdminDtos;
+import com.studiy.backend.service.AdminMetricasService;
 import com.studiy.backend.service.AdminService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -15,9 +16,17 @@ import org.springframework.web.bind.annotation.*;
 public class AdminController {
 
     private final AdminService adminService;
+    private final AdminMetricasService metricasService;
 
-    public AdminController(AdminService adminService) {
+    public AdminController(AdminService adminService, AdminMetricasService metricasService) {
         this.adminService = adminService;
+        this.metricasService = metricasService;
+    }
+
+    /** Visão geral: usuários, vendas, conteúdo gerado e IA no período (1 a 365 dias). */
+    @GetMapping("/metricas")
+    public AdminDtos.Metricas metricas(@RequestParam(defaultValue = "30") int dias) {
+        return metricasService.metricas(dias);
     }
 
     @GetMapping("/usuarios")
