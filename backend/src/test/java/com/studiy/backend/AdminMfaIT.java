@@ -64,7 +64,10 @@ class AdminMfaIT extends IntegracaoBase {
         assertThat(cru).startsWith("enc:v1:").doesNotContain(segredo);
 
         assertThat(codigo(s, "ativar", "000000").getResponse().getStatus()).isEqualTo(401);
-        MvcResult ativado = codigo(s, "ativar", codigoAtual(segredo, -1));
+        // Guarda o passo usado: a checagem de reuso, mais abaixo, tem de repetir ESTE código. Recalcular
+        // "o passo anterior" lá dá outro código se o relógio virar a janela de 30 s no meio do teste.
+        long passoDaAtivacao = Totp.passoAtual(Instant.now()) - 1;
+        MvcResult ativado = codigo(s, "ativar", Totp.codigo(segredo, passoDaAtivacao));
         assertThat(ativado.getResponse().getStatus()).isEqualTo(200);
         Cookie acessoComMfa = ativado.getResponse().getCookie("studiy_at");
 
@@ -87,7 +90,7 @@ class AdminMfaIT extends IntegracaoBase {
         // Novo login: precisa do TOTP de novo, e o código já usado não vale
         Sessao nova = sessaoDe(s.email(), tentarLogin(s.email(), SENHA));
         mvc.perform(get("/api/admin/usuarios").cookie(nova.acesso())).andExpect(status().isForbidden());
-        assertThat(codigo(nova, "verificar", codigoAtual(segredo, -1)).getResponse().getStatus()).isEqualTo(401);
+        assertThat(codigo(nova, "verificar", Totp.codigo(segredo, passoDaAtivacao)).getResponse().getStatus()).isEqualTo(401);
         MvcResult verificado = codigo(nova, "verificar", codigoAtual(segredo, 0));
         assertThat(verificado.getResponse().getStatus()).isEqualTo(200);
         mvc.perform(get("/api/admin/usuarios").cookie(verificado.getResponse().getCookie("studiy_at"))).andExpect(status().isOk());
