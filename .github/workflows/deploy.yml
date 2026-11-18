@@ -1,0 +1,44 @@
+name: Deploy
+
+# Publica a main na VPS quando o CI dela passa (inclui os merges automáticos do Dependabot).
+# Também dá para disparar à mão em Actions > Deploy > Run workflow.
+#
+# Segurança (repo público): só roda para push na main deste repo, nunca para PR.
+# A chave VPS_DEPLOY_KEY só consegue executar deploy/deploy.sh na VPS (forced command).
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: deploy-producao
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Publicar na VPS
+    if: >-
+      github.event_name == 'workflow_dispatch' || (
+        github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.event == 'push' &&
+        github.event.workflow_run.head_repository.full_name == github.repository)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Deploy
+        env:
+          CHAVE: ${{ secrets.VPS_DEPLOY_KEY }}
+          # Disparo manual publica a ponta da main (sem sha).
+          SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$CHAVE" > ~/.ssh/deploy
+          chmod 600 ~/.ssh/deploy
+          # Chave pública do servidor fixada: o Actions recusa se não for a nossa VPS.
+          echo "161.97.97.133 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGdSx0HnuGWHB/YXl31dxoabsPynEdv4unFnrZiMpFiW" > ~/.ssh/known_hosts
+          ssh -i ~/.ssh/deploy -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes deploy@161.97.97.133 "$SHA"
