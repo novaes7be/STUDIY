@@ -26,3 +26,20 @@ echo "$(date '+%F %T') ok $(du -h "$arquivo" | cut -f1) $arquivo"
 # Fica com os MANTER mais recentes (padrão 14: duas semanas para perceber um dado errado).
 MANTER="${BACKUP_MANTER:-14}"
 ls -1t "$DESTINO"/studiy-*.dump | tail -n +"$((MANTER + 1))" | xargs -r rm -f --
+
+# Cópia fora da VPS: restic (criptografado) no Backblaze B2, se ~/.backup-b2.env e ~/.restic-senha existem.
+# Uma falha aqui não apaga nada local: sai com código 3 para o cron/log acusar, e o deploy segue.
+B2_ENV="${BACKUP_B2_ENV:-$HOME/.backup-b2.env}"
+SENHA="${BACKUP_RESTIC_SENHA:-$HOME/.restic-senha}"
+if [ -r "$B2_ENV" ] && [ -r "$SENHA" ]; then
+  set -a; . "$B2_ENV"; set +a
+  export RESTIC_REPOSITORY="b2:$B2_BUCKET:studiy" RESTIC_PASSWORD_FILE="$SENHA"
+  # Retenção no B2: 14 diários, 8 semanais e 12 mensais (um ano de histórico em poucos MB).
+  if restic backup -q --host studiy-vps --tag postgres "$arquivo" \
+     && restic forget -q --host studiy-vps --tag postgres --keep-daily 14 --keep-weekly 8 --keep-monthly 12 --prune; then
+    echo "$(date '+%F %T') ok b2 $RESTIC_REPOSITORY"
+  else
+    echo "$(date '+%F %T') ERRO b2: dump local guardado, envio ao B2 falhou" >&2
+    exit 3
+  fi
+fi
