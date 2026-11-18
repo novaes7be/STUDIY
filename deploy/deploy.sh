@@ -29,7 +29,8 @@ if [ -n "$alvo" ] && [ "$alvo" != "$ponta" ]; then
 fi
 
 echo "== publicando ${ponta:0:7}: $(git log -1 --format=%s)"
-deploy/backup.sh
+# Sem dump local não publica; se só o envio ao B2 falhou (código 3), avisa e segue.
+deploy/backup.sh || { codigo=$?; [ "$codigo" = 3 ] || exit "$codigo"; echo "aviso: backup local ok, B2 falhou"; }
 docker compose build -q
 docker compose up -d --remove-orphans
 
