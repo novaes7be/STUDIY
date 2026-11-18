@@ -44,10 +44,12 @@ public class PagamentoService {
 
     private static final Logger log = LoggerFactory.getLogger(PagamentoService.class);
 
+    // "account_money" (saldo da conta Mercado Pago) não pode ser excluído: o Mercado Pago recusa a preferência
+    // inteira com 400 "account_money cannot be excluded". Ele continua como opção nos dois métodos.
     private static final List<String> EXCLUIR_NO_PIX =
-            List.of("credit_card", "debit_card", "ticket", "atm", "prepaid_card", "account_money");
+            List.of("credit_card", "debit_card", "ticket", "atm", "prepaid_card");
     private static final List<String> EXCLUIR_NO_CARTAO =
-            List.of("ticket", "atm", "bank_transfer", "account_money");
+            List.of("ticket", "atm", "bank_transfer");
 
     private final PedidoRepository pedidoRepository;
     private final UsuarioRepository usuarioRepository;
