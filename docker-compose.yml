@@ -58,6 +58,9 @@ services:
     environment:
       DOMAIN: ${DOMAIN:-localhost}
       API_ORIGIN: ${API_ORIGIN:-}
+      # Sem redirect configurado, o bloco do Caddy fica num nome local que nunca recebe tráfego
+      REDIRECT_DOMAINS: ${REDIRECT_DOMAINS:-redirect.localhost}
+      REDIRECT_TO: ${REDIRECT_TO:-https://localhost}
     ports:
       - "80:80"
       - "443:443"
