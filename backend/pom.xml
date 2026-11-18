@@ -24,6 +24,8 @@
         <bucket4j.version>8.21.0</bucket4j.version>
         <!-- Lombok novo: o padrão do Spring Boot 3.3 quebra no JDK 24/25 -->
         <lombok.version>1.18.40</lombok.version>
+        <!-- api, impl e jackson do jjwt sempre na mesma versão: o Dependabot sobe um de cada vez -->
+        <jjwt.version>0.13.0</jjwt.version>
     </properties>
 
     <dependencies>
@@ -64,18 +66,18 @@
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
-            <version>0.12.6</version>
+            <version>${jjwt.version}</version>
         </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-impl</artifactId>
-            <version>0.13.0</version>
+            <version>${jjwt.version}</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-jackson</artifactId>
-            <version>0.12.6</version>
+            <version>${jjwt.version}</version>
             <scope>runtime</scope>
         </dependency>
 
