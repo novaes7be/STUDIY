@@ -34,6 +34,9 @@ services:
   # PDF -> Markdown com figuras (PyMuPDF). Só a API alcança (rede interna); sem porta publicada.
   extrator:
     build: ./pdf-extrator
+    # tini como PID 1: recolhe o python do healthcheck quando o Docker o mata por timeout.
+    # Sem isso o uvicorn (PID 1) herda o órfão e ele vira zumbi (10 em 6 dias na VPS).
+    init: true
     environment:
       EXTRATOR_TOKEN: ${EXTRATOR_TOKEN:?defina EXTRATOR_TOKEN}
     expose:
