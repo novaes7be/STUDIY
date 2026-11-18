@@ -7,6 +7,9 @@ updates:
     groups:
       spring:
         patterns: ["org.springframework*"]
+      jjwt:
+        # api, impl e jackson precisam estar na mesma versão
+        patterns: ["io.jsonwebtoken*"]
   - package-ecosystem: pip
     directory: /pdf-extrator
     schedule:
@@ -28,3 +31,7 @@ updates:
       # Trocar de versão de Java é uma migração própria, não uma atualização automática.
       - dependency-name: "maven"
       - dependency-name: "eclipse-temurin"
+      # Python 3.12 -> 3.15 quebrou o build da imagem do extrator (PR #31): migração própria.
+      # Patches (3.12.x) continuam chegando.
+      - dependency-name: "python"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
