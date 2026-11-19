@@ -41,10 +41,13 @@ ls -1t "$DESTINO"/studiy-*.dump | tail -n +"$((MANTER + 1))" | xargs -r rm -f --
 SENHA="${BACKUP_RESTIC_SENHA:-$HOME/.restic-senha}"
 if [ -r "$B2_ENV" ] && [ -r "$SENHA" ]; then
   set -a; . "$B2_ENV"; set +a
-  export RESTIC_REPOSITORY="b2:$B2_BUCKET:studiy" RESTIC_PASSWORD_FILE="$SENHA"
-  # Retenção no B2: 14 diários, 8 semanais e 12 mensais (um ano de histórico em poucos MB).
-  if restic backup -q --host studiy-vps --tag postgres "$arquivo" \
-     && restic forget -q --host studiy-vps --tag postgres --keep-daily 14 --keep-weekly 8 --keep-monthly 12 --prune; then
+  # Pela API S3 do B2: as chaves criadas pela CLI nova do Backblaze só funcionam na API B2 v4, e o
+  # restic (backend "b2") ainda usa a v1. Mesmo repositório e mesmo caminho; muda só o protocolo.
+  export AWS_ACCESS_KEY_ID="$B2_ACCOUNT_ID" AWS_SECRET_ACCESS_KEY="$B2_ACCOUNT_KEY" RESTIC_PASSWORD_FILE="$SENHA"
+  export RESTIC_REPOSITORY="s3:${B2_S3_ENDPOINT:-https://s3.us-east-005.backblazeb2.com}/$B2_BUCKET/studiy"
+  # A chave da VPS não tem permissão de apagar (deleteFiles): quem invadir a VPS não consegue destruir
+  # os backups. Por isso aqui só se ENVIA; a limpeza dos antigos é deploy/limpar-b2.sh, rodado do Mac.
+  if restic backup -q --host studiy-vps --tag postgres "$arquivo"; then
     echo "$(date '+%F %T') ok b2 $RESTIC_REPOSITORY"
   else
     echo "$(date '+%F %T') ERRO b2: dump local guardado, envio ao B2 falhou" >&2
