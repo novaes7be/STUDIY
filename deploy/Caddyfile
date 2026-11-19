@@ -17,10 +17,21 @@
 		Cross-Origin-Opener-Policy same-origin
 		-Server
 	}
+
+	# Site fechado (SITE_FECHADO=1) enquanto não lança: o front pede usuário e senha e nada é indexado.
+	# A API (/api/*, inclusive o webhook do Mercado Pago) fica de fora: tem login próprio.
+	# SITE_SENHA_HASH vem de `caddy hash-password`. O padrão abaixo é o hash de uma senha aleatória
+	# descartada: só existe para o arquivo ser válido com o site aberto, e nunca é usado.
+	@fechado expression `{env.SITE_FECHADO} == "1"`
+	header @fechado X-Robots-Tag "noindex, nofollow"
+
 	handle /api/* {
 		reverse_proxy api:8080
 	}
 	handle {
+		basic_auth @fechado {
+			{$SITE_USUARIO:studiy} {$SITE_SENHA_HASH:$2a$14$1Ni0SBIkKQbLWjz7gcdTw.VEGxHVXOB9twhA0aobM/puVVasO7hZe}
+		}
 		# Mesma política da <meta> gerada no build, agora como header (frame-ancestors só vale aqui).
 		header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self' {$API_ORIGIN}; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
 		# Arquivos sem hash no nome: revalida sempre (ETag), para um deploy nunca servir CSS/JS velho

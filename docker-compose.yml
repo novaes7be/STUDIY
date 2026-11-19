@@ -61,6 +61,13 @@ services:
       # Sem redirect configurado, o bloco do Caddy fica num nome local que nunca recebe tráfego
       REDIRECT_DOMAINS: ${REDIRECT_DOMAINS:-redirect.localhost}
       REDIRECT_TO: ${REDIRECT_TO:-https://localhost}
+      # Site com senha até o lançamento (deploy/Caddyfile). No .env o hash vai entre aspas simples:
+      # SITE_SENHA_HASH='$2a$14$...' (sem aspas, o Compose tenta ler os $ como variáveis)
+      SITE_FECHADO: ${SITE_FECHADO:-0}
+      SITE_USUARIO: ${SITE_USUARIO:-studiy}
+      # Vazio derrubaria o Caddy (basic_auth exige hash mesmo com o site aberto): o padrão é o hash
+      # de uma senha aleatória descartada, nunca usado. $$ é o $ literal no Compose.
+      SITE_SENHA_HASH: ${SITE_SENHA_HASH:-$$2a$$14$$1Ni0SBIkKQbLWjz7gcdTw.VEGxHVXOB9twhA0aobM/puVVasO7hZe}
     ports:
       - "80:80"
       - "443:443"
