@@ -8,6 +8,15 @@ set -euo pipefail
 
 DESTINO="${BACKUP_DIR:-$HOME/backups}"
 CONTAINER="${DB_CONTAINER:-studiy-db-1}"
+B2_ENV="${BACKUP_B2_ENV:-$HOME/.backup-b2.env}"
+
+# Healthchecks.io (HC_URL=https://hc-ping.com/... em ~/.backup-b2.env): avisa no início e manda o código
+# de saída no fim (0 = ok, outro = falha). Se nenhum aviso chegar no horário, ele também alerta.
+# Um problema no aviso nunca derruba o backup.
+HC_URL="${HC_URL:-$(grep -sE '^HC_URL=' "$B2_ENV" | cut -d= -f2- || true)}"
+avisar() { [ -z "$HC_URL" ] || curl -fsS -m 10 --retry 3 -o /dev/null "$HC_URL$1" || true; }
+avisar /start
+trap 'avisar "/$?"' EXIT
 
 install -d -m 700 "$DESTINO"
 arquivo="$DESTINO/studiy-$(date +%F-%H%M%S).dump"
@@ -29,7 +38,6 @@ ls -1t "$DESTINO"/studiy-*.dump | tail -n +"$((MANTER + 1))" | xargs -r rm -f --
 
 # Cópia fora da VPS: restic (criptografado) no Backblaze B2, se ~/.backup-b2.env e ~/.restic-senha existem.
 # Uma falha aqui não apaga nada local: sai com código 3 para o cron/log acusar, e o deploy segue.
-B2_ENV="${BACKUP_B2_ENV:-$HOME/.backup-b2.env}"
 SENHA="${BACKUP_RESTIC_SENHA:-$HOME/.restic-senha}"
 if [ -r "$B2_ENV" ] && [ -r "$SENHA" ]; then
   set -a; . "$B2_ENV"; set +a
