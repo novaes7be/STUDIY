@@ -50,3 +50,11 @@ def test_worker_nao_importa_o_fastapi():
     saida = subprocess.run([sys.executable, "-c", codigo], capture_output=True, text=True, timeout=120,
                            env={**__import__('os').environ, "EXTRATOR_TOKEN": "token-de-teste-0123456789"})
     assert saida.stdout.strip().endswith("False"), saida.stderr[-300:]
+
+
+def test_recusa_html_disfarcado_de_pdf():
+    """Começa com %PDF- (passa no teste de assinatura), mas o conteúdo é HTML com script."""
+    falso = b"%PDF-1.7\n" + b"<html><body><script>alert(1)</script></body></html>\n" * 20
+    with TestClient(app) as c:
+        r = c.post("/converter", headers=TOKEN, files={"arquivo": ("a.pdf", falso, "application/pdf")})
+        assert r.status_code == 400
