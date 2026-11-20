@@ -21,6 +21,12 @@ const idiomas = readdirSync(pastaI18n).filter((f) => f.endsWith('.json')).map((f
 const dicionarios = Object.fromEntries(
   idiomas.map((l) => [l, JSON.parse(readFileSync(join(pastaI18n, `${l}.json`), 'utf8'))]));
 const paginas = readdirSync(destino).filter((f) => f.endsWith('.html'));
+
+// Chaves usadas pelo JavaScript: t("chave", "texto em português"), escritas com aspas simples. Viram js/textos-<idioma>.js.
+const chavesJs = new Set();
+for (const f of readdirSync(join(destino, 'js')).filter((f) => f.endsWith('.js'))) {
+  for (const m of readFileSync(join(destino, 'js', f), 'utf8').matchAll(/\bt\('([^']+)'/g)) chavesJs.add(m[1]);
+}
 const erros = [];
 const usadas = new Set();
 
@@ -80,13 +86,24 @@ for (const pagina of paginas) {
       .replace(/<html lang="[^"]*"/, `<html lang="${idioma}"`)
       // A página fica um nível abaixo: arquivos estáticos voltam para a raiz; links entre páginas ficam no idioma.
       .replace(/(\s(?:href|src)=")(css|js|fonts)\//g, '$1../$2/')
-      .replaceAll('<!--idiomas-->', linksIdiomas(pagina, idioma));
+      .replaceAll('<!--idiomas-->', linksIdiomas(pagina, idioma))
+      // Traduções do JavaScript antes do primeiro script (o js/t.js as lê ao carregar).
+      .replace('<script src="../js/t.js">', `<script src="../js/textos-${idioma}.js"></script>\n<script src="../js/t.js">`);
     mkdirSync(join(destino, idioma), { recursive: true });
     writeFileSync(join(destino, idioma, pagina), html);
   }
   writeFileSync(join(destino, pagina), original.replaceAll('<!--idiomas-->', linksIdiomas(pagina, PADRAO.codigo)));
 }
 
+for (const idioma of idiomas) {
+  const textos = {};
+  for (const chave of [...chavesJs].sort()) {
+    usadas.add(chave);
+    if (typeof dicionarios[idioma][chave] !== 'string') erros.push(`${idioma}.json: falta "${chave}" (js)`);
+    else textos[chave] = dicionarios[idioma][chave];
+  }
+  writeFileSync(join(destino, 'js', `textos-${idioma}.js`), `window.STUDIY_TEXTOS = ${JSON.stringify(textos)};\n`);
+}
 for (const idioma of idiomas) {
   for (const chave of Object.keys(dicionarios[idioma])) {
     if (!usadas.has(chave)) console.warn(`aviso: ${idioma}.json tem "${chave}", que nenhuma página usa`);
