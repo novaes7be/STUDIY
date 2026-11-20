@@ -16,7 +16,13 @@
    * @returns {string|null}        um item de `disponiveis`, ou null
    */
   function idiomaSugerido(preferidos, disponiveis) {
-    // TODO(human)
+    // Percorre na ordem de preferência e para no primeiro idioma que decide: se o português vier
+    // antes de qualquer idioma disponível, a pessoa está bem servida aqui e nada é sugerido.
+    for (var i = 0; i < preferidos.length; i++) {
+      var base = String(preferidos[i] || '').toLowerCase().split('-')[0];
+      if (base === 'pt') return null;
+      if (disponiveis.indexOf(base) >= 0) return base;
+    }
     return null;
   }
 
