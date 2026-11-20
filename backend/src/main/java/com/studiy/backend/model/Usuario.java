@@ -59,6 +59,11 @@ public class Usuario {
     private LocalDateTime termosAceitosEm;
     private String termosVersao;
 
+    /** Idioma do site que a pessoa usa (pt-BR, en, es): gravado no cadastro e atualizado a cada login. */
+    @Builder.Default
+    @Column(nullable = false, length = 5)
+    private String idioma = com.studiy.backend.i18n.Idioma.PT;
+
     // Papel e segundo fator (TOTP). Promoção a ADMIN só direto no banco; segredo cifrado em repouso.
     @Enumerated(EnumType.STRING)
     @Builder.Default

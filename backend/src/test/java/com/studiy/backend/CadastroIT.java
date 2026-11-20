@@ -33,8 +33,8 @@ class CadastroIT extends IntegracaoBase {
         assertThat(repetido.getResponse().getContentAsString()).isEqualTo(novo.getResponse().getContentAsString());
         assertThat(novo.getResponse().getContentAsString()).doesNotContain("token");
 
-        verify(emailService).enviarVerificacao(eq(email), org.mockito.ArgumentMatchers.anyString());
-        verify(emailService).enviarAvisoContaExistente(email);
+        verify(emailService).enviarVerificacao(eq(email), org.mockito.ArgumentMatchers.anyString(), eq("pt-BR"));
+        verify(emailService).enviarAvisoContaExistente(email, "pt-BR");
     }
 
     @Test
@@ -42,7 +42,7 @@ class CadastroIT extends IntegracaoBase {
         String email = emailNovo();
         registrar(email);
         registrar(email.toUpperCase());
-        verify(emailService).enviarAvisoContaExistente(email);
+        verify(emailService).enviarAvisoContaExistente(email, "pt-BR");
     }
 
     @Test
@@ -64,7 +64,7 @@ class CadastroIT extends IntegracaoBase {
 
         // Confirma o e-mail com o token que teria ido por e-mail
         ArgumentCaptor<String> tk = ArgumentCaptor.forClass(String.class);
-        verify(emailService).enviarVerificacao(eq(email), tk.capture());
+        verify(emailService).enviarVerificacao(eq(email), tk.capture(), eq("pt-BR"));
         mvc.perform(post("/api/auth/verificar-email").with(comCsrf()).contentType(MediaType.APPLICATION_JSON)
                 .content(corpo(Map.of("token", tk.getValue())))).andExpect(status().isOk());
 
@@ -91,6 +91,6 @@ class CadastroIT extends IntegracaoBase {
         String r2 = mvc.perform(post("/api/auth/reenviar-verificacao").with(comCsrf()).contentType(MediaType.APPLICATION_JSON)
                 .content(corpo(Map.of("email", existente)))).andReturn().getResponse().getContentAsString();
         assertThat(r1).isEqualTo(r2);
-        verify(emailService, never()).enviarVerificacao(eq(inexistente), org.mockito.ArgumentMatchers.anyString());
+        verify(emailService, never()).enviarVerificacao(eq(inexistente), org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString());
     }
 }
