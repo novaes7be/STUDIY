@@ -16,6 +16,8 @@ from concurrent.futures.process import BrokenProcessPool
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, File, Header, HTTPException, UploadFile
+from magika import Magika
+from magika.types import MagikaResult
 
 from app import trabalho
 
@@ -36,6 +38,17 @@ def _token() -> str:
     return token
 
 
+def pdf_confirmado(resultado: MagikaResult) -> bool:
+    """Decide, pelo veredito do Magika, se o arquivo é mesmo um PDF.
+
+    O teste de "%PDF-" no começo só confere 5 bytes: um HTML ou script com esse prefixo passa.
+    O Magika olha o conteúdo (início, meio e fim) e devolve um rótulo com uma confiança.
+    """
+    # Só o rótulo final: ele já aplica os limites de confiança calibrados pelo Google. Exigir score extra
+    # recusaria PDFs legítimos de scanner/com anexos; o PyMuPDF já roda isolado, então o Magika é uma camada a mais.
+    return resultado.output.label == "pdf"
+
+
 def _novo_pool() -> ProcessPoolExecutor:
     # Trocar o processo de tempos em tempos limita o crescimento de memória; trocar a cada PDF custa caro demais.
     pool = ProcessPoolExecutor(max_workers=PROCESSOS, max_tasks_per_child=PDFS_POR_PROCESSO)
@@ -47,6 +60,7 @@ def _novo_pool() -> ProcessPoolExecutor:
 @asynccontextmanager
 async def ciclo_de_vida(app: FastAPI):
     app.state.token = _token()
+    app.state.magika = Magika()   # modelo pequeno (~1 MB), carrega em milissegundos
     app.state.pool = _novo_pool()
     yield
     app.state.pool.shutdown(wait=True, cancel_futures=True)
@@ -69,6 +83,11 @@ async def converter(arquivo: UploadFile = File(...), x_extrator_token: str = Hea
     if len(dados) > TAMANHO_MAXIMO:
         raise HTTPException(status_code=413, detail="PDF muito grande (máximo 10MB)")
     if not dados.startswith(b"%PDF-"):
+        raise HTTPException(status_code=400, detail="Só são aceitos arquivos PDF")
+    # Em thread: a inferência leva ~6 ms e não deve travar o loop do servidor.
+    veredito = await asyncio.to_thread(app.state.magika.identify_bytes, dados)
+    if not pdf_confirmado(veredito):
+        log.warning("recusado pelo Magika: %s (%.2f)", veredito.output.label, veredito.score)
         raise HTTPException(status_code=400, detail="Só são aceitos arquivos PDF")
 
     loop = asyncio.get_running_loop()

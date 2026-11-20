@@ -4,3 +4,5 @@ pymupdf4llm==2.1
 fastapi==0.163.1
 uvicorn==0.54.0
 python-multipart==0.0.33
+# Detecção de tipo por conteúdo (Google, Apache-2.0); usa o onnxruntime que o pymupdf já instala.
+magika==1.0.3

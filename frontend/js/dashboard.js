@@ -307,8 +307,9 @@
      Devolve um DocumentFragment com os painéis na ordem escolhida. */
   function ordemDosPaineis(m, mat, rev) {
     var frag = document.createDocumentFragment();
-    // TODO(human): decidir qual painel vem primeiro e anexar os dois em frag
-    frag.append(mat, rev);
+    // Com cartões vencendo, revisar é a ação mais valiosa do dia; sem eles, o próximo passo é enviar/usar um PDF.
+    if (m.flashcardsPendentes > 0 && state.pdfs.length) frag.append(rev, mat);
+    else frag.append(mat, rev);
     return frag;
   }
 

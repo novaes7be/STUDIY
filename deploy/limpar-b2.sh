@@ -23,9 +23,11 @@ export AWS_ACCESS_KEY_ID="$B2_ACCOUNT_ID" AWS_SECRET_ACCESS_KEY="$B2_ACCOUNT_KEY
 export RESTIC_REPOSITORY="s3:${B2_S3_ENDPOINT:-https://s3.us-east-005.backblazeb2.com}/$B2_BUCKET/studiy"
 
 # Retenção: 14 diários, 8 semanais e 12 mensais (um ano de histórico em poucos MB).
+# --group-by host,tags: cada dump tem nome com a data, e o agrupamento padrão (host+caminho) deixaria
+# cada snapshot sozinho no seu grupo, sem nunca apagar nada.
 # Pelo S3, o B2 "esconde" o que o restic apaga; a regra do bucket (daysFromHidingToDeleting: 30)
 # remove de vez depois de 30 dias. Até lá, um backup escondido por engano ainda pode ser recuperado.
-restic forget --host studiy-vps --tag postgres --keep-daily 14 --keep-weekly 8 --keep-monthly 12 --prune
+restic forget --host studiy-vps --tag postgres --group-by host,tags --keep-daily 14 --keep-weekly 8 --keep-monthly 12 --prune
 # Confere a integridade do repositório depois de apagar.
 restic check
 restic snapshots --compact | tail -5
