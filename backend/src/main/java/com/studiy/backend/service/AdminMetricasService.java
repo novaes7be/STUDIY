@@ -73,8 +73,12 @@ public class AdminMetricasService {
      * Devolve null quando não há base para calcular.
      */
     static Double taxaConversao(Map<String, Long> porStatus) {
-        // TODO(human): definir quais status entram no numerador e no denominador
-        return null;
+        // Reembolsado também converteu (o reembolso tem métrica própria); o denominador é todo pedido criado,
+        // inclusive pendente: checkout abandonado é justamente o que a conversão deve mostrar.
+        long total = porStatus.values().stream().mapToLong(Long::longValue).sum();
+        if (total == 0) return null;
+        long vendidos = porStatus.getOrDefault("PAGO", 0L) + porStatus.getOrDefault("REEMBOLSADO", 0L);
+        return (double) vendidos / total;
     }
 
     private AdminDtos.MetricasConteudo conteudo(LocalDateTime desde, LocalDate inicio) {
