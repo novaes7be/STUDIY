@@ -16,8 +16,7 @@ import java.util.concurrent.CompletableFuture;
 /**
  * Envio de e-mails. Só envia se o SMTP estiver configurado (SPRING_MAIL_HOST + MAIL_FROM).
  * O envio é assíncrono para o tempo de resposta não revelar se o e-mail existe.
- * Tokens nunca vão para os logs — exceto no perfil dev sem SMTP (studiy.auth.expor-token-reset-dev,
- * que a StartupGuard proíbe fora de dev), para dar para testar o fluxo localmente.
+ * Tokens nunca vão para os logs, nem em dev: lá os e-mails aparecem no Mailpit (docker-compose.dev.yml).
  */
 @Service
 public class EmailService {
@@ -108,7 +107,9 @@ public class EmailService {
         JavaMailSender sender = mailSender.getIfAvailable();
         if (sender == null || remetente.isBlank()) {
             if (modoDev) {
-                log.warn("[DEV] SMTP não configurado. E-mail que seria enviado a {}:\n{}\n{}", para, assunto, texto);
+                // Nunca o corpo: ele leva o token do link. Para ver o e-mail completo em dev, use o Mailpit
+                // do docker-compose.dev.yml (http://localhost:8025).
+                log.warn("[DEV] SMTP não configurado. E-mail \"{}\" não enviado (veja no Mailpit).", assunto);
             } else {
                 log.warn("E-mail não configurado (SPRING_MAIL_HOST/MAIL_FROM): mensagem não enviada.");
             }
