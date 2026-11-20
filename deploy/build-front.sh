@@ -41,6 +41,9 @@ for f in "$DESTINO"/*.html; do
 done
 sed -i.bak "s#__API_BASE__#${API}#g" "$DESTINO/js/config.js" && rm -f "$DESTINO/js/config.js.bak"
 
+# Páginas traduzidas em <destino>/en, <destino>/es... (dicionários em frontend/i18n; falta de chave derruba o build).
+node "$RAIZ/deploy/i18n-front.mjs" "$DESTINO"
+
 # Conferências: nenhum placeholder sobrando; em prod, nada de localhost/http nem fontes de terceiros.
 if grep -rl "__API_" "$DESTINO" >/dev/null; then
   echo "ERRO: placeholder não substituído:" >&2; grep -rl "__API_" "$DESTINO" >&2; exit 1

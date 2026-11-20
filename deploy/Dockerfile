@@ -1,10 +1,10 @@
 # Site estático (front) servido pelo Caddy. O build por ambiente roda aqui dentro,
 # então a imagem nunca carrega a CSP/config de desenvolvimento.
 FROM alpine:3.24 AS build
-RUN apk add --no-cache bash grep sed
+RUN apk add --no-cache bash grep sed nodejs
 WORKDIR /src
 COPY frontend ./frontend
-COPY deploy/build-front.sh ./deploy/build-front.sh
+COPY deploy/build-front.sh deploy/i18n-front.mjs ./deploy/
 # Vazio = API na mesma origem (Caddy encaminha /api). Ou https://api.seudominio.com
 ARG API_ORIGIN=
 RUN API_ORIGIN="$API_ORIGIN" bash deploy/build-front.sh prod

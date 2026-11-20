@@ -74,12 +74,13 @@ services:
     volumes:
       - ./frontend:/app/frontend:ro
       - ./deploy/build-front.sh:/app/deploy/build-front.sh:ro
+      - ./deploy/i18n-front.mjs:/app/deploy/i18n-front.mjs:ro
       - ./build:/app/build
     command:
       - sh
       - -c
       - |
-        apk add --no-cache bash grep sed findutils >/dev/null
+        apk add --no-cache bash grep sed findutils nodejs >/dev/null
         bash deploy/build-front.sh dev && touch /tmp/marca
         while sleep 2; do
           if [ -n "$$(find frontend -type f -newer /tmp/marca | head -n 1)" ]; then
