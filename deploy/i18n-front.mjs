@@ -6,7 +6,7 @@
 // frontend/i18n/<idioma>.json, cria <build>/<idioma>/*.html com os textos trocados:
 //   data-i18n="chave"                          troca o conteúdo do elemento (pode ter HTML simples)
 //   data-i18n-attr="aria-label:chave; alt:c2"  troca atributos do próprio elemento
-//   <!--idiomas-->                             vira os links para a mesma página nos outros idiomas
+//   <!--idiomas-->                             (navbar e rodapé) vira os links para a mesma página nos outros idiomas
 // Chave faltando em qualquer idioma derruba o build: nada sai com texto pela metade.
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
@@ -80,11 +80,11 @@ for (const pagina of paginas) {
       .replace(/<html lang="[^"]*"/, `<html lang="${idioma}"`)
       // A página fica um nível abaixo: arquivos estáticos voltam para a raiz; links entre páginas ficam no idioma.
       .replace(/(\s(?:href|src)=")(css|js|fonts)\//g, '$1../$2/')
-      .replace('<!--idiomas-->', linksIdiomas(pagina, idioma));
+      .replaceAll('<!--idiomas-->', linksIdiomas(pagina, idioma));
     mkdirSync(join(destino, idioma), { recursive: true });
     writeFileSync(join(destino, idioma, pagina), html);
   }
-  writeFileSync(join(destino, pagina), original.replace('<!--idiomas-->', linksIdiomas(pagina, PADRAO.codigo)));
+  writeFileSync(join(destino, pagina), original.replaceAll('<!--idiomas-->', linksIdiomas(pagina, PADRAO.codigo)));
 }
 
 for (const idioma of idiomas) {
