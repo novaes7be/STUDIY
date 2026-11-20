@@ -33,7 +33,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @SpringBootTest(properties = {
         "studiy.ratelimit.auth-por-minuto=100000", "studiy.ratelimit.ia-por-minuto=100000",
-        "studiy.ratelimit.upload-por-minuto=100000"})
+        "studiy.ratelimit.upload-por-minuto=100000",
+        // O agendador do ranking (1ª rodada 15 s após subir) disputava a trava com o ranking.atualizar()
+        // dos testes: a chamada do teste era ignorada e ele lia uma foto antiga. Nos testes, só eles recalculam.
+        "studiy.ranking.atraso-inicial-ms=86400000"})
 @AutoConfigureMockMvc
 @ActiveProfiles("dev")
 public abstract class IntegracaoBase {
