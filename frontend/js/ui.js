@@ -34,7 +34,7 @@
   var logado = false;
   try { logado = sessionStorage.getItem('studiy-logado') === '1'; } catch (e) { /* ignora */ }
   var botaoEntrar = nav.querySelector('.nav-end a[href="login.html"]');
-  if (logado && botaoEntrar) { botaoEntrar.textContent = 'Meu painel'; botaoEntrar.setAttribute('href', 'dashboard.html'); }
+  if (logado && botaoEntrar) { botaoEntrar.textContent = t('ui.meu_painel', 'Meu painel'); botaoEntrar.setAttribute('href', 'dashboard.html'); }
   var links = Array.prototype.slice.call(nav.querySelectorAll('.nav-links a[href^="#"]'));
   var glow = nav.querySelector('.nav-glow');
   var lista = nav.querySelector('.nav-links');

@@ -11,7 +11,7 @@
   var PASSO = 60;            // ms entre quadros do scramble
   var TICKS_POR_LETRA = 2;   // ~120 ms por letra revelada
   var TROCA = 0.3;           // chance de uma letra cifrada mudar de símbolo a cada quadro
-  var fmt = new Intl.NumberFormat('pt-BR');
+  var fmt = new Intl.NumberFormat(window.IDIOMA || 'pt-BR');
 
   if (!reduz && temIO) document.documentElement.classList.add('motion');
 
