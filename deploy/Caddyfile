@@ -1,6 +1,6 @@
 # HTTPS automático (Let's Encrypt) para o domínio em DOMAIN. Front e API na mesma origem.
 
-# Domínios que só redirecionam (ex.: study.novaes.io -> studiy.novaes.io), com HTTPS próprio.
+# Domínios que só redirecionam (ex.: www.studiy.app -> studiy.app), com HTTPS próprio.
 # REDIRECT_DOMAINS separado por espaço; REDIRECT_TO é a origem de destino, sem barra no fim.
 {$REDIRECT_DOMAINS} {
 	redir {$REDIRECT_TO}{uri} permanent
