@@ -6,7 +6,7 @@
 <!-- CSP gerada por deploy/build-front.sh (connect-src por ambiente) -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self' __API_ORIGIN__; object-src 'none'; base-uri 'none'; form-action 'self'">
 <meta name="referrer" content="no-referrer">
-<title>Studiy — Estude melhor. Esqueça menos.</title>
+<title data-i18n="index.titulo">Studiy — Estude melhor. Esqueça menos.</title>
 <link rel="preload" href="fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/fonts.css">
 <link rel="stylesheet" href="css/tokens.css">
@@ -19,22 +19,22 @@
 <script src="js/botao.js" defer></script>
 </head>
 <body data-grade>
-<a class="skip" href="#principal">Ir para o conteúdo</a>
+<a class="skip" href="#principal" data-i18n="comum.pular">Ir para o conteúdo</a>
 <header class="nav-wrap">
-  <nav class="nav" aria-label="Principal">
+  <nav class="nav" aria-label="Principal" data-i18n-attr="aria-label:comum.nav_principal">
     <a class="logo" href="#topo">STUDIY<span class="logo-dot">.</span></a>
     <div class="nav-links" id="navLinks">
-      <a class="btn btn-tertiary btn-sm" href="#como">Como funciona</a>
-      <a class="btn btn-tertiary btn-sm" href="#recursos">Recursos</a>
-      <a class="btn btn-tertiary btn-sm" href="#planos">Planos</a>
-      <a class="btn btn-tertiary btn-sm" href="#duvidas">Dúvidas</a>
-      <a class="btn btn-tertiary btn-sm nav-only-mobile" href="login.html">Entrar</a>
+      <a class="btn btn-tertiary btn-sm" href="#como" data-i18n="index.nav_como">Como funciona</a>
+      <a class="btn btn-tertiary btn-sm" href="#recursos" data-i18n="index.nav_recursos">Recursos</a>
+      <a class="btn btn-tertiary btn-sm" href="#planos" data-i18n="index.nav_planos">Planos</a>
+      <a class="btn btn-tertiary btn-sm" href="#duvidas" data-i18n="index.nav_duvidas">Dúvidas</a>
+      <a class="btn btn-tertiary btn-sm nav-only-mobile" href="login.html" data-i18n="comum.entrar">Entrar</a>
     </div>
     <div class="nav-end">
-      <button class="icon-btn" id="themeToggle" type="button" aria-label="Alternar tema claro/escuro"><svg class="i-moon" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg><svg class="i-sun" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
-      <a class="btn btn-secondary btn-sm btn-dot nav-entrar" href="login.html">Entrar</a>
-      <a class="btn btn-primary btn-sm nav-comecar" href="cadastro.html">Começar</a>
-      <button class="nav-burger icon-btn" type="button" aria-expanded="false" aria-controls="navLinks" aria-label="Abrir menu"><span></span><span></span></button>
+      <button class="icon-btn" id="themeToggle" type="button" aria-label="Alternar tema claro/escuro" data-i18n-attr="aria-label:comum.alternar_tema"><svg class="i-moon" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg><svg class="i-sun" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
+      <a class="btn btn-secondary btn-sm btn-dot nav-entrar" href="login.html" data-i18n="comum.entrar">Entrar</a>
+      <a class="btn btn-primary btn-sm nav-comecar" href="cadastro.html" data-i18n="comum.comecar">Começar</a>
+      <button class="nav-burger icon-btn" type="button" aria-expanded="false" aria-controls="navLinks" aria-label="Abrir menu" data-i18n-attr="aria-label:comum.abrir_menu"><span></span><span></span></button>
     </div>
   </nav>
 </header>
@@ -42,97 +42,98 @@
 <main id="principal">
   <section class="hero wrap" id="topo">
     <h1 class="display hero-title">
-      <span class="sr-only">Estude melhor. Esqueça menos.</span>
-      <span class="hero-l" aria-hidden="true" data-scramble>Estude melhor.</span>
-      <span class="hero-r" aria-hidden="true" data-scramble>Esqueça menos.</span>
+      <span class="sr-only" data-i18n="index.hero_titulo">Estude melhor. Esqueça menos.</span>
+      <span class="hero-l" aria-hidden="true" data-scramble data-i18n="index.hero_l">Estude melhor.</span>
+      <span class="hero-r" aria-hidden="true" data-scramble data-i18n="index.hero_r">Esqueça menos.</span>
     </h1>
     <div class="hero-row" data-reveal>
-      <p>Envie o PDF da aula e receba resumo e flashcards prontos.</p>
-      <p>Revise no dia certo, antes de esquecer, com repetição espaçada.</p>
+      <p data-i18n="index.hero_p1">Envie o PDF da aula e receba resumo e flashcards prontos.</p>
+      <p data-i18n="index.hero_p2">Revise no dia certo, antes de esquecer, com repetição espaçada.</p>
       <div class="hero-cta">
-        <a class="btn btn-secondary" href="#como">Ver como funciona</a>
-        <a class="btn btn-accent btn-arrow" href="cadastro.html">Começar grátis</a>
+        <a class="btn btn-secondary" href="#como" data-i18n="index.ver_como">Ver como funciona</a>
+        <a class="btn btn-accent btn-arrow" href="cadastro.html" data-i18n="index.comecar_gratis">Começar grátis</a>
       </div>
     </div>
   </section>
 
   <section class="how" id="como">
     <div class="wrap">
-      <h2 class="display" data-reveal>Como funciona.</h2>
+      <h2 class="display" data-reveal data-i18n="index.como_titulo">Como funciona.</h2>
       <ol class="how-steps">
-        <li class="how-step" data-reveal><span class="how-n">01</span><h3>Crie a matéria</h3><p>Dê um nome e escolha uma cor para cada disciplina. Tudo o que você enviar fica organizado ali.</p></li>
-        <li class="how-step" data-reveal="120"><span class="how-n">02</span><h3>Envie o PDF</h3><p>PDF com texto selecionável, até 10 MB. Depois peça um resumo, flashcards ou os dois.</p></li>
-        <li class="how-step" data-reveal="240"><span class="how-n">03</span><h3>Revise no tempo certo</h3><p>Todo dia aparecem os cartões perto de serem esquecidos. Você avalia como foi e o próximo intervalo se ajusta.</p></li>
+        <li class="how-step" data-reveal><span class="how-n">01</span><h3 data-i18n="index.passo1_t">Crie a matéria</h3><p data-i18n="index.passo1_p">Dê um nome e escolha uma cor para cada disciplina. Tudo o que você enviar fica organizado ali.</p></li>
+        <li class="how-step" data-reveal="120"><span class="how-n">02</span><h3 data-i18n="index.passo2_t">Envie o PDF</h3><p data-i18n="index.passo2_p">PDF com texto selecionável, até 10 MB. Depois peça um resumo, flashcards ou os dois.</p></li>
+        <li class="how-step" data-reveal="240"><span class="how-n">03</span><h3 data-i18n="index.passo3_t">Revise no tempo certo</h3><p data-i18n="index.passo3_p">Todo dia aparecem os cartões perto de serem esquecidos. Você avalia como foi e o próximo intervalo se ajusta.</p></li>
       </ol>
-      <p class="how-note">Resumos e flashcards são gerados por IA e podem conter erros. Use como apoio e confira com o material original.</p>
+      <p class="how-note" data-i18n="index.aviso_ia">Resumos e flashcards são gerados por IA e podem conter erros. Use como apoio e confira com o material original.</p>
     </div>
   </section>
 
   <section class="sec wrap" id="recursos">
-    <h2 class="display" data-reveal>Tudo num lugar.</h2>
+    <h2 class="display" data-reveal data-i18n="index.recursos_titulo">Tudo num lugar.</h2>
     <div class="cards">
-      <article class="card tint-blue" data-reveal><h3>Matérias com cor</h3><p>Cada disciplina com seus PDFs, resumos e flashcards, na cor que você escolher.</p></article>
-      <article class="card tint-indigo" data-reveal="100"><h3>Resumos e flashcards</h3><p>Os pontos principais do PDF em tópicos e perguntas prontas para praticar.</p></article>
-      <article class="card tint-red" data-reveal="200"><h3>Revisão, XP e sequência</h3><p>Algoritmo SM-2 decide quando cada cartão volta. Dias seguidos e nível mantêm o hábito.</p></article>
-      <article class="card card-soon" data-reveal="300"><span class="soon">Em breve</span><h3>Ranking e questionários</h3><p>Simulados por matéria e um ranking entre amigos.</p></article>
+      <article class="card tint-blue" data-reveal><h3 data-i18n="index.rec1_t">Matérias com cor</h3><p data-i18n="index.rec1_p">Cada disciplina com seus PDFs, resumos e flashcards, na cor que você escolher.</p></article>
+      <article class="card tint-indigo" data-reveal="100"><h3 data-i18n="index.rec2_t">Resumos e flashcards</h3><p data-i18n="index.rec2_p">Os pontos principais do PDF em tópicos e perguntas prontas para praticar.</p></article>
+      <article class="card tint-red" data-reveal="200"><h3 data-i18n="index.rec3_t">Revisão, XP e sequência</h3><p data-i18n="index.rec3_p">Algoritmo SM-2 decide quando cada cartão volta. Dias seguidos e nível mantêm o hábito.</p></article>
+      <article class="card card-soon" data-reveal="300"><span class="soon" data-i18n="comum.em_breve">Em breve</span><h3 data-i18n="index.rec4_t">Ranking e questionários</h3><p data-i18n="index.rec4_p">Simulados por matéria e um ranking entre amigos.</p></article>
     </div>
   </section>
 
   <section class="sec wrap" id="planos">
-    <h2 class="display" data-reveal>Planos.</h2>
+    <h2 class="display" data-reveal data-i18n="index.planos_titulo">Planos.</h2>
     <div class="plans">
       <div class="plan" data-reveal>
-        <h3>Grátis</h3>
+        <h3 data-i18n="index.plano_gratis">Grátis</h3>
         <p class="plan-price">R$&nbsp;0</p>
-        <ul><li>20 gerações com IA por mês</li><li>Flashcards e revisões ilimitados</li><li>Matérias ilimitadas</li><li>Exportar e excluir seus dados</li></ul>
-        <a class="btn btn-secondary btn-block" href="cadastro.html">Criar conta</a>
+        <ul data-i18n="index.gratis_itens"><li>20 gerações com IA por mês</li><li>Flashcards e revisões ilimitados</li><li>Matérias ilimitadas</li><li>Exportar e excluir seus dados</li></ul>
+        <a class="btn btn-secondary btn-block" href="cadastro.html" data-i18n="index.criar_conta">Criar conta</a>
       </div>
       <div class="plan plan-pro" data-reveal="120">
         <h3>Pro</h3>
-        <p class="plan-price">R$&nbsp;20<small> / 30 dias</small></p>
-        <ul><li>300 gerações com IA a cada 30 dias</li><li>Tudo do plano Grátis</li><li>Prioridade na geração</li><li>Cartão ou Pix, sem renovação automática</li></ul>
-        <a class="btn btn-light btn-block btn-arrow" href="pagamento.html">Assinar Pro</a>
+        <p class="plan-price">R$&nbsp;20<small data-i18n="index.por_30_dias"> / 30 dias</small></p>
+        <ul data-i18n="index.pro_itens"><li>300 gerações com IA a cada 30 dias</li><li>Tudo do plano Grátis</li><li>Prioridade na geração</li><li>Cartão ou Pix, sem renovação automática</li></ul>
+        <a class="btn btn-light btn-block btn-arrow" href="pagamento.html" data-i18n="index.assinar_pro">Assinar Pro</a>
       </div>
     </div>
-    <p class="note">Uma "geração" é cada resumo ou conjunto de flashcards criado a partir de um PDF. Enviar PDFs, revisar cartões e ler resumos não consome gerações.</p>
+    <p class="note" data-i18n="index.nota_geracao">Uma "geração" é cada resumo ou conjunto de flashcards criado a partir de um PDF. Enviar PDFs, revisar cartões e ler resumos não consome gerações.</p>
   </section>
 
   <section class="sec wrap" id="duvidas">
-    <h2 class="display" data-reveal>Dúvidas.</h2>
+    <h2 class="display" data-reveal data-i18n="index.duvidas_titulo">Dúvidas.</h2>
     <div class="faq">
-      <details><summary>Meus PDFs ficam guardados?</summary><p>Não guardamos o arquivo original. Extraímos o texto, usamos para gerar o resumo e os flashcards e armazenamos esse texto cifrado na sua conta.</p></details>
-      <details><summary>Alguém além de mim vê meus materiais?</summary><p>Cada conteúdo só é acessível pela conta que o criou. Para gerar resumos e flashcards, o texto é enviado ao provedor de IA, que o processa para devolver o resultado. Os detalhes estão na Política de Privacidade.</p></details>
-      <details><summary>A IA pode errar?</summary><p>Pode. Os resumos e os cartões são um apoio de estudo e não substituem o material original nem o professor. Vale conferir pontos importantes antes da prova.</p></details>
-      <details><summary>Funciona com PDF escaneado ou protegido por senha?</summary><p>Ainda não. O PDF precisa ter texto selecionável. Arquivos escaneados (só imagem) e PDFs com senha não são lidos. O limite é de 10 MB e 300 páginas por arquivo.</p></details>
-      <details><summary>O que é repetição espaçada?</summary><p>É revisar o conteúdo em intervalos crescentes: o que você domina aparece cada vez mais espaçado, e o que você erra volta logo. Assim você gasta tempo onde precisa.</p></details>
-      <details><summary>Posso apagar meus dados?</summary><p>Sim. Em "Minha conta" você baixa uma cópia de tudo e pode excluir a conta e todo o conteúdo quando quiser.</p></details>
-      <details><summary>Como funciona o pagamento do Pro?</summary><p>Você escolhe cartão ou Pix e paga no ambiente seguro do Mercado Pago. O Studiy não vê nem guarda os dados do seu cartão. O Pro vale por 30 dias e não renova sozinho.</p></details>
+      <details><summary data-i18n="index.faq1_p">Meus PDFs ficam guardados?</summary><p data-i18n="index.faq1_r">Não guardamos o arquivo original. Extraímos o texto, usamos para gerar o resumo e os flashcards e armazenamos esse texto cifrado na sua conta.</p></details>
+      <details><summary data-i18n="index.faq2_p">Alguém além de mim vê meus materiais?</summary><p data-i18n="index.faq2_r">Cada conteúdo só é acessível pela conta que o criou. Para gerar resumos e flashcards, o texto é enviado ao provedor de IA, que o processa para devolver o resultado. Os detalhes estão na Política de Privacidade.</p></details>
+      <details><summary data-i18n="index.faq3_p">A IA pode errar?</summary><p data-i18n="index.faq3_r">Pode. Os resumos e os cartões são um apoio de estudo e não substituem o material original nem o professor. Vale conferir pontos importantes antes da prova.</p></details>
+      <details><summary data-i18n="index.faq4_p">Funciona com PDF escaneado ou protegido por senha?</summary><p data-i18n="index.faq4_r">Ainda não. O PDF precisa ter texto selecionável. Arquivos escaneados (só imagem) e PDFs com senha não são lidos. O limite é de 10 MB e 300 páginas por arquivo.</p></details>
+      <details><summary data-i18n="index.faq5_p">O que é repetição espaçada?</summary><p data-i18n="index.faq5_r">É revisar o conteúdo em intervalos crescentes: o que você domina aparece cada vez mais espaçado, e o que você erra volta logo. Assim você gasta tempo onde precisa.</p></details>
+      <details><summary data-i18n="index.faq6_p">Posso apagar meus dados?</summary><p data-i18n="index.faq6_r">Sim. Em "Minha conta" você baixa uma cópia de tudo e pode excluir a conta e todo o conteúdo quando quiser.</p></details>
+      <details><summary data-i18n="index.faq7_p">Como funciona o pagamento do Pro?</summary><p data-i18n="index.faq7_r">Você escolhe cartão ou Pix e paga no ambiente seguro do Mercado Pago. O Studiy não vê nem guarda os dados do seu cartão. O Pro vale por 30 dias e não renova sozinho.</p></details>
     </div>
   </section>
 
   <section class="sec wrap privacy" id="privacidade" data-reveal>
-    <h3>Seus materiais são seus</h3>
-    <ul>
+    <h3 data-i18n="index.priv_titulo">Seus materiais são seus</h3>
+    <ul data-i18n="index.priv_itens">
       <li>Senhas guardadas apenas como hash, nunca em texto puro</li>
       <li>Textos, resumos e flashcards cifrados em repouso</li>
       <li>Conexão criptografada (HTTPS) em produção</li>
       <li>Exporte uma cópia dos seus dados ou exclua a conta quando quiser</li>
     </ul>
-    <p>Leia a <a href="privacidade.html">Política de Privacidade</a> e os <a href="termos.html">Termos de Uso</a>.</p>
+    <p data-i18n="index.priv_links">Leia a <a href="privacidade.html">Política de Privacidade</a> e os <a href="termos.html">Termos de Uso</a>.</p>
   </section>
 
   <section class="cta">
     <div class="wrap">
-      <h2 class="display" data-scramble>Comece agora.</h2>
-      <a class="btn btn-light btn-lg btn-arrow" href="cadastro.html">Começar grátis</a>
+      <h2 class="display" data-scramble data-i18n="index.cta_titulo">Comece agora.</h2>
+      <a class="btn btn-light btn-lg btn-arrow" href="cadastro.html" data-i18n="index.comecar_gratis">Começar grátis</a>
     </div>
   </section>
 </main>
 
 <footer class="footer wrap">
   <div><a class="logo" href="#topo">STUDIY<span class="logo-dot">.</span></a><p>© 2026 Studiy</p></div>
-  <nav aria-label="Produto"><a href="#como">Como funciona</a><a href="#recursos">Recursos</a><a href="#planos">Planos</a><a href="#duvidas">Dúvidas</a></nav>
-  <nav aria-label="Legal"><a href="privacidade.html">Privacidade</a><a href="termos.html">Termos de Uso</a><a href="login.html">Entrar</a></nav>
+  <nav aria-label="Produto" data-i18n-attr="aria-label:comum.nav_produto"><a href="#como" data-i18n="index.nav_como">Como funciona</a><a href="#recursos" data-i18n="index.nav_recursos">Recursos</a><a href="#planos" data-i18n="index.nav_planos">Planos</a><a href="#duvidas" data-i18n="index.nav_duvidas">Dúvidas</a></nav>
+  <nav aria-label="Legal" data-i18n-attr="aria-label:comum.nav_legal"><a href="privacidade.html" data-i18n="comum.privacidade">Privacidade</a><a href="termos.html" data-i18n="comum.termos">Termos de Uso</a><a href="login.html" data-i18n="comum.entrar">Entrar</a></nav>
+  <nav class="idiomas" aria-label="Idioma" data-i18n-attr="aria-label:comum.idioma"><!--idiomas--></nav>
 </footer>
 <script src="js/ui.js"></script>
 </body>
