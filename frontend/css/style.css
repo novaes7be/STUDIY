@@ -87,7 +87,7 @@ html[data-theme="dark"] .i-moon { display: none; }
 
 /* Landing: css/landing.css */
 /* Autenticação: css/auth.css. Compartilhados com pagamento, admin e páginas legais: */
-.auth-top { position: fixed; top: 16px; right: 16px; z-index: 10; }
+.auth-top { position: fixed; top: 16px; right: 16px; z-index: 10; display: flex; align-items: center; gap: 6px; }
 /* "Voltar": link discreto, não um segundo botão competindo com o principal */
 .back-home { display: inline-flex; align-items: center; gap: 6px; min-height: var(--control-h); margin-bottom: 24px; color: var(--text-muted); font-size: var(--fs-sm); font-weight: 600; text-decoration: none; }
 .back-home::before { content: ""; width: 16px; height: 16px; background: currentColor; -webkit-mask: var(--ico-arrow-left) center / contain no-repeat; mask: var(--ico-arrow-left) center / contain no-repeat; transition: transform var(--dur-2) var(--ease-spring); }
@@ -150,3 +150,11 @@ details.acc-section form { margin-top: 10px; }
 .onb li strong { display: block; }
 .onb li span { color: var(--text-muted); font-size: var(--fs-sm); }
 .onb-actions { display: flex; justify-content: flex-end; }
+
+/* Menu de idioma (navbar e telas de login): <details> nativo, a lista é preenchida pelo build (deploy/i18n-front.mjs). */
+.idioma-menu { position: relative; }
+.idioma-menu summary { list-style: none; cursor: pointer; font-size: var(--fs-sm); font-weight: 600; letter-spacing: .02em; }
+.idioma-menu summary::-webkit-details-marker { display: none; }
+.idioma-lista { position: absolute; right: 0; top: calc(100% + 8px); z-index: 20; display: flex; flex-direction: column; min-width: 140px; padding: 6px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 8px 24px rgb(0 0 0 / .18); }
+.idioma-lista a { display: flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px; color: var(--text); text-decoration: none; font-size: var(--fs-sm); }
+.idioma-lista a:hover, .idioma-lista a:focus-visible { background: var(--hover-tint); }
