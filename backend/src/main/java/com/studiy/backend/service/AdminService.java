@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.sql.Date;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -58,7 +59,7 @@ public class AdminService {
         LocalDateTime desde = LocalDateTime.now().minusDays(d);
         List<Object[]> linhas = iaChamadas.resumoPorDia(desde);
         List<AdminDtos.UsoIaDia> porDia = linhas.stream().map(r -> new AdminDtos.UsoIaDia(
-                ((Date) r[0]).toLocalDate(), n(r[1]), n(r[2]), n(r[3]), n(r[4]), usd(n(r[5])))).toList();
+                (r[0] instanceof Date sd ? sd.toLocalDate() : (LocalDate) r[0]), n(r[1]), n(r[2]), n(r[3]), n(r[4]), usd(n(r[5])))).toList();
         List<AdminDtos.UsoIaConsumidor> top = iaChamadas.maioresConsumidores(desde).stream()
                 .map(r -> new AdminDtos.UsoIaConsumidor((String) r[0], n(r[1]), usd(n(r[2])))).toList();
         long chamadas = linhas.stream().mapToLong(r -> n(r[1])).sum();

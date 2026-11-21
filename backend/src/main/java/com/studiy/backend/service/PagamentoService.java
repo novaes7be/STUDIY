@@ -1,6 +1,6 @@
 package com.studiy.backend.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import com.studiy.backend.dto.PagamentoDtos.CheckoutResponse;
 import com.studiy.backend.dto.PagamentoDtos.ConfigResponse;
 import com.studiy.backend.dto.PagamentoDtos.PedidoResponse;
@@ -118,11 +118,11 @@ public class PagamentoService {
         }
 
         JsonNode resposta = mp.criarPreferencia(preferencia(pedido, usuario, voltar));
-        String url = resposta.path(mp.sandbox() ? "sandbox_init_point" : "init_point").asText("");
+        String url = resposta.path(mp.sandbox() ? "sandbox_init_point" : "init_point").asString("");
         if (url.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Não foi possível iniciar o pagamento agora. Tente novamente.");
         }
-        pedido.setMpPreferenceId(resposta.path("id").asText(null));
+        pedido.setMpPreferenceId(resposta.path("id").asString(null));
         pedidoRepository.save(pedido);
         return new CheckoutResponse(pedido.getId(), url, false);
     }
@@ -153,18 +153,18 @@ public class PagamentoService {
         if (!AssinaturaMercadoPago.valida(segredoWebhook, dataId, xSignature, xRequestId)) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Assinatura inválida");
         }
-        String tipoEvento = tipo != null ? tipo : (corpo != null ? corpo.path("type").asText("") : "");
+        String tipoEvento = tipo != null ? tipo : (corpo != null ? corpo.path("type").asString("") : "");
         if (!"payment".equals(tipoEvento) || !dataId.matches("\\d{1,20}")) {
             return; // evento que não nos interessa
         }
         // Nunca confiamos no corpo do webhook: consultamos o pagamento direto no Mercado Pago.
         JsonNode pagamento = mp.buscarPagamento(dataId);
         processarPagamento(
-                pagamento.path("external_reference").asText(""),
+                pagamento.path("external_reference").asString(""),
                 dataId,
-                pagamento.path("status").asText(""),
+                pagamento.path("status").asString(""),
                 pagamento.path("transaction_amount").decimalValue(),
-                pagamento.path("currency_id").asText(""));
+                pagamento.path("currency_id").asString(""));
     }
 
     void processarPagamento(String referencia, String paymentId, String status, BigDecimal valor, String moeda) {

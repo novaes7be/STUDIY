@@ -1,6 +1,6 @@
 package com.studiy.backend.controller;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import com.studiy.backend.dto.PagamentoDtos;
 import com.studiy.backend.security.UsuarioAtual;
 import com.studiy.backend.service.PagamentoService;
