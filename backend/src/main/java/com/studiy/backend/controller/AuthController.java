@@ -22,9 +22,12 @@ public class AuthController {
     private final com.studiy.backend.security.UsuarioAtual usuarioAtual;
     private final SessaoService sessaoService;
 
+    private final com.studiy.backend.i18n.TradutorMensagens tradutor;
+
     public AuthController(AuthService authService, com.studiy.backend.security.UsuarioAtual usuarioAtual,
-                          SessaoService sessaoService) {
+                          SessaoService sessaoService, com.studiy.backend.i18n.TradutorMensagens tradutor) {
         this.authService = authService;
+        this.tradutor = tradutor;
         this.usuarioAtual = usuarioAtual;
         this.sessaoService = sessaoService;
     }
@@ -33,7 +36,7 @@ public class AuthController {
     @PostMapping("/registrar")
     @ResponseStatus(org.springframework.http.HttpStatus.ACCEPTED)
     public MensagemResponse registrar(@Valid @RequestBody RegisterRequest request) {
-        return new MensagemResponse(authService.registrar(request));
+        return new MensagemResponse(tradutor.traduzir(authService.registrar(request)));
     }
 
     /** Sessão vai em cookies HttpOnly; o corpo traz só dados exibíveis. */
@@ -58,7 +61,7 @@ public class AuthController {
 
     @PostMapping("/esqueci-senha")
     public MensagemResponse esqueciSenha(@Valid @RequestBody ForgotPasswordRequest request) {
-        return new MensagemResponse(authService.esqueciSenha(request));
+        return new MensagemResponse(tradutor.traduzir(authService.esqueciSenha(request)));
     }
 
     @PostMapping("/redefinir-senha")
@@ -73,7 +76,7 @@ public class AuthController {
 
     @PostMapping("/reenviar-verificacao")
     public MensagemResponse reenviarVerificacao(@Valid @RequestBody ForgotPasswordRequest request) {
-        return new MensagemResponse(authService.reenviarVerificacao(request));
+        return new MensagemResponse(tradutor.traduzir(authService.reenviarVerificacao(request)));
     }
 
     @PostMapping("/logout")

@@ -42,7 +42,8 @@
 
   async function bruto(path, opts) {
     var metodo = opts.method || 'GET';
-    var headers = {};
+    // O servidor responde no idioma da página (mensagens de erro e e-mails); sem isso, português.
+    var headers = { 'Accept-Language': document.documentElement.lang || 'pt-BR' };
     var body;
     if (opts.form) { body = opts.form; }
     else if (opts.body !== undefined) { headers['Content-Type'] = 'application/json'; body = JSON.stringify(opts.body); }

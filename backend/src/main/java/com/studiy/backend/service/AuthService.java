@@ -1,5 +1,6 @@
 package com.studiy.backend.service;
 
+import com.studiy.backend.i18n.Idioma;
 import com.studiy.backend.dto.ForgotPasswordRequest;
 import com.studiy.backend.dto.LoginRequest;
 import com.studiy.backend.dto.RegisterRequest;
@@ -81,7 +82,7 @@ public class AuthService {
         String senhaHash = passwordEncoder.encode(request.senha()); // sempre, para o tempo não denunciar o caminho
 
         if (usuarioRepository.existsByEmail(email)) {
-            emailService.enviarAvisoContaExistente(email);
+            emailService.enviarAvisoContaExistente(email, Idioma.doPedido());
             return MSG_GENERICA_CADASTRO;
         }
         Usuario usuario = Usuario.builder()
@@ -91,13 +92,14 @@ public class AuthService {
                 .plano(Plano.FREE) // o plano NUNCA vem do cliente
                 .termosAceitosEm(LocalDateTime.now())
                 .termosVersao(versaoTermos)
+                .idioma(Idioma.doPedido())
                 .emailVerificado(false)
                 .onboardingConcluido(false)
                 .build();
         try {
             usuarioRepository.saveAndFlush(usuario);
         } catch (DataIntegrityViolationException corrida) { // dois cadastros simultâneos do mesmo e-mail
-            emailService.enviarAvisoContaExistente(email);
+            emailService.enviarAvisoContaExistente(email, Idioma.doPedido());
             return MSG_GENERICA_CADASTRO;
         }
         enviarVerificacao(usuario);
@@ -128,7 +130,8 @@ public class AuthService {
                 throw credenciaisInvalidas();
             }
             bloqueio.limpar(usuario);
-            gamificacaoService.registrarLogin(usuario); // salva a entidade (inclui o contador zerado)
+            usuario.setIdioma(Idioma.doPedido());       // o idioma da página em que entrou
+            gamificacaoService.registrarLogin(usuario); // salva a entidade (inclui o contador zerado e o idioma)
             return usuario;
         } finally {
             aguardarTempoMinimo(inicio);
@@ -174,7 +177,7 @@ public class AuthService {
         usuario.setResetTokenHash(sha256(token));
         usuario.setResetTokenExpira(LocalDateTime.now().plusMinutes(30));
         usuarioRepository.save(usuario);
-        emailService.enviarResetSenha(usuario.getEmail(), token);
+        emailService.enviarResetSenha(usuario.getEmail(), token, Idioma.doPedido());
 
         if (exporTokenResetDev) {
             return "Modo desenvolvimento — seu token: " + token;
@@ -205,7 +208,7 @@ public class AuthService {
         usuario.setVerifTokenHash(sha256(token));
         usuario.setVerifTokenExpira(LocalDateTime.now().plusHours(24));
         usuarioRepository.save(usuario);
-        emailService.enviarVerificacao(usuario.getEmail(), token);
+        emailService.enviarVerificacao(usuario.getEmail(), token, Idioma.doPedido());
     }
 
     public void verificarEmail(String token) {
