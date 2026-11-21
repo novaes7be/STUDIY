@@ -33,11 +33,11 @@ class GeradorConteudoTest {
     void resumoDePdfLongoLeTodasAsPartesEJuntaNoFinal() {
         AnthropicService ia = mock(AnthropicService.class);
         List<String> enviados = new CopyOnWriteArrayList<>();
-        when(ia.chamar(eq(Tarefa.RESUMO_PARTE), anyString(), anyString(), anyInt(), anyList())).thenAnswer(inv -> {
+        when(ia.chamar(eq(Tarefa.RESUMO_PARTE), anyString(), anyString(), anyInt(), anyList(), anyString())).thenAnswer(inv -> {
             enviados.add(inv.getArgument(1));
             return resp("- anotacao");
         });
-        when(ia.chamar(eq(Tarefa.RESUMO_FINAL), anyString(), anyString(), anyInt(), anyList())).thenReturn(resp("# Resumo final"));
+        when(ia.chamar(eq(Tarefa.RESUMO_FINAL), anyString(), anyString(), anyInt(), anyList(), anyString())).thenReturn(resp("# Resumo final"));
 
         String md = pdfLongo();
         GeradorConteudo.Resultado r = new GeradorConteudo(ia).gerar(TipoGeracao.RESUMO, md);
@@ -50,25 +50,25 @@ class GeradorConteudoTest {
             assertThat(enviados).anySatisfy(t -> assertThat(t).contains(marca));
         }
         assertThat(r.chamadas()).hasSize(enviados.size() + 1); // partes + junção final
-        verify(ia, never()).chamar(eq(Tarefa.RESUMO), anyString(), anyString(), anyInt(), anyList());
+        verify(ia, never()).chamar(eq(Tarefa.RESUMO), anyString(), anyString(), anyInt(), anyList(), anyString());
     }
 
     @Test
     void pdfCurtoFazUmaChamadaSoNoModeloDoResumo() {
         AnthropicService ia = mock(AnthropicService.class);
-        when(ia.chamar(eq(Tarefa.RESUMO), anyString(), anyString(), anyInt(), anyList())).thenReturn(resp("ok"));
+        when(ia.chamar(eq(Tarefa.RESUMO), anyString(), anyString(), anyInt(), anyList(), anyString())).thenReturn(resp("ok"));
 
         GeradorConteudo.Resultado r = new GeradorConteudo(ia).gerar(TipoGeracao.RESUMO, "# A\n\nTexto curto.");
 
         assertThat(r.chamadas()).hasSize(1);
-        verify(ia).chamar(Tarefa.RESUMO, "# A\n\nTexto curto.", "", 0, List.of());
+        verify(ia).chamar(Tarefa.RESUMO, "# A\n\nTexto curto.", "", 0, List.of(), "pt-BR");
     }
 
     @Test
     void cadaParteLevaSoAsFigurasQueCita() {
         AnthropicService ia = mock(AnthropicService.class);
         Map<String, List<Integer>> figurasPorParte = new java.util.concurrent.ConcurrentHashMap<>();
-        when(ia.chamar(eq(Tarefa.FLASHCARD), anyString(), anyString(), anyInt(), anyList())).thenAnswer(inv -> {
+        when(ia.chamar(eq(Tarefa.FLASHCARD), anyString(), anyString(), anyInt(), anyList(), anyString())).thenAnswer(inv -> {
             String texto = inv.getArgument(1);
             List<AnthropicService.Figura> figs = inv.getArgument(4);
             String cap = texto.contains("Capitulo 1") ? "c1" : texto.contains("Capitulo 3") ? "c3" : "outro";
@@ -84,7 +84,7 @@ class GeradorConteudoTest {
                 1, new AnthropicService.Figura(1, "image/png", "AAA"),
                 2, new AnthropicService.Figura(2, "image/png", "BBB"));
 
-        new GeradorConteudo(ia).gerar(TipoGeracao.FLASHCARD, md, figuras);
+        new GeradorConteudo(ia).gerar(TipoGeracao.FLASHCARD, md, figuras, "pt-BR");
 
         assertThat(figurasPorParte.get("c1")).containsExactly(1);
         assertThat(figurasPorParte.get("c3")).containsExactly(2);
@@ -103,7 +103,7 @@ class GeradorConteudoTest {
     @Test
     void falhaNumaParteAindaDevolveAsChamadasCobradas() {
         AnthropicService ia = mock(AnthropicService.class);
-        when(ia.chamar(eq(Tarefa.FLASHCARD), anyString(), anyString(), anyInt(), anyList())).thenAnswer(inv -> {
+        when(ia.chamar(eq(Tarefa.FLASHCARD), anyString(), anyString(), anyInt(), anyList(), anyString())).thenAnswer(inv -> {
             if (((String) inv.getArgument(1)).contains("Capitulo 2")) throw new IllegalStateException("caiu");
             return resp("Pergunta: x? | Resposta: y");
         });

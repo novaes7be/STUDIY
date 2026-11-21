@@ -1,5 +1,6 @@
 package com.studiy.backend.service;
 
+import com.studiy.backend.i18n.Idioma;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.studiy.backend.model.TipoGeracao;
 import org.springframework.beans.factory.annotation.Value;
@@ -82,11 +83,15 @@ public class AnthropicService {
      * GeradorConteudo); contexto diz de onde vem a parte e quantidade é o nº de cartões/questões.
      */
     public RespostaIa chamar(Tarefa tarefa, String material, String contexto, int quantidade) {
-        return chamar(tarefa, material, contexto, quantidade, List.of());
+        return chamar(tarefa, material, contexto, quantidade, List.of(), Idioma.PT);
     }
 
-    /** Com figuras: vão como imagens antes do texto, cada uma identificada pelo número que o texto cita. */
-    public RespostaIa chamar(Tarefa tarefa, String material, String contexto, int quantidade, List<Figura> figuras) {
+    /**
+     * Com figuras: vão como imagens antes do texto, cada uma identificada pelo número que o texto cita.
+     * idioma (pt-BR, en, es) é o idioma em que o resumo, os cartões e as questões são escritos.
+     */
+    public RespostaIa chamar(Tarefa tarefa, String material, String contexto, int quantidade, List<Figura> figuras,
+                             String idioma) {
         if (apiKey == null || apiKey.isBlank()) {
             // Sem chave configurada: devolve uma resposta de teste, sem gastar nada,
             // pra dar pra testar o fluxo inteiro do app antes de pagar pela API.
@@ -98,7 +103,7 @@ public class AnthropicService {
         String onde = contexto == null || contexto.isBlank() ? "" : "<secao>" + contexto + "</secao>\n";
         Map<String, Object> body = new java.util.HashMap<>();
         body.put("model", modelo);
-        body.put("system", promptSistemaPara(tarefa, quantidade) + REGRA_SEGURANCA);
+        body.put("system", promptSistemaPara(tarefa, quantidade, idioma) + REGRA_SEGURANCA);
         body.put("messages", List.of(Map.of("role", "user", "content", conteudo(onde, material, figuras))));
         body.put("max_tokens", maxTokens(tarefa, quantidade));
         if (!effort.isBlank()) {
@@ -154,14 +159,23 @@ public class AnthropicService {
         };
     }
 
-    private static String promptSistemaPara(Tarefa tarefa, int quantidade) {
+    /** Fixo por tarefa e idioma: até 3 variações por tarefa, cada uma aproveitando o cache de prompt. */
+    static String promptSistemaPara(Tarefa tarefa, int quantidade, String idioma) {
         int min = Math.max(1, quantidade - 3);
+        String lingua = switch (idioma == null ? Idioma.PT : idioma) {
+            case Idioma.EN -> "inglês";
+            case Idioma.ES -> "espanhol";
+            default -> "português";
+        };
+        // O parser (GeracaoService) lê "Pergunta: ... | Resposta: ...": os rótulos não mudam com o idioma.
+        String rotulos = Idioma.PT.equals(idioma) || idioma == null ? ""
+                : " Mantenha os rótulos 'Pergunta:' e 'Resposta:' exatamente assim, em português; só o conteúdo vai em " + lingua + ".";
         return switch (tarefa) {
-            case RESUMO -> "Você é um assistente de estudos. Resuma o material enviado em Markdown, com títulos e tópicos claros e didáticos, em português. Cubra todos os conceitos essenciais, definições e relações importantes, na ordem do material.";
-            case RESUMO_PARTE -> "Você é um assistente de estudos. O material é UMA PARTE de um documento maior (a seção de origem vem em <secao>). Extraia em tópicos Markdown, em português, todos os conceitos, definições, fórmulas, datas, nomes, exemplos e relações desta parte. Não omita nada que possa cair numa prova; seja conciso em cada item. Não escreva introdução nem conclusão.";
-            case RESUMO_FINAL -> "Você é um assistente de estudos. O material são anotações, em ordem, de todas as partes de um mesmo documento. Monte UM resumo didático em Markdown, em português, com títulos e tópicos, seguindo a ordem do documento. Junte o que se repete, mas não deixe de fora nenhum conceito presente nas anotações.";
-            case FLASHCARD -> "Você é um assistente de estudos. A partir do material enviado, gere de " + min + " a " + quantidade + " flashcards no formato 'Pergunta: ... | Resposta: ...', um por linha, em português, cobrindo os pontos importantes de todo o material (não só do começo). Não repita perguntas.";
-            case SIMULADO -> "Você é um assistente de estudos. A partir do material enviado, gere " + quantidade + " questões de múltipla escolha (com gabarito) em português, no estilo de simulado, cobrindo os pontos principais de todo o material.";
+            case RESUMO -> "Você é um assistente de estudos. Resuma o material enviado em Markdown, com títulos e tópicos claros e didáticos, em " + lingua + ". Cubra todos os conceitos essenciais, definições e relações importantes, na ordem do material.";
+            case RESUMO_PARTE -> "Você é um assistente de estudos. O material é UMA PARTE de um documento maior (a seção de origem vem em <secao>). Extraia em tópicos Markdown, em " + lingua + ", todos os conceitos, definições, fórmulas, datas, nomes, exemplos e relações desta parte. Não omita nada que possa cair numa prova; seja conciso em cada item. Não escreva introdução nem conclusão.";
+            case RESUMO_FINAL -> "Você é um assistente de estudos. O material são anotações, em ordem, de todas as partes de um mesmo documento. Monte UM resumo didático em Markdown, em " + lingua + ", com títulos e tópicos, seguindo a ordem do documento. Junte o que se repete, mas não deixe de fora nenhum conceito presente nas anotações.";
+            case FLASHCARD -> "Você é um assistente de estudos. A partir do material enviado, gere de " + min + " a " + quantidade + " flashcards no formato 'Pergunta: ... | Resposta: ...', um por linha, em " + lingua + ", cobrindo os pontos importantes de todo o material (não só do começo). Não repita perguntas." + rotulos;
+            case SIMULADO -> "Você é um assistente de estudos. A partir do material enviado, gere " + quantidade + " questões de múltipla escolha (com gabarito) em " + lingua + ", no estilo de simulado, cobrindo os pontos principais de todo o material.";
         };
     }
 

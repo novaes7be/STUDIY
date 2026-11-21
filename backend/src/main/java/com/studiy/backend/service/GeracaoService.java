@@ -1,5 +1,6 @@
 package com.studiy.backend.service;
 
+import com.studiy.backend.i18n.Idioma;
 import com.studiy.backend.dto.GerarRequest;
 import com.studiy.backend.dto.GerarResponse;
 import com.studiy.backend.model.*;
@@ -84,7 +85,7 @@ public class GeracaoService {
         try {
             Map<Integer, AnthropicService.Figura> figuras = pdfService.figuras(pdf).stream().collect(Collectors.toMap(
                     PdfImagem::getNumero, f -> new AnthropicService.Figura(f.getNumero(), f.getMime(), f.getDados())));
-            resultado = geradorConteudo.gerar(tipo, pdf.getTextoExtraido(), figuras);
+            resultado = geradorConteudo.gerar(tipo, pdf.getTextoExtraido(), figuras, Idioma.doPedido()); // o idioma da página
         } catch (GeradorConteudo.FalhaNaGeracao e) {
             // as partes que responderam (e recusas) foram cobradas: o custo fica registrado
             e.cobradas().forEach(r -> iaCustoService.registrar(usuario, tipo, r));

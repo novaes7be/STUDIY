@@ -1,5 +1,6 @@
 package com.studiy.backend.service;
 
+import com.studiy.backend.i18n.Idioma;
 import com.studiy.backend.model.TipoGeracao;
 import com.studiy.backend.service.AnthropicService.Tarefa;
 import com.studiy.backend.service.DivisorDeTexto.Parte;
@@ -62,20 +63,24 @@ public class GeradorConteudo {
     }
 
     public Resultado gerar(TipoGeracao tipo, String markdown) {
-        return gerar(tipo, markdown, Map.of());
+        return gerar(tipo, markdown, Map.of(), Idioma.PT);
     }
 
-    /** figuras: as do PDF, por número; cada parte leva só as que ela cita (imagem:N). */
-    public Resultado gerar(TipoGeracao tipo, String markdown, Map<Integer, AnthropicService.Figura> figuras) {
+    /**
+     * figuras: as do PDF, por número; cada parte leva só as que ela cita (imagem:N).
+     * idioma: em que o conteúdo é escrito. Vai explícito porque as partes rodam em outras threads,
+     * onde o idioma do pedido HTTP (LocaleContextHolder) não chega.
+     */
+    public Resultado gerar(TipoGeracao tipo, String markdown, Map<Integer, AnthropicService.Figura> figuras, String idioma) {
         List<Parte> partes = DivisorDeTexto.dividir(markdown, TAMANHO_PARTE);
         List<RespostaIa> chamadas = Collections.synchronizedList(new ArrayList<>());
         try {
             String texto = switch (tipo) {
                 case FLASHCARD -> juntarFlashcards(porParte(partes, chamadas,
-                        p -> ia.chamar(Tarefa.FLASHCARD, p.texto(), p.contexto(), cartoesPara(p.texto()), citadas(p, figuras))));
+                        p -> ia.chamar(Tarefa.FLASHCARD, p.texto(), p.contexto(), cartoesPara(p.texto()), citadas(p, figuras), idioma)));
                 case SIMULADO -> juntarSimulados(porParte(partes, chamadas,
-                        p -> ia.chamar(Tarefa.SIMULADO, p.texto(), p.contexto(), partes.size() == 1 ? 5 : 3, citadas(p, figuras))));
-                case RESUMO -> resumir(partes, chamadas, figuras);
+                        p -> ia.chamar(Tarefa.SIMULADO, p.texto(), p.contexto(), partes.size() == 1 ? 5 : 3, citadas(p, figuras), idioma)));
+                case RESUMO -> resumir(partes, chamadas, figuras, idioma);
             };
             return new Resultado(texto, List.copyOf(chamadas));
         } catch (FalhaNaGeracao e) {
@@ -88,14 +93,15 @@ public class GeradorConteudo {
         }
     }
 
-    private String resumir(List<Parte> partes, List<RespostaIa> chamadas, Map<Integer, AnthropicService.Figura> figuras) {
+    private String resumir(List<Parte> partes, List<RespostaIa> chamadas, Map<Integer, AnthropicService.Figura> figuras,
+                           String idioma) {
         if (partes.size() == 1) {
-            RespostaIa r = ia.chamar(Tarefa.RESUMO, partes.get(0).texto(), "", 0, citadas(partes.get(0), figuras));
+            RespostaIa r = ia.chamar(Tarefa.RESUMO, partes.get(0).texto(), "", 0, citadas(partes.get(0), figuras), idioma);
             chamadas.add(r);
             return r.texto();
         }
         List<String> anotacoes = porParte(partes, chamadas,
-                p -> ia.chamar(Tarefa.RESUMO_PARTE, p.texto(), p.contexto(), 0, citadas(p, figuras)));
+                p -> ia.chamar(Tarefa.RESUMO_PARTE, p.texto(), p.contexto(), 0, citadas(p, figuras), idioma));
         // A junção final só lê as anotações: as figuras já foram "lidas" e descritas nas partes.
         StringBuilder juntas = new StringBuilder();
         for (int i = 0; i < anotacoes.size(); i++) {
@@ -104,7 +110,7 @@ public class GeradorConteudo {
             if (!ctx.isBlank()) juntas.append(" (").append(ctx).append(')');
             juntas.append("\n\n").append(anotacoes.get(i).strip()).append("\n\n");
         }
-        RespostaIa fim = ia.chamar(Tarefa.RESUMO_FINAL, juntas.toString().strip(), "", 0, List.of());
+        RespostaIa fim = ia.chamar(Tarefa.RESUMO_FINAL, juntas.toString().strip(), "", 0, List.of(), idioma);
         chamadas.add(fim);
         return fim.texto();
     }
