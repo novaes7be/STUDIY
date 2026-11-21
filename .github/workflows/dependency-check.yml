@@ -2,6 +2,9 @@ name: Auditoria de dependências
 on:
   pull_request:
     paths: ['backend/pom.xml']
+  push:
+    branches: [main]
+    paths: ['backend/pom.xml']
   schedule:
     - cron: '41 5 * * 1'
   workflow_dispatch:
@@ -26,7 +29,7 @@ jobs:
           path: ~/.m2/repository/org/owasp/dependency-check-data
           key: nvd-${{ github.run_id }}
           restore-keys: nvd-
-      # NVD_API_KEY (opcional, secret do repositório) deixa o download da base muito mais rápido.
+      # NVD_API_KEY (secret do repositório): sem ela o NVD responde 429 e o plugin 13+ nem inicia.
       - run: mvn -B -Paudit verify -DskipTests
         working-directory: backend
         env:
