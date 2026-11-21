@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.3.4</version>
+        <version>4.1.3</version>
         <relativePath/>
     </parent>
 
@@ -19,10 +19,10 @@
 
     <properties>
         <java.version>17</java.version>
-        <!-- 1.19 (padrão do Boot 3.3) não fala com Docker 29+ -->
+        <!-- 1.19 não fala com Docker 29+; a 2.x (padrão do Boot 4) renomeia os artefatos -->
         <testcontainers.version>1.21.4</testcontainers.version>
         <bucket4j.version>8.22.0</bucket4j.version>
-        <!-- Lombok novo: o padrão do Spring Boot 3.3 quebra no JDK 24/25 -->
+        <!-- Lombok novo: versões antigas quebram no JDK 24/25 -->
         <lombok.version>1.18.40</lombok.version>
         <!-- api, impl e jackson do jjwt sempre na mesma versão: o Dependabot sobe um de cada vez -->
         <jjwt.version>0.13.0</jjwt.version>
@@ -31,7 +31,7 @@
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
+            <artifactId>spring-boot-starter-webmvc</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -52,10 +52,10 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Migrations de banco -->
+        <!-- Migrations de banco (no Boot 4 a configuração automática do Flyway vem do starter) -->
         <dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-core</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-flyway</artifactId>
         </dependency>
         <dependency>
             <groupId>org.flywaydb</groupId>
@@ -122,7 +122,13 @@
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-            <version>2.6.0</version>
+            <version>3.2.1</version>
+        </dependency>
+        <!-- MockMvc nos testes (no Boot 4 saiu do spring-boot-starter-test) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc-test</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework.security</groupId>
