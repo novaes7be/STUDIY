@@ -1,7 +1,7 @@
 package com.studiy.backend.service;
 
 import com.studiy.backend.i18n.Idioma;
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import com.studiy.backend.model.TipoGeracao;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -193,15 +193,15 @@ public class AnthropicService {
         if (resposta == null || !resposta.path("content").isArray()) {
             throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Resposta inesperada da IA");
         }
-        String motivo = resposta.path("stop_reason").asText("");
+        String motivo = resposta.path("stop_reason").asString("");
         JsonNode uso = resposta.path("usage");
         StringBuilder sb = new StringBuilder();
         for (JsonNode bloco : resposta.path("content")) {
-            if ("text".equals(bloco.path("type").asText())) {
-                sb.append(bloco.path("text").asText());
+            if ("text".equals(bloco.path("type").asString())) {
+                sb.append(bloco.path("text").asString());
             }
         }
-        RespostaIa r = new RespostaIa(sb.toString(), resposta.path("model").asText(modelo),
+        RespostaIa r = new RespostaIa(sb.toString(), resposta.path("model").asString(modelo),
                 uso.path("input_tokens").asInt(0), uso.path("output_tokens").asInt(0),
                 uso.path("cache_creation_input_tokens").asInt(0), uso.path("cache_read_input_tokens").asInt(0),
                 motivo);

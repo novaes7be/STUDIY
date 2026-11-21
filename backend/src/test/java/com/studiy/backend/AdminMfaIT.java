@@ -1,6 +1,6 @@
 package com.studiy.backend;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import com.studiy.backend.model.Papel;
 import com.studiy.backend.model.Usuario;
 import com.studiy.backend.security.Totp;
@@ -57,8 +57,8 @@ class AdminMfaIT extends IntegracaoBase {
     void fluxoCompletoConfigurarAtivarEVerificar() throws Exception {
         Sessao s = promoverAdmin();
         JsonNode cfg = ler(mvc.perform(s.em(post("/api/auth/mfa/configurar"))).andExpect(status().isOk()).andReturn());
-        String segredo = cfg.path("segredo").asText();
-        assertThat(cfg.path("uri").asText()).startsWith("otpauth://totp/Studiy:");
+        String segredo = cfg.path("segredo").asString();
+        assertThat(cfg.path("uri").asString()).startsWith("otpauth://totp/Studiy:");
         // o segredo fica cifrado no banco (leitura crua da coluna, sem o conversor JPA)
         String cru = jdbc.queryForObject("select mfa_segredo from usuarios where email = ?", String.class, s.email());
         assertThat(cru).startsWith("enc:v1:").doesNotContain(segredo);
@@ -74,11 +74,11 @@ class AdminMfaIT extends IntegracaoBase {
         mvc.perform(get("/api/admin/usuarios").cookie(acessoComMfa)).andExpect(status().isOk());
         mvc.perform(get("/api/admin/pedidos").cookie(acessoComMfa)).andExpect(status().isOk());
         JsonNode uso = ler(mvc.perform(get("/api/admin/uso-ia").cookie(acessoComMfa)).andExpect(status().isOk()).andReturn());
-        assertThat(uso.path("custoTotal").asText()).startsWith("US$ ");
+        assertThat(uso.path("custoTotal").asString()).startsWith("US$ ");
         JsonNode m = ler(mvc.perform(get("/api/admin/metricas?dias=7").cookie(acessoComMfa)).andExpect(status().isOk()).andReturn());
         assertThat(m.path("usuarios").path("total").asLong()).isPositive();
         assertThat(m.path("usuarios").path("cadastrosPorDia")).hasSize(7); // dias sem cadastro vêm com zero
-        assertThat(m.path("vendas").path("receitaPeriodo").asText()).startsWith("R$");
+        assertThat(m.path("vendas").path("receitaPeriodo").asString()).startsWith("R$");
         mvc.perform(get("/api/admin/metricas").cookie(s.acesso())).andExpect(status().isForbidden());
 
         // A sessão antiga (só senha) continua sem acesso; o MFA renova junto com o refresh
@@ -99,7 +99,7 @@ class AdminMfaIT extends IntegracaoBase {
     @Test
     void segredoMfaNaoPodeSerReconfiguradoDepoisDeAtivo() throws Exception {
         Sessao s = promoverAdmin();
-        String segredo = ler(mvc.perform(s.em(post("/api/auth/mfa/configurar"))).andReturn()).path("segredo").asText();
+        String segredo = ler(mvc.perform(s.em(post("/api/auth/mfa/configurar"))).andReturn()).path("segredo").asString();
         codigo(s, "ativar", codigoAtual(segredo, 0));
         mvc.perform(s.em(post("/api/auth/mfa/configurar"))).andExpect(status().isConflict());
     }

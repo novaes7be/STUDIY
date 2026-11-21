@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.web.servlet.request.AbstractMockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import java.util.Map;
@@ -62,7 +63,7 @@ class IsolamentoUsuariosIT extends IntegracaoBase {
                 .content(corpo(Map.of("metodo", "PIX")))).andExpect(status().isOk()).andReturn()).path("pedidoId").asText();
     }
 
-    private void beto404(MockHttpServletRequestBuilder req) throws Exception {
+    private <B extends AbstractMockHttpServletRequestBuilder<B>> void beto404(B req) throws Exception {
         mvc.perform(beto.em(req)).andExpect(status().isNotFound());
     }
 

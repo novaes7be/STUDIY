@@ -1,6 +1,6 @@
 package com.studiy.backend.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -63,12 +63,12 @@ public class ExtratorPdfClient {
             if (r == null || !r.path("markdown").isTextual()) return Optional.empty();
             List<Figura> figuras = new ArrayList<>();
             for (JsonNode i : r.path("imagens")) {
-                String mime = i.path("mime").asText();
+                String mime = i.path("mime").asString();
                 if (!mime.matches("image/(png|jpeg|webp|gif)")) continue; // só o que a API de IA aceita
                 figuras.add(new Figura(i.path("id").asInt(), mime, i.path("largura").asInt(),
-                        i.path("altura").asInt(), i.path("base64").asText()));
+                        i.path("altura").asInt(), i.path("base64").asString()));
             }
-            return Optional.of(new Extraido(r.path("markdown").asText(), figuras, r.path("motor").asText("pymupdf4llm")));
+            return Optional.of(new Extraido(r.path("markdown").asString(), figuras, r.path("motor").asString("pymupdf4llm")));
         } catch (Exception e) {
             log.warn("Extrator de PDF indisponível ou falhou ({}); usando PDFBox", e.getClass().getSimpleName());
             return Optional.empty();
