@@ -54,7 +54,7 @@
     try {
       return await fetch(BASE + path, { method: metodo, headers: headers, body: body, credentials: 'include' });
     } catch (e) {
-      throw new ApiError(0, 'Não foi possível conectar ao servidor (' + (BASE || window.location.origin) + '). Confirme que o backend está rodando e tente de novo.');
+      throw new ApiError(0, t('api.sem_conexao', 'Não foi possível conectar ao servidor ({origem}). Confirme que o backend está rodando e tente de novo.', { origem: BASE || window.location.origin }));
     }
   }
 
@@ -77,7 +77,7 @@
       if (res.status === 401) {
         hint.clear();
         window.location.replace('login.html');
-        throw new ApiError(401, 'Sessão expirada. Entre novamente.');
+        throw new ApiError(401, t('api.sessao_expirada', 'Sessão expirada. Entre novamente.'));
       }
     }
     var data = null;
@@ -85,7 +85,7 @@
       try { data = await res.json(); } catch (e) { data = null; }
     }
     if (!res.ok) {
-      var msg = (data && data.erro) || 'Algo deu errado. Tente novamente.';
+      var msg = (data && data.erro) || t('api.erro_generico', 'Algo deu errado. Tente novamente.');
       if (data && data.campos) msg = Object.values(data.campos).join(' ');
       throw new ApiError(res.status, msg, data && data.campos);
     }
@@ -100,11 +100,11 @@
       if (res.status === 401) {
         hint.clear();
         window.location.replace('login.html');
-        throw new ApiError(401, 'Sessão expirada. Entre novamente.');
+        throw new ApiError(401, t('api.sessao_expirada', 'Sessão expirada. Entre novamente.'));
       }
     }
     if (!res.ok) {
-      throw new ApiError(res.status, res.status === 404 ? 'Arquivo não encontrado.' : 'Não foi possível baixar. Tente novamente.');
+      throw new ApiError(res.status, res.status === 404 ? t('api.arquivo_404', 'Arquivo não encontrado.') : t('api.erro_baixar', 'Não foi possível baixar. Tente novamente.'));
     }
     return { blob: await res.blob(), tipo: res.headers.get('content-type') || '' };
   }

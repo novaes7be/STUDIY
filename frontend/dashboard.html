@@ -6,7 +6,7 @@
 <!-- CSP gerada por deploy/build-front.sh (connect-src por ambiente) -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self' __API_ORIGIN__; object-src 'none'; base-uri 'none'; form-action 'self'">
 <meta name="referrer" content="no-referrer">
-<title>Painel — Studiy</title>
+<title data-i18n="painel.titulo">Painel — Studiy</title>
 <link rel="preload" href="fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/fonts.css">
 <link rel="stylesheet" href="css/tokens.css">
@@ -14,32 +14,33 @@
 <link rel="stylesheet" href="css/motion.css">
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/painel.css">
+<script src="js/t.js"></script>
 <script src="js/theme.js"></script>
 <script src="js/motion.js" defer></script>
 <script src="js/botao.js" defer></script>
 </head>
 <body>
 <div class="app" id="app" data-subject="verde">
-  <aside class="side" aria-label="Menu lateral">
+  <aside class="side" aria-label="Menu lateral" data-i18n-attr="aria-label:painel.menu_lateral">
     <a class="logo" href="index.html">STUDIY<span class="logo-dot">.</span></a>
-    <a class="home-link" href="index.html">← Voltar para a home</a>
-    <nav aria-label="Matérias"><h2>Matérias</h2><div class="subj-list" id="subjectList"></div></nav>
-    <nav class="side-extra" aria-label="Comunidade"><button class="subj" id="rankingBtn" type="button" aria-current="false">Ranking</button></nav>
-    <div class="side-soon" aria-label="Em breve" role="group">
-      <span class="subj is-soon" aria-disabled="true">Questionário <small>Em breve</small></span>
+    <a class="home-link" href="index.html" data-i18n="painel.voltar_home">← Voltar para a home</a>
+    <nav aria-label="Matérias" data-i18n-attr="aria-label:painel.materias"><h2 data-i18n="painel.materias">Matérias</h2><div class="subj-list" id="subjectList"></div></nav>
+    <nav class="side-extra" aria-label="Comunidade" data-i18n-attr="aria-label:painel.comunidade"><button class="subj" id="rankingBtn" type="button" aria-current="false" data-i18n="painel.ranking">Ranking</button></nav>
+    <div class="side-soon" aria-label="Em breve" role="group" data-i18n-attr="aria-label:comum.em_breve">
+      <span class="subj is-soon" aria-disabled="true" data-i18n="painel.questionario">Questionário <small>Em breve</small></span>
     </div>
     <div class="side-foot">
       <div class="usage">
-        <div class="top"><span id="planName">Plano</span><a id="upgradeLink" href="pagamento.html">Assinar Pro</a></div>
+        <div class="top"><span id="planName" data-i18n="painel.plano">Plano</span><a id="upgradeLink" href="pagamento.html" data-i18n="index.assinar_pro">Assinar Pro</a></div>
         <div class="bar on-surface"><span id="usageBar"></span></div>
         <p id="usageText"></p>
       </div>
       <div class="side-row">
-        <button class="profile-chip" id="accountBtn" type="button" aria-label="Abrir meu perfil">
+        <button class="profile-chip" id="accountBtn" type="button" aria-label="Abrir meu perfil" data-i18n-attr="aria-label:painel.abrir_perfil">
           <span class="avatar" id="sideAvatar" aria-hidden="true"></span>
-          <span class="profile-who"><strong id="sideName">Meu perfil</strong><small>Conta e privacidade</small></span>
+          <span class="profile-who"><strong id="sideName" data-i18n="painel.meu_perfil">Meu perfil</strong><small data-i18n="painel.conta_privacidade">Conta e privacidade</small></span>
         </button>
-        <button class="icon-btn" id="themeToggle" type="button" aria-label="Alternar tema claro/escuro"><svg class="i-moon" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg><svg class="i-sun" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
+        <details class="idioma-menu"><summary class="icon-btn" aria-label="Idioma: português" data-i18n-attr="aria-label:comum.idioma_atual"><span data-i18n="comum.idioma_sigla">PT</span></summary><div class="idioma-lista"><!--idiomas--></div></details><button class="icon-btn" id="themeToggle" type="button" aria-label="Alternar tema claro/escuro" data-i18n-attr="aria-label:comum.alternar_tema"><svg class="i-moon" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg><svg class="i-sun" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
       </div>
     </div>
   </aside>
@@ -48,7 +49,7 @@
       <h1 id="subjectTitle">Studiy</h1>
       <div class="head-actions">
         
-        <button class="btn btn-accent i-upload" id="uploadBtn" type="button" hidden>Enviar PDF</button>
+        <button class="btn btn-accent i-upload" id="uploadBtn" type="button" hidden data-i18n="painel.enviar_pdf">Enviar PDF</button>
         <input id="fileInput" type="file" accept="application/pdf,.pdf" hidden>
       </div>
     </div>
@@ -57,23 +58,23 @@
 </div>
 
 <dialog id="newDialog" aria-labelledby="newTitle">
-  <h2 id="newTitle">Nova matéria</h2>
+  <h2 id="newTitle" data-i18n="painel.nova_materia">Nova matéria</h2>
   <form id="newForm" method="dialog" novalidate>
     <div id="newMsg" class="msg error" role="alert" hidden></div>
-    <div class="field"><label for="newName">Nome</label><input id="newName" type="text" maxlength="100" required></div>
-    <fieldset class="swatches"><legend>Cor</legend><span id="newSwatches" class="swatches"></span></fieldset>
-    <div class="dlg-actions"><button class="btn btn-secondary" type="button" data-close>Cancelar</button><button class="btn btn-accent i-check" type="submit">Criar</button></div>
+    <div class="field"><label for="newName" data-i18n="auth.nome">Nome</label><input id="newName" type="text" maxlength="100" required></div>
+    <fieldset class="swatches"><legend data-i18n="painel.cor">Cor</legend><span id="newSwatches" class="swatches"></span></fieldset>
+    <div class="dlg-actions"><button class="btn btn-secondary" type="button" data-close data-i18n="painel.cancelar">Cancelar</button><button class="btn btn-accent i-check" type="submit" data-i18n="painel.criar">Criar</button></div>
   </form>
 </dialog>
 
 <dialog id="reviewDialog" aria-labelledby="revTitle">
-  <h2 id="revTitle">Revisão</h2>
+  <h2 id="revTitle" data-i18n="painel.revisao">Revisão</h2>
   <div id="reviewBody"></div>
-  <div class="dlg-actions"><button class="btn btn-secondary" type="button" data-close>Fechar</button></div>
+  <div class="dlg-actions"><button class="btn btn-secondary" type="button" data-close data-i18n="painel.fechar">Fechar</button></div>
 </dialog>
 
 <dialog id="accountDialog" class="wide profile" aria-labelledby="accTitle">
-  <h2 id="accTitle">Meu perfil</h2>
+  <h2 id="accTitle" data-i18n="painel.meu_perfil">Meu perfil</h2>
   <div id="accMsg" class="msg error" role="alert" hidden></div>
   <div class="acc-head">
     <div class="avatar lg" id="dlgAvatar" aria-hidden="true"></div>
@@ -81,57 +82,57 @@
       <p class="acc-name" id="dlgName"></p>
       <p class="empty" id="dlgEmail"></p>
       <div class="acc-actions">
-        <button class="btn btn-accent btn-sm i-upload" id="avatarBtn" type="button">Escolher foto</button>
-        <button class="btn btn-secondary btn-sm i-trash" id="avatarDel" type="button">Remover foto</button>
+        <button class="btn btn-accent btn-sm i-upload" id="avatarBtn" type="button" data-i18n="painel.escolher_foto">Escolher foto</button>
+        <button class="btn btn-secondary btn-sm i-trash" id="avatarDel" type="button" data-i18n="painel.remover_foto">Remover foto</button>
         <input id="avatarFile" type="file" accept="image/png,image/jpeg,image/webp" hidden>
       </div>
-      <p class="hint-text">PNG, JPEG ou WebP. A imagem é recortada em quadrado e reduzida automaticamente.</p>
+      <p class="hint-text" data-i18n="painel.foto_dica">PNG, JPEG ou WebP. A imagem é recortada em quadrado e reduzida automaticamente.</p>
     </div>
   </div>
 
   <form id="nameForm" class="acc-section" novalidate>
-    <div class="field"><label for="accNome">Nome</label><input id="accNome" type="text" maxlength="100" autocomplete="name" required></div>
-    <button class="btn btn-accent btn-sm i-check" type="submit">Salvar nome</button>
+    <div class="field"><label for="accNome" data-i18n="auth.nome">Nome</label><input id="accNome" type="text" maxlength="100" autocomplete="name" required></div>
+    <button class="btn btn-accent btn-sm i-check" type="submit" data-i18n="painel.salvar_nome">Salvar nome</button>
   </form>
 
   <form id="apelidoForm" class="acc-section" novalidate>
-    <div class="field"><label for="accApelido">Apelido no ranking</label><input id="accApelido" type="text" maxlength="20" autocomplete="nickname" spellcheck="false" aria-describedby="apelidoDica"><p class="hint" id="apelidoDica">De 3 a 20 letras, números, ponto, hífen ou sublinhado. Só o apelido aparece no ranking, nunca seu nome ou e-mail. Deixe vazio para sair do ranking.</p></div>
-    <button class="btn btn-accent btn-sm i-check" type="submit">Salvar apelido</button>
+    <div class="field"><label for="accApelido" data-i18n="painel.apelido">Apelido no ranking</label><input id="accApelido" type="text" maxlength="20" autocomplete="nickname" spellcheck="false" aria-describedby="apelidoDica"><p class="hint" id="apelidoDica" data-i18n="painel.apelido_dica">De 3 a 20 letras, números, ponto, hífen ou sublinhado. Só o apelido aparece no ranking, nunca seu nome ou e-mail. Deixe vazio para sair do ranking.</p></div>
+    <button class="btn btn-accent btn-sm i-check" type="submit" data-i18n="painel.salvar_apelido">Salvar apelido</button>
   </form>
 
   <details class="acc-section">
-    <summary>Alterar e-mail</summary>
+    <summary data-i18n="painel.alterar_email">Alterar e-mail</summary>
     <form id="emailForm" novalidate>
-      <div class="field"><label for="accNovoEmail">Novo e-mail</label><input id="accNovoEmail" type="email" maxlength="254" autocomplete="email" required></div>
-      <div class="field"><label for="accSenhaEmail">Senha atual</label><input id="accSenhaEmail" type="password" autocomplete="current-password" required></div>
-      <button class="btn btn-accent btn-sm i-check" type="submit">Alterar e-mail</button>
+      <div class="field"><label for="accNovoEmail" data-i18n="painel.novo_email">Novo e-mail</label><input id="accNovoEmail" type="email" maxlength="254" autocomplete="email" required></div>
+      <div class="field"><label for="accSenhaEmail" data-i18n="painel.senha_atual">Senha atual</label><input id="accSenhaEmail" type="password" autocomplete="current-password" required></div>
+      <button class="btn btn-accent btn-sm i-check" type="submit" data-i18n="painel.alterar_email">Alterar e-mail</button>
     </form>
   </details>
 
   <details class="acc-section">
-    <summary>Alterar senha</summary>
+    <summary data-i18n="painel.alterar_senha">Alterar senha</summary>
     <form id="passForm" novalidate>
-      <div class="field"><label for="accSenhaAtual">Senha atual</label><input id="accSenhaAtual" type="password" autocomplete="current-password" required></div>
-      <div class="field"><label for="accSenhaNova">Nova senha</label><input id="accSenhaNova" type="password" autocomplete="new-password" minlength="8" maxlength="72" required><p class="hint">De 8 a 72 caracteres. Suas outras sessões serão encerradas.</p></div>
-      <button class="btn btn-accent btn-sm i-check" type="submit">Alterar senha</button>
+      <div class="field"><label for="accSenhaAtual" data-i18n="painel.senha_atual">Senha atual</label><input id="accSenhaAtual" type="password" autocomplete="current-password" required></div>
+      <div class="field"><label for="accSenhaNova" data-i18n="recuperar_senha.nova">Nova senha</label><input id="accSenhaNova" type="password" autocomplete="new-password" minlength="8" maxlength="72" required><p class="hint" data-i18n="painel.senha_dica">De 8 a 72 caracteres. Suas outras sessões serão encerradas.</p></div>
+      <button class="btn btn-accent btn-sm i-check" type="submit" data-i18n="painel.alterar_senha">Alterar senha</button>
     </form>
   </details>
 
   <div class="acc-section">
-    <h3>Seus dados</h3>
+    <h3 data-i18n="painel.seus_dados">Seus dados</h3>
     <div class="acc-actions">
-      <button class="btn btn-secondary btn-sm i-download" id="exportBtn" type="button">Exportar meus dados</button>
-      <button class="btn btn-tertiary btn-sm i-user" id="logoutBtn" type="button">Sair</button>
+      <button class="btn btn-secondary btn-sm i-download" id="exportBtn" type="button" data-i18n="painel.exportar">Exportar meus dados</button>
+      <button class="btn btn-tertiary btn-sm i-user" id="logoutBtn" type="button" data-i18n="painel.sair">Sair</button>
     </div>
-    <p class="hint-text"><a href="privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a> · <a href="termos.html" target="_blank" rel="noopener">Termos</a></p>
-    <button class="btn btn-destructive btn-sm i-trash" id="delStart" type="button">Excluir minha conta</button>
+    <p class="hint-text" data-i18n="painel.links_legais"><a href="privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a> · <a href="termos.html" target="_blank" rel="noopener">Termos</a></p>
+    <button class="btn btn-destructive btn-sm i-trash" id="delStart" type="button" data-i18n="painel.excluir_conta">Excluir minha conta</button>
     <form id="delForm" hidden>
-      <p>Isso apaga sua conta e todo o conteúdo, sem volta. Confirme com sua senha:</p>
-      <div class="field"><label for="delPass">Senha</label><input id="delPass" type="password" autocomplete="current-password" required></div>
-      <button class="btn btn-destructive btn-sm" type="submit">Excluir definitivamente</button>
+      <p data-i18n="painel.excluir_aviso">Isso apaga sua conta e todo o conteúdo, sem volta. Confirme com sua senha:</p>
+      <div class="field"><label for="delPass" data-i18n="auth.senha">Senha</label><input id="delPass" type="password" autocomplete="current-password" required></div>
+      <button class="btn btn-destructive btn-sm" type="submit" data-i18n="painel.excluir_def">Excluir definitivamente</button>
     </form>
   </div>
-  <div class="dlg-actions"><button class="btn btn-secondary btn-sm" type="button" data-close>Fechar</button></div>
+  <div class="dlg-actions"><button class="btn btn-secondary btn-sm" type="button" data-close data-i18n="painel.fechar">Fechar</button></div>
 </dialog>
 
 <div class="toasts" id="toasts" role="status" aria-live="polite"></div>

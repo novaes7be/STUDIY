@@ -27,18 +27,23 @@
   }
   function limpar(el) { while (el.firstChild) el.removeChild(el.firstChild); }
 
+  /* Botões da revisão: o servidor manda o valor (ERREI...) e o rótulo em português. */
+  var ROTULOS = {
+    ERREI: t('rev.errei', 'Errei'), DIFICIL: t('rev.dificil', 'Difícil'), BOM: t('rev.bom', 'Bom'), FACIL: t('rev.facil', 'Fácil')
+  };
+
   function toast(text, erro) {
-    var t = h('div', { class: 'toast' + (erro ? ' error' : ''), text: text });
-    $('#toasts').append(t);
-    setTimeout(function () { t.remove(); }, 4500);
+    var aviso = h('div', { class: 'toast' + (erro ? ' error' : ''), text: text });
+    $('#toasts').append(aviso);
+    setTimeout(function () { aviso.remove(); }, 4500);
   }
-  function falha(e) { toast((e && e.message) || 'Algo deu errado.', true); }
+  function falha(e) { toast((e && e.message) || t('auth.erro', 'Algo deu errado.'), true); }
   function chaveCor(cor) {
     return CFG.SUBJECTS.some(function (s) { return s.key === cor; }) ? cor : CFG.DEFAULT_SUBJECT;
   }
   function fmtData(iso) {
     var d = new Date(iso);
-    return isNaN(d) ? '' : d.toLocaleDateString('pt-BR');
+    return isNaN(d) ? '' : d.toLocaleDateString(window.IDIOMA);
   }
 
   /* ---------- Carregamento ---------- */
@@ -95,7 +100,7 @@
         onclick: function () { selecionar(m.id); }
       }));
     });
-    box.append(h('button', { class: 'subj add', type: 'button', text: '+ Nova matéria', onclick: abrirNovaMateria }));
+    box.append(h('button', { class: 'subj add', type: 'button', text: t('painel.mais_materia', '+ Nova matéria'), onclick: abrirNovaMateria }));
     $('#rankingBtn').setAttribute('aria-current', state.tela === 'ranking' ? 'true' : 'false');
   }
 
@@ -107,7 +112,7 @@
   var rankingTimer = null;
 
   function esquecerPreviasDoRanking() {
-    ['SEMANA', 'SEQUENCIA', 'XP'].forEach(function (t) { try { localStorage.removeItem(PREVIA + t); } catch (e) { /* ignora */ } });
+    ['SEMANA', 'SEQUENCIA', 'XP'].forEach(function (q) { try { localStorage.removeItem(PREVIA + q); } catch (e) { /* ignora */ } });
   }
   function lerPrevia(tipo) {
     try { return JSON.parse(localStorage.getItem(PREVIA + tipo) || 'null'); } catch (e) { return null; }
@@ -117,7 +122,7 @@
   }
   function haQuanto(iso) {
     var min = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
-    return min < 1 ? 'agora há pouco' : min === 1 ? 'há 1 minuto' : 'há ' + min + ' minutos';
+    return min < 1 ? t('rank.agora', 'agora há pouco') : min === 1 ? t('rank.min1', 'há 1 minuto') : t('rank.min', 'há {n} minutos', { n: min });
   }
 
   function abrirRanking() {
@@ -125,7 +130,7 @@
     renderLateral();
     $('#uploadBtn').hidden = true;
     $('#subjectTitle').textContent = 'Ranking';
-    document.title = 'Ranking — Studiy';
+    document.title = t('rank.titulo', 'Ranking — Studiy');
     carregarRanking(state.rankingTipo);
     clearInterval(rankingTimer);
     rankingTimer = setInterval(function () { if (!document.hidden) carregarRanking(state.rankingTipo, true); }, 60000);
@@ -145,7 +150,7 @@
       if (state.tela !== 'ranking' || state.rankingTipo !== tipo) return;  // usuário já saiu ou trocou de aba
       salvarPrevia(tipo, novo);
       if (!previa || JSON.stringify(previa) !== JSON.stringify(novo) || !silencioso) renderRanking(novo, tipo, false);
-      else if (novo.geradoEm) $('.rank-meta span').textContent = ' · atualizado ' + haQuanto(novo.geradoEm);  // só o relógio
+      else if (novo.geradoEm) $('.rank-meta span').textContent = t('rank.atualizado', ' · atualizado {quando}', { quando: haQuanto(novo.geradoEm) });  // só o relógio
     } catch (e) {
       if (state.tela === 'ranking' && state.rankingTipo === tipo && !silencioso) renderRanking(previa, tipo, true);
     }
@@ -154,50 +159,50 @@
   function renderRanking(d, tipo, offline) {
     var content = $('#content');
     limpar(content);
-    var abas = h('div', { class: 'rank-tabs', role: 'group', 'aria-label': 'Quadro do ranking' });
-    [['SEMANA', 'Semana'], ['SEQUENCIA', 'Sequência'], ['XP', 'XP']].forEach(function (t) {
+    var abas = h('div', { class: 'rank-tabs', role: 'group', 'aria-label': t('rank.quadro', 'Quadro do ranking') });
+    [['SEMANA', t('rank.semana', 'Semana')], ['SEQUENCIA', t('painel.sequencia', 'Sequência')], ['XP', 'XP']].forEach(function (aba) {
       abas.append(h('button', {
-        class: 'btn btn-tertiary btn-sm', type: 'button', text: t[1], 'aria-pressed': t[0] === tipo ? 'true' : 'false',
-        onclick: function () { if (t[0] !== state.rankingTipo) carregarRanking(t[0]); }
+        class: 'btn btn-tertiary btn-sm', type: 'button', text: aba[1], 'aria-pressed': aba[0] === tipo ? 'true' : 'false',
+        onclick: function () { if (aba[0] !== state.rankingTipo) carregarRanking(aba[0]); }
       }));
     });
     content.append(abas);
 
     if (!d) {  // primeira vez, sem prévia: esqueleto em vez de spinner
-      var esq = h('ol', { class: 'rank-list is-loading', 'aria-busy': 'true', 'aria-label': 'Carregando ranking' });
+      var esq = h('ol', { class: 'rank-list is-loading', 'aria-busy': 'true', 'aria-label': t('rank.carregando', 'Carregando ranking') });
       for (var i = 0; i < 6; i++) esq.append(h('li', { class: 'rank-row rank-skel' }));
-      content.append(offline ? h('p', { class: 'msg error', role: 'alert', text: 'Não foi possível carregar o ranking agora.' }) : esq);
+      content.append(offline ? h('p', { class: 'msg error', role: 'alert', text: t('rank.erro', 'Não foi possível carregar o ranking agora.') }) : esq);
       return;
     }
 
     content.append(h('p', { class: 'rank-meta' },
       h('strong', { text: d.titulo }),
-      h('span', { text: d.geradoEm ? ' · atualizado ' + haQuanto(d.geradoEm) : ' · sendo calculado' }),
-      offline ? h('span', { class: 'rank-offline', text: ' · sem conexão, mostrando a última versão' }) : ''));
+      h('span', { text: d.geradoEm ? t('rank.atualizado', ' · atualizado {quando}', { quando: haQuanto(d.geradoEm) }) : t('rank.calculando', ' · sendo calculado') }),
+      offline ? h('span', { class: 'rank-offline', text: t('rank.offline', ' · sem conexão, mostrando a última versão') }) : ''));
 
     if (!d.participando) {
       content.append(h('section', { class: 'panel rank-cta' },
-        h('h2', { text: 'Entre no ranking' }),
-        h('p', { class: 'hint-text', text: 'Escolha um apelido no seu perfil. Só o apelido aparece para os outros; seu nome e e-mail nunca.' }),
-        h('button', { class: 'btn btn-accent btn-sm btn-arrow', type: 'button', text: 'Escolher apelido',
+        h('h2', { text: t('rank.entrar', 'Entre no ranking') }),
+        h('p', { class: 'hint-text', text: t('rank.entrar_txt', 'Escolha um apelido no seu perfil. Só o apelido aparece para os outros; seu nome e e-mail nunca.') }),
+        h('button', { class: 'btn btn-accent btn-sm btn-arrow', type: 'button', text: t('rank.escolher_apelido', 'Escolher apelido'),
           onclick: function () { $('#accountBtn').click(); } })));
     } else if (d.voce) {
       content.append(h('section', { class: 'rank-me' },
-        h('p', { class: 'card-label', text: 'Sua posição' }),
-        h('p', { class: 'rank-me-pos' }, h('span', { text: d.voce.posicao }), h('small', { text: 'º' })),
+        h('p', { class: 'card-label', text: t('rank.posicao', 'Sua posição') }),
+        h('p', { class: 'rank-me-pos' }, h('span', { text: d.voce.posicao }), h('small', { text: t('rank.ordinal', 'º') })),
         h('p', { class: 'rank-me-val', text: d.voce.valor + ' ' + d.unidade })));
     } else {
-      content.append(h('p', { class: 'hint-text', text: 'Você ainda não pontuou neste quadro. Revise alguns cartões e volte aqui.' }));
+      content.append(h('p', { class: 'hint-text', text: t('rank.sem_pontos', 'Você ainda não pontuou neste quadro. Revise alguns cartões e volte aqui.') }));
     }
 
     if (!d.itens.length) {
-      content.append(h('p', { class: 'empty', text: 'Ninguém pontuou neste quadro ainda.' }));
+      content.append(h('p', { class: 'empty', text: t('rank.vazio', 'Ninguém pontuou neste quadro ainda.') }));
     } else {
       var lista = h('ol', { class: 'rank-list' });
       d.itens.forEach(function (it) {
         lista.append(h('li', { class: 'rank-row' + (it.voce ? ' is-voce' : '') + (it.posicao <= 3 ? ' is-top' : '') },
           h('span', { class: 'rank-pos', text: it.posicao + 'º' }),
-          h('span', { class: 'rank-nome', text: it.apelido + (it.voce ? ' (você)' : '') }),
+          h('span', { class: 'rank-nome', text: it.apelido + (it.voce ? t('rank.voce', ' (você)') : '') }),
           h('span', { class: 'rank-val', text: it.valor + ' ' + d.unidade })));
       });
       content.append(lista);
@@ -209,8 +214,8 @@
     var p = state.perfil; // tudo já vem calculado pelo servidor
     $('#planName').textContent = p.planoRotulo;
     $('#upgradeLink').textContent = p.acaoPlano;
-    $('#usageText').textContent = p.pdfsUsados + ' de ' + p.pdfsLimite + ' gerações com IA neste mês'
-      + (p.planoExpiraEm ? ' · Pro até ' + fmtData(p.planoExpiraEm) : '');
+    $('#usageText').textContent = t('painel.uso', '{usados} de {limite} gerações com IA neste mês', { usados: p.pdfsUsados, limite: p.pdfsLimite })
+      + (p.planoExpiraEm ? t('painel.pro_ate', ' · Pro até {data}', { data: fmtData(p.planoExpiraEm) }) : '');
     $('#usageBar').style.width = p.usoPercentual + '%';
     renderPerfil();
   }
@@ -220,35 +225,35 @@
     var content = $('#content');
     limpar(content);
     $('#uploadBtn').hidden = !m;
-    $('#subjectTitle').textContent = m ? m.nome : 'Bem-vindo ao Studiy';
+    $('#subjectTitle').textContent = m ? m.nome : t('onb.titulo', 'Bem-vindo ao Studiy');
     app.dataset.subject = m ? chaveCor(m.cor) : CFG.DEFAULT_SUBJECT;
     document.title = (m ? m.nome + ' — ' : '') + 'Studiy';
 
     if (!state.perfil.emailVerificado) {
-      var reenviar = h('button', { class: 'btn btn-secondary btn-sm', type: 'button', text: 'Reenviar link' });
+      var reenviar = h('button', { class: 'btn btn-secondary btn-sm', type: 'button', text: t('verificar_email.reenviar', 'Reenviar link') });
       reenviar.addEventListener('click', async function () {
         reenviar.disabled = true;
         try { var r = await api.post('/api/auth/reenviar-verificacao', { email: state.perfil.email }, false); toast(r.mensagem); }
         catch (e) { falha(e); reenviar.disabled = false; }
       });
       content.append(h('p', { class: 'msg info', role: 'status' },
-        'Confirme seu e-mail para liberar a geração com IA e o plano Pro. ', reenviar));
+        t('painel.confirme_email', 'Confirme seu e-mail para liberar a geração com IA e o plano Pro. '), reenviar));
     }
 
     if (!m) {
       content.append(h('section', { class: 'welcome' },
-        h('h1', { text: 'Comece pela sua primeira matéria' }),
-        h('p', { text: 'Crie uma matéria, envie o PDF da aula e o Studiy gera o resumo e os flashcards para você revisar na hora certa.' }),
+        h('h1', { text: t('painel.vazio_t', 'Comece pela sua primeira matéria') }),
+        h('p', { text: t('painel.vazio_p', 'Crie uma matéria, envie o PDF da aula e o Studiy gera o resumo e os flashcards para você revisar na hora certa.') }),
         h('ol', { class: 'tips' },
-          h('li', { text: 'Crie uma matéria e escolha a cor que combina com ela.' }),
-          h('li', { text: 'Use "Enviar PDF" para subir o material (texto selecionável, até 10 MB).' }),
-          h('li', { text: 'Gere o resumo e os flashcards e volte todo dia para revisar.' })),
-        h('button', { class: 'btn btn-accent i-check', type: 'button', text: 'Criar matéria', onclick: abrirNovaMateria })));
+          h('li', { text: t('painel.vazio_1', 'Crie uma matéria e escolha a cor que combina com ela.') }),
+          h('li', { text: t('painel.vazio_2', 'Use "Enviar PDF" para subir o material (texto selecionável, até 10 MB).') }),
+          h('li', { text: t('painel.vazio_3', 'Gere o resumo e os flashcards e volte todo dia para revisar.') })),
+        h('button', { class: 'btn btn-accent i-check', type: 'button', text: t('painel.criar_materia', 'Criar matéria'), onclick: abrirNovaMateria })));
       return;
     }
 
     /* Cor da matéria */
-    var sw = h('fieldset', { class: 'swatches' }, h('legend', { text: 'Cor da matéria' }));
+    var sw = h('fieldset', { class: 'swatches' }, h('legend', { text: t('painel.cor_materia', 'Cor da matéria') }));
     CFG.SUBJECTS.forEach(function (s) {
       sw.append(h('button', {
         class: 'swatch', type: 'button', 'data-k': s.key, 'aria-label': s.label,
@@ -256,43 +261,43 @@
         onclick: function () { mudarCor(s.key); }
       }));
     });
-    sw.append(h('button', { class: 'btn btn-secondary btn-sm grow i-trash', type: 'button', text: 'Excluir matéria', onclick: excluirMateria }));
+    sw.append(h('button', { class: 'btn btn-secondary btn-sm grow i-trash', type: 'button', text: t('painel.excluir_materia', 'Excluir matéria'), onclick: excluirMateria }));
     content.append(sw);
 
     /* Cartões de status */
     var g = state.perfil.gamificacao;
-    var barra = h('div', { class: 'bar', title: g.xpParaProximoNivel + ' XP para o próximo nível' }, h('span'));
+    var barra = h('div', { class: 'bar', title: t('painel.xp_proximo', '{xp} XP para o próximo nível', { xp: g.xpParaProximoNivel }) }, h('span'));
     barra.firstChild.style.width = g.percentualNivel + '%';
     content.append(h('div', { class: 'stats' },
-      h('div', { class: 'stat' }, h('div', { class: 'label', text: 'Sequência' }), h('div', { class: 'value' }, h('span', { 'data-count': '', text: g.streakAtual }), h('small', { text: g.streakAtual === 1 ? ' dia' : ' dias' }))),
-      h('div', { class: 'stat' }, h('div', { class: 'label', text: 'Nível ' + g.nivel }), h('div', { class: 'value' }, h('span', { 'data-count': '', text: g.xp }), h('small', { text: ' XP' })), barra),
-      h('div', { class: 'stat' }, h('div', { class: 'label', text: 'Revisões de hoje' }), h('div', { class: 'value' }, h('span', { 'data-count': '', text: m.flashcardsPendentes }), h('small', { text: m.flashcardsPendentes === 1 ? ' cartão' : ' cartões' })))));
+      h('div', { class: 'stat' }, h('div', { class: 'label', text: t('painel.sequencia', 'Sequência') }), h('div', { class: 'value' }, h('span', { 'data-count': '', text: g.streakAtual }), h('small', { text: g.streakAtual === 1 ? t('painel.dia', ' dia') : t('painel.dias', ' dias') }))),
+      h('div', { class: 'stat' }, h('div', { class: 'label', text: t('painel.nivel', 'Nível {n}', { n: g.nivel }) }), h('div', { class: 'value' }, h('span', { 'data-count': '', text: g.xp }), h('small', { text: ' XP' })), barra),
+      h('div', { class: 'stat' }, h('div', { class: 'label', text: t('painel.revisoes_hoje', 'Revisões de hoje') }), h('div', { class: 'value' }, h('span', { 'data-count': '', text: m.flashcardsPendentes }), h('small', { text: m.flashcardsPendentes === 1 ? t('painel.cartao', ' cartão') : t('painel.cartoes', ' cartões') })))));
 
     /* Materiais */
-    var mat = h('section', { class: 'panel' }, h('h2', { text: 'Materiais' }));
+    var mat = h('section', { class: 'panel' }, h('h2', { text: t('painel.materiais', 'Materiais') }));
     mat.append(h('p', { class: 'hint-text', text: state.perfil.regraUso }));
-    if (!state.pdfs.length) mat.append(h('p', { class: 'empty', text: 'Nenhum PDF ainda. Use "Enviar PDF" para começar.' }));
+    if (!state.pdfs.length) mat.append(h('p', { class: 'empty', text: t('painel.sem_pdf', 'Nenhum PDF ainda. Use "Enviar PDF" para começar.') }));
     state.pdfs.forEach(function (p) {
-      var bResumo = h('button', { class: 'btn btn-accent btn-sm i-sparkle', type: 'button', text: 'Resumo' });
+      var bResumo = h('button', { class: 'btn btn-accent btn-sm i-sparkle', type: 'button', text: t('painel.resumo', 'Resumo') });
       var bCards = h('button', { class: 'btn btn-secondary btn-sm i-sparkle', type: 'button', text: 'Flashcards' });
       bResumo.addEventListener('click', function () { gerar(p.id, 'RESUMO', [bResumo, bCards], bResumo); });
       bCards.addEventListener('click', function () { gerar(p.id, 'FLASHCARD', [bResumo, bCards], bCards); });
-      var bMd = h('button', { class: 'btn btn-secondary btn-sm i-download', type: 'button', text: '.md', 'aria-label': 'Baixar ' + p.nomeArquivo + ' em Markdown (em .zip com as figuras, quando houver)' });
+      var bMd = h('button', { class: 'btn btn-secondary btn-sm i-download', type: 'button', text: '.md', 'aria-label': t('painel.baixar_md', 'Baixar {arquivo} em Markdown (em .zip com as figuras, quando houver)', { arquivo: p.nomeArquivo }) });
       bMd.addEventListener('click', function () { baixarMarkdown(p, bMd); });
       mat.append(h('div', { class: 'row' }, h('span', { class: 'name', text: p.nomeArquivo }), h('span', { class: 'actions' }, bResumo, bCards, bMd)));
     });
 
     /* Revisão */
     var rev = h('section', { class: 'panel panel-grad' },
-      h('h2', { text: 'Revisar agora' }),
-      h('p', { text: m.flashcardsPendentes ? m.flashcardsPendentes + ' cartões vencem hoje. Leva poucos minutos e é o que mais ajuda a fixar o conteúdo.' : 'Nenhum cartão para revisar hoje. Gere flashcards de um PDF para começar sua rotina.' }),
-      h('button', { class: 'btn btn-light i-play', type: 'button', text: 'Começar revisão', disabled: !m.flashcardsPendentes, onclick: abrirRevisao }));
+      h('h2', { text: t('painel.revisar_agora', 'Revisar agora') }),
+      h('p', { text: m.flashcardsPendentes ? t('painel.vencem', '{n} cartões vencem hoje. Leva poucos minutos e é o que mais ajuda a fixar o conteúdo.', { n: m.flashcardsPendentes }) : t('painel.sem_revisao', 'Nenhum cartão para revisar hoje. Gere flashcards de um PDF para começar sua rotina.') }),
+      h('button', { class: 'btn btn-light i-play', type: 'button', text: t('painel.comecar_revisao', 'Começar revisão'), disabled: !m.flashcardsPendentes, onclick: abrirRevisao }));
 
     /* Resumos */
-    var res = h('section', { class: 'panel' }, h('h2', { text: 'Resumos' }));
-    if (!state.resumos.length) res.append(h('p', { class: 'empty', text: 'Os resumos gerados aparecem aqui. Escolha um PDF em "Materiais" e toque em "Resumo".' }));
+    var res = h('section', { class: 'panel' }, h('h2', { text: t('painel.resumos', 'Resumos') }));
+    if (!state.resumos.length) res.append(h('p', { class: 'empty', text: t('painel.sem_resumo', 'Os resumos gerados aparecem aqui. Escolha um PDF em "Materiais" e toque em "Resumo".') }));
     state.resumos.forEach(function (r) {
-      var titulo = (r.conteudo || '').split('\n').find(function (l) { return l.trim(); }) || 'Resumo';
+      var titulo = (r.conteudo || '').split('\n').find(function (l) { return l.trim(); }) || t('painel.resumo', 'Resumo');
       res.append(h('details', { class: 'resumo' },
         h('summary', { text: fmtData(r.criadoEm) + ' · ' + titulo.slice(0, 60) }),
         h('div', { class: 'prewrap', text: r.conteudo })));
@@ -326,11 +331,11 @@
 
   async function excluirMateria() {
     var m = state.atual;
-    if (!window.confirm('Excluir "' + m.nome + '" e todos os PDFs, resumos e flashcards dela? Esta ação não pode ser desfeita.')) return;
+    if (!window.confirm(t('painel.confirma_excluir', 'Excluir "{nome}" e todos os PDFs, resumos e flashcards dela? Esta ação não pode ser desfeita.', { nome: m.nome }))) return;
     try {
       await api.del('/api/materias/' + m.id);
       await recarregarMaterias();
-      toast('Matéria excluída.');
+      toast(t('painel.materia_excluida', 'Matéria excluída.'));
       await selecionar(state.materias.length ? state.materias[0].id : null);
     } catch (e) { falha(e); }
   }
@@ -345,7 +350,7 @@
       var a = h('a', { href: URL.createObjectURL(r.blob), download: base + (zip ? '.zip' : '.md') });
       document.body.append(a); a.click(); a.remove();
       setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
-      if (zip) toast('Baixado em .zip: o texto em Markdown e as figuras na pasta figuras/. Extraia antes de abrir.');
+      if (zip) toast(t('painel.baixado_zip', 'Baixado em .zip: o texto em Markdown e as figuras na pasta figuras/. Extraia antes de abrir.'));
     } catch (e) { falha(e); }
     finally { btn.disabled = false; }
   }
@@ -353,15 +358,15 @@
   async function gerar(pdfId, tipo, botoes, ativo) {
     var rotulo = ativo.textContent;
     botoes.forEach(function (b) { b.disabled = true; });
-    ativo.textContent = 'Gerando...';
+    ativo.textContent = t('painel.gerando', 'Gerando...');
     ativo.setAttribute('aria-busy', 'true');
     try {
       var r = await api.post('/api/materias/' + state.atual.id + '/gerar', { pdfId: pdfId, tipo: tipo });
       await Promise.all([recarregarPerfil(), recarregarMaterias()]);
       var id = state.atual ? state.atual.id : null;
       // reaproveitado: o mesmo conteúdo já tinha sido gerado; o servidor não gastou o limite do mês
-      if (r && r.reaproveitado) toast('Este material já tinha sido gerado. Reaproveitamos, sem gastar seu limite.');
-      else toast(tipo === 'RESUMO' ? 'Resumo gerado!' : 'Flashcards gerados!');
+      if (r && r.reaproveitado) toast(t('painel.reaproveitado', 'Este material já tinha sido gerado. Reaproveitamos, sem gastar seu limite.'));
+      else toast(tipo === 'RESUMO' ? t('painel.resumo_gerado', 'Resumo gerado!') : t('painel.cards_gerados', 'Flashcards gerados!'));
       await selecionar(id);
     } catch (e) {
       falha(e);
@@ -379,13 +384,13 @@
     var form = new FormData();
     form.append('arquivo', arquivo);
     var btn = $('#uploadBtn');
-    btn.disabled = true; btn.textContent = 'Enviando...'; btn.setAttribute('aria-busy', 'true');
+    btn.disabled = true; btn.textContent = t('painel.enviando', 'Enviando...'); btn.setAttribute('aria-busy', 'true');
     try {
       await api.upload('/api/materias/' + state.atual.id + '/pdfs', form);
-      toast('PDF enviado. Agora gere o resumo ou os flashcards.');
+      toast(t('painel.pdf_enviado', 'PDF enviado. Agora gere o resumo ou os flashcards.'));
       await selecionar(state.atual.id);
     } catch (e) { falha(e); }
-    finally { btn.disabled = false; btn.textContent = 'Enviar PDF'; btn.removeAttribute('aria-busy'); }
+    finally { btn.disabled = false; btn.textContent = t('painel.enviar_pdf', 'Enviar PDF'); btn.removeAttribute('aria-busy'); }
   });
 
   /* ---------- Nova matéria ---------- */
@@ -426,7 +431,7 @@
       var rev = await api.get('/api/materias/' + state.atual.id + '/flashcards/revisao');
       fila = rev.cartoes; opcoes = rev.opcoes; // botões e escala SM-2 decididos pelo servidor
     } catch (e) { falha(e); return; }
-    if (!fila.length) { toast('Nenhum cartão para revisar hoje.'); return; }
+    if (!fila.length) { toast(t('painel.nenhum_cartao', 'Nenhum cartão para revisar hoje.')); return; }
     var i = 0;
     var revisados = 0; // quantos foram enviados desde a última atualização do painel
     async function atualizarPainel() {
@@ -440,23 +445,23 @@
     function mostrar() {
       limpar(box);
       if (i >= fila.length) {
-        box.append(h('p', { class: 'card-q', text: 'Revisão concluída! 🎉' }));
+        box.append(h('p', { class: 'card-q', text: t('painel.revisao_ok', 'Revisão concluída! 🎉') }));
         atualizarPainel();
         return;
       }
       var c = fila[i];
       // Flashcard com flip 3D (css/motion.css): frente = pergunta, verso = resposta
       var cartao = h('div', { class: 'flip flashcard' }, h('div', { class: 'flip-inner' },
-        h('div', { class: 'flip-face flip-front' }, h('p', { class: 'card-label', text: 'Pergunta' }), h('p', { class: 'card-q', text: c.pergunta })),
-        h('div', { class: 'flip-face flip-back', 'aria-hidden': 'true' }, h('p', { class: 'card-label', text: 'Resposta' }), h('div', { class: 'card-a', text: c.resposta }))));
+        h('div', { class: 'flip-face flip-front' }, h('p', { class: 'card-label', text: t('painel.pergunta', 'Pergunta') }), h('p', { class: 'card-q', text: c.pergunta })),
+        h('div', { class: 'flip-face flip-back', 'aria-hidden': 'true' }, h('p', { class: 'card-label', text: t('painel.resposta', 'Resposta') }), h('div', { class: 'card-a', text: c.resposta }))));
       var notas = h('div', { class: 'rate', hidden: true });
       opcoes.forEach(function (o) {
-        notas.append(h('button', { class: 'btn btn-accent btn-sm', type: 'button', text: o.rotulo, onclick: async function () {
+        notas.append(h('button', { class: 'btn btn-accent btn-sm', type: 'button', text: ROTULOS[o.valor] || o.rotulo, onclick: async function () {
           try { await api.post('/api/materias/' + state.atual.id + '/flashcards/' + c.id + '/revisar', { resposta: o.valor }); i++; revisados++; mostrar(); }
           catch (e) { falha(e); }
         } }));
       });
-      var ver = h('button', { class: 'btn btn-primary', type: 'button', text: 'Ver resposta' });
+      var ver = h('button', { class: 'btn btn-primary', type: 'button', text: t('painel.ver_resposta', 'Ver resposta') });
       ver.addEventListener('click', function () {
         cartao.classList.add('is-flipped');
         cartao.querySelector('.flip-back').removeAttribute('aria-hidden');
@@ -464,7 +469,7 @@
         notas.hidden = false; ver.hidden = true;
         notas.querySelector('button').focus();
       });
-      box.append(h('p', { class: 'empty', text: 'Cartão ' + (i + 1) + ' de ' + fila.length }), cartao, ver, notas);
+      box.append(h('p', { class: 'empty', text: t('painel.cartao_n', 'Cartão {i} de {total}', { i: i + 1, total: fila.length }) }), cartao, ver, notas);
     }
     mostrar();
     dlg.showModal();
@@ -506,7 +511,7 @@
     $('#accMsg').hidden = true;
     var pronto = botao && window.Botao ? Botao.carregando(botao) : function () {}; // spinner enquanto espera
     try { await fn(); if (okTexto) accMsg(okTexto, true); }
-    catch (e) { accMsg(e.message || 'Algo deu errado.', false); }
+    catch (e) { accMsg(e.message || t('auth.erro', 'Algo deu errado.'), false); }
     finally { pronto(); }
   }
 
@@ -526,7 +531,7 @@
     acao(async function () {
       state.perfil = await api.put('/api/usuarios/me', { nome: $('#accNome').value.trim() });
       renderPerfil();
-    }, 'Nome atualizado.', ev.submitter);
+    }, t('painel.nome_ok', 'Nome atualizado.'), ev.submitter);
   });
 
   $('#apelidoForm').addEventListener('submit', function (ev) {
@@ -538,7 +543,7 @@
       esquecerPreviasDoRanking();          // a participação mudou: a prévia salva ficou velha
       if (state.tela === 'ranking') carregarRanking(state.rankingTipo);
       renderPerfil();
-    }, saindo ? 'Você saiu do ranking.' : 'Apelido salvo. Você aparece no ranking na próxima atualização (até 5 minutos).', ev.submitter);
+    }, saindo ? t('painel.saiu_ranking', 'Você saiu do ranking.') : t('painel.apelido_ok', 'Apelido salvo. Você aparece no ranking na próxima atualização (até 5 minutos).'), ev.submitter);
   });
 
   $('#emailForm').addEventListener('submit', function (ev) {
@@ -548,7 +553,7 @@
       state.perfil = await api.get('/api/usuarios/me');
       $('#accNovoEmail').value = ''; $('#accSenhaEmail').value = '';
       renderPerfil();
-    }, 'E-mail atualizado.', ev.submitter);
+    }, t('painel.email_ok', 'E-mail atualizado.'), ev.submitter);
   });
 
   $('#passForm').addEventListener('submit', function (ev) {
@@ -556,7 +561,7 @@
     acao(async function () {
       await api.put('/api/usuarios/me/senha', { senhaAtual: $('#accSenhaAtual').value, novaSenha: $('#accSenhaNova').value });
       $('#accSenhaAtual').value = ''; $('#accSenhaNova').value = '';
-    }, 'Senha alterada. As outras sessões foram encerradas.', ev.submitter);
+    }, t('painel.senha_ok', 'Senha alterada. As outras sessões foram encerradas.'), ev.submitter);
   });
 
   /* Foto: recorta em quadrado e reduz para 256x256 no navegador (fica leve) antes de enviar */
@@ -564,10 +569,10 @@
     return new Promise(function (resolve, reject) {
       // Só recorta/reduz para 256x256 antes de enviar; tipo, tamanho e assinatura são validados no servidor.
       var leitor = new FileReader();
-      leitor.onerror = function () { reject(new Error('Não foi possível ler a imagem.')); };
+      leitor.onerror = function () { reject(new Error(t('painel.img_erro', 'Não foi possível ler a imagem.'))); };
       leitor.onload = function () {
         var img = new Image();
-        img.onerror = function () { reject(new Error('Imagem inválida.')); };
+        img.onerror = function () { reject(new Error(t('painel.img_invalida', 'Imagem inválida.'))); };
         img.onload = function () {
           var lado = Math.min(img.width, img.height), T = 256;
           var cv = document.createElement('canvas');
@@ -589,13 +594,13 @@
       var dataUrl = await prepararFoto(arquivo);
       state.perfil = await api.put('/api/usuarios/me/avatar', { avatar: dataUrl });
       renderPerfil();
-    }, 'Foto atualizada.', $('#avatarBtn'));
+    }, t('painel.foto_ok', 'Foto atualizada.'), $('#avatarBtn'));
   });
   $('#avatarDel').addEventListener('click', function () {
     acao(async function () {
       state.perfil = await api.put('/api/usuarios/me/avatar', { avatar: null });
       renderPerfil();
-    }, 'Foto removida.', $('#avatarDel'));
+    }, t('painel.foto_removida', 'Foto removida.'), $('#avatarDel'));
   });
 
   /* ---------- Sair, exportar e excluir (LGPD) ---------- */
@@ -605,7 +610,7 @@
     window.location.href = 'login.html';
   });
   $('#exportBtn').addEventListener('click', async function () {
-    var pronto = Botao.carregando($('#exportBtn'), 'Preparando…');
+    var pronto = Botao.carregando($('#exportBtn'), t('painel.preparando', 'Preparando…'));
     try {
       var dados = await api.get('/api/usuarios/me/exportar');
       var blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });

@@ -24,7 +24,7 @@
     msg.hidden = true;
     busy(true);
     try { await fn(); }
-    catch (e) { show(e.message || 'Algo deu errado.'); }
+    catch (e) { show(e.message || t('auth.erro', 'Algo deu errado.')); }
     finally { busy(false); }
   }
   var v = function (id) { return document.getElementById(id).value; };
@@ -32,8 +32,8 @@
   // Aviso claro se o backend estiver desligado (em vez de só falhar ao enviar o formulário).
   api.ping().then(function (ok) {
     if (!ok) {
-      show('Não consegui falar com o servidor em ' + api.apiBase + '. Inicie o backend (porta 8080) e recarregue a página. '
-        + 'Teste abrindo ' + api.apiBase + '/api/saude no navegador: deve aparecer {"status":"ok"}.', 'error');
+      show(t('auth.sem_servidor', 'Não consegui falar com o servidor em {base}. Inicie o backend (porta 8080) e recarregue a página. '
+        + 'Teste abrindo {base}/api/saude no navegador: deve aparecer {"status":"ok"}.', { base: api.apiBase }), 'error');
     }
   });
 
@@ -85,7 +85,7 @@
       enviar(async function () {
         await api.post('/api/auth/redefinir-senha', { token: token, novaSenha: v('novaSenha') }, false);
         history.replaceState(null, '', 'recuperar-senha.html');
-        show('Senha alterada. Redirecionando para o login...', 'info');
+        show(t('auth.senha_alterada', 'Senha alterada. Redirecionando para o login...'), 'info');
         setTimeout(function () { window.location.href = 'login.html'; }, 1500);
       });
     });
@@ -97,14 +97,14 @@
     var formReenvio = document.getElementById('etapaEmail');
     if (tk) {
       formReenvio.hidden = true;
-      show('Confirmando seu e-mail…', 'info');
+      show(t('auth.confirmando', 'Confirmando seu e-mail…'), 'info');
       api.post('/api/auth/verificar-email', { token: tk }, false).then(function () {
         history.replaceState(null, '', 'verificar-email.html');
-        show('E-mail confirmado! Redirecionando para o login…', 'info');
+        show(t('auth.confirmado', 'E-mail confirmado! Redirecionando para o login…'), 'info');
         setTimeout(function () { window.location.href = 'login.html'; }, 1500);
       }).catch(function (e) {
         formReenvio.hidden = false;
-        show((e.message || 'Link inválido ou expirado.') + ' Peça um novo link abaixo.');
+        show(t('auth.link_invalido_pedir', '{erro} Peça um novo link abaixo.', { erro: e.message || t('auth.link_invalido', 'Link inválido ou expirado.') }));
       });
     }
     formReenvio.addEventListener('submit', function (ev) {

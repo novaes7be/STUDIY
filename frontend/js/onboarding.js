@@ -4,9 +4,9 @@
   'use strict';
 
   var passos = [
-    ['Crie uma matéria', 'Clique em “Nova matéria” e escolha uma cor para ela.'],
-    ['Envie um PDF', 'Use “Enviar PDF” com o material da aula (texto selecionável, até 10 MB).'],
-    ['Gere e revise', 'A IA cria o resumo e os flashcards. Revise os cartões no dia certo.']
+    [t('onb.p1_t', 'Crie uma matéria'), t('onb.p1', 'Clique em “Nova matéria” e escolha uma cor para ela.')],
+    [t('onb.p2_t', 'Envie um PDF'), t('onb.p2', 'Use “Enviar PDF” com o material da aula (texto selecionável, até 10 MB).')],
+    [t('onb.p3_t', 'Gere e revise'), t('onb.p3', 'A IA cria o resumo e os flashcards. Revise os cartões no dia certo.')]
   ];
 
   function el(tag, cls, text) {
@@ -24,10 +24,10 @@
   box.setAttribute('aria-modal', 'true');
   box.setAttribute('aria-labelledby', 'onbTitulo');
 
-  var titulo = el('h2', '', 'Bem-vindo ao Studiy');
+  var titulo = el('h2', '', t('onb.titulo', 'Bem-vindo ao Studiy'));
   titulo.id = 'onbTitulo';
   box.appendChild(titulo);
-  box.appendChild(el('p', '', 'Em 3 passos você já estuda com ajuda da IA:'));
+  box.appendChild(el('p', '', t('onb.sub', 'Em 3 passos você já estuda com ajuda da IA:')));
 
   var lista = el('ol');
   passos.forEach(function (p) {
@@ -41,7 +41,7 @@
   box.appendChild(lista);
 
   var acoes = el('div', 'onb-actions');
-  var ok = el('button', 'btn btn-accent', 'Entendi, vamos lá');
+  var ok = el('button', 'btn btn-accent', t('onb.ok', 'Entendi, vamos lá'));
   ok.type = 'button';
   acoes.appendChild(ok);
   box.appendChild(acoes);
