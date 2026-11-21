@@ -1,6 +1,6 @@
 package com.studiy.backend;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import com.studiy.backend.model.RevisaoLog;
 import com.studiy.backend.model.Usuario;
 import com.studiy.backend.repository.RevisaoLogRepository;
@@ -47,7 +47,7 @@ class RankingIT extends IntegracaoBase {
 
     private static JsonNode linha(JsonNode resp, String apelido) {
         return StreamSupport.stream(resp.get("itens").spliterator(), false)
-                .filter(i -> i.get("apelido").asText().equals(apelido)).findFirst().orElse(null);
+                .filter(i -> i.get("apelido").asString().equals(apelido)).findFirst().orElse(null);
     }
 
     @Test
@@ -68,7 +68,7 @@ class RankingIT extends IntegracaoBase {
         assertThat(linha(r, a).get("valor").asInt()).isEqualTo(5);
         assertThat(linha(r, a).get("voce").asBoolean()).isTrue();
         assertThat(linha(r, c)).isNull();
-        assertThat(r.get("voce").get("apelido").asText()).isEqualTo(a);
+        assertThat(r.get("voce").get("apelido").asString()).isEqualTo(a);
     }
 
     @Test

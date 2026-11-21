@@ -1,13 +1,13 @@
 package com.studiy.backend;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import com.studiy.backend.model.Plano;
 import com.studiy.backend.model.Usuario;
 import com.studiy.backend.service.AssinaturaMercadoPago;
 import com.studiy.backend.service.MercadoPagoClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
 
@@ -32,7 +32,7 @@ class PagamentoWebhookIT extends IntegracaoBase {
     static final String SEGREDO = "segredo-de-webhook-de-teste-0123456789";
     private static final AtomicLong PROXIMO_PAGAMENTO = new AtomicLong(9_000_000_000L);
 
-    @MockBean MercadoPagoClient mp;
+    @MockitoBean MercadoPagoClient mp;
 
     @BeforeEach
     void mercadoPagoConfigurado() {
@@ -103,7 +103,7 @@ class PagamentoWebhookIT extends IntegracaoBase {
                         .contentType(MediaType.APPLICATION_JSON).content(corpo(Map.of("metodo", "CARTAO"))))
                 .andExpect(status().isOk()).andReturn());
         assertThat(r.path("simulacao").asBoolean()).isFalse();
-        return r.path("pedidoId").asText();
+        return r.path("pedidoId").asString();
     }
 
     /** O que a API do Mercado Pago devolveria em GET /v1/payments/{id}. */
@@ -129,6 +129,6 @@ class PagamentoWebhookIT extends IntegracaoBase {
 
     private String statusDoPedido(Sessao s, String pedido) throws Exception {
         return ler(mvc.perform(s.em(get("/api/pagamentos/" + pedido))).andExpect(status().isOk()).andReturn())
-                .path("status").asText();
+                .path("status").asString();
     }
 }

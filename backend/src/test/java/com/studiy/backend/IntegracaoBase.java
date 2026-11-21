@@ -1,21 +1,21 @@
 package com.studiy.backend;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import com.studiy.backend.model.Usuario;
 import com.studiy.backend.repository.UsuarioRepository;
 import com.studiy.backend.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.AbstractMockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import jakarta.servlet.http.Cookie;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -57,7 +57,7 @@ public abstract class IntegracaoBase {
     @Autowired protected MockMvc mvc;
     @Autowired protected ObjectMapper json;
     @Autowired protected UsuarioRepository usuarios;
-    @MockBean protected EmailService emailService;
+    @MockitoBean protected EmailService emailService;
 
     protected static final String SENHA = "senha-segura-123";
 
@@ -78,7 +78,8 @@ public abstract class IntegracaoBase {
 
     /** Sessão autenticada de um usuário de teste (cookies HttpOnly devolvidos pelo login). */
     public record Sessao(String email, Cookie acesso, Cookie refresh) {
-        public MockHttpServletRequestBuilder em(MockHttpServletRequestBuilder req) {
+        /* Genérico: no Spring 7 o builder de multipart não é mais subclasse do MockHttpServletRequestBuilder. */
+        public <B extends AbstractMockHttpServletRequestBuilder<B>> B em(B req) {
             return req.cookie(acesso).with(comCsrf());
         }
     }

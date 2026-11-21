@@ -1,6 +1,6 @@
 package com.studiy.backend;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 
@@ -19,10 +19,10 @@ class RegrasNoServidorIT extends IntegracaoBase {
         Sessao s = novaSessao(); // o login só mantém o streak: conta nova começa com 0 XP
         JsonNode p = ler(mvc.perform(get("/api/usuarios/me").cookie(s.acesso())).andReturn());
 
-        assertThat(p.path("planoRotulo").asText()).isEqualTo("Plano Grátis");
-        assertThat(p.path("acaoPlano").asText()).isEqualTo("Assinar Pro");
+        assertThat(p.path("planoRotulo").asString()).isEqualTo("Plano Grátis");
+        assertThat(p.path("acaoPlano").asString()).isEqualTo("Assinar Pro");
         assertThat(p.path("usoPercentual").asInt()).isZero();
-        assertThat(p.path("regraUso").asText()).isNotBlank();
+        assertThat(p.path("regraUso").asString()).isNotBlank();
         JsonNode g = p.path("gamificacao");
         assertThat(g.path("xp").asInt()).isZero();
         assertThat(g.path("nivel").asInt()).isEqualTo(1);
@@ -50,7 +50,7 @@ class RegrasNoServidorIT extends IntegracaoBase {
 
         JsonNode rev = ler(mvc.perform(get("/api/materias/" + m + "/flashcards/revisao").cookie(s.acesso())).andReturn());
         assertThat(rev.path("cartoes").isArray()).isTrue();
-        assertThat(rev.path("opcoes")).extracting(o -> o.path("valor").asText())
+        assertThat(rev.path("opcoes")).extracting(o -> o.path("valor").asString())
                 .containsExactly("ERREI", "DIFICIL", "BOM", "FACIL");
     }
 
@@ -59,10 +59,10 @@ class RegrasNoServidorIT extends IntegracaoBase {
         Sessao s = novaSessao();
         JsonNode m = ler(mvc.perform(s.em(post("/api/materias")).contentType(MediaType.APPLICATION_JSON)
                 .content(corpo(Map.of("nome", "Botânica", "cor", "verde")))).andExpect(status().isOk()).andReturn());
-        assertThat(m.path("cor").asText()).isEqualTo("verde");
+        assertThat(m.path("cor").asString()).isEqualTo("verde");
         JsonNode padrao = ler(mvc.perform(s.em(post("/api/materias")).contentType(MediaType.APPLICATION_JSON)
                 .content(corpo(Map.of("nome", "Sem cor")))).andExpect(status().isOk()).andReturn());
-        assertThat(padrao.path("cor").asText()).isEqualTo("verde");
+        assertThat(padrao.path("cor").asString()).isEqualTo("verde");
         mvc.perform(s.em(post("/api/materias")).contentType(MediaType.APPLICATION_JSON)
                 .content(corpo(Map.of("nome", "X", "cor", "#ff0000")))).andExpect(status().isBadRequest());
     }
@@ -78,6 +78,6 @@ class RegrasNoServidorIT extends IntegracaoBase {
     void configDePagamentoTrazPrecoFormatado() throws Exception {
         Sessao s = novaSessao();
         JsonNode c = ler(mvc.perform(get("/api/pagamentos/config").cookie(s.acesso())).andReturn());
-        assertThat(c.path("precoFormatado").asText()).isEqualTo("R$ 20,00");
+        assertThat(c.path("precoFormatado").asString()).isEqualTo("R$ 20,00");
     }
 }
